@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq, gt, lt, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,158 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function getUserById(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Query helpers para quartos
+ */
+export async function getAllRooms() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(rooms);
+}
+
+export async function getRoomById(roomId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(rooms).where(eq(rooms.id, roomId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getRoomAvailability(roomId: number, checkInDate: Date, checkOutDate: Date) {
+  const db = await getDb();
+  if (!db) return { available: false, bookedDates: [] };
+  
+  // Buscar reservas confirmadas que conflitem com as datas
+  const conflictingBookings = await db
+    .select()
+    .from(bookings)
+    .where(
+      and(
+        eq(bookings.roomId, roomId),
+        or(
+          eq(bookings.status, "confirmed"),
+          eq(bookings.status, "checked_in")
+        ),
+        // Verificar conflito de datas
+        and(
+          lt(bookings.checkInDate, checkOutDate),
+          gt(bookings.checkOutDate, checkInDate)
+        )
+      )
+    );
+
+  return {
+    available: conflictingBookings.length === 0,
+    bookedDates: conflictingBookings.map(b => ({
+      checkIn: b.checkInDate,
+      checkOut: b.checkOutDate
+    }))
+  };
+}
+
+/**
+ * Query helpers para hóspedes
+ */
+export async function createOrUpdateGuest(guestData: InsertGuest) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Verificar se o hóspede já existe pelo email
+  const existing = await db
+    .select()
+    .from(guests)
+    .where(eq(guests.email, guestData.email))
+    .limit(1);
+  
+  if (existing.length > 0) {
+    // Atualizar hóspede existente
+    await db
+      .update(guests)
+      .set(guestData)
+      .where(eq(guests.id, existing[0].id));
+    return existing[0].id;
+  } else {
+    // Criar novo hóspede
+    const result = await db.insert(guests).values(guestData);
+    return result[0].insertId;
+  }
+}
+
+/**
+ * Query helpers para reservas
+ */
+export async function createBooking(bookingData: InsertBooking) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(bookings).values(bookingData);
+  return result[0].insertId;
+}
+
+export async function getAllBookings() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db
+    .select({
+      booking: bookings,
+      guest: guests,
+      room: rooms
+    })
+    .from(bookings)
+    .innerJoin(guests, eq(bookings.guestId, guests.id))
+    .innerJoin(rooms, eq(bookings.roomId, rooms.id))
+    .orderBy(desc(bookings.createdAt));
+}
+
+export async function getBookingById(bookingId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db
+    .select({
+      booking: bookings,
+      guest: guests,
+      room: rooms
+    })
+    .from(bookings)
+    .innerJoin(guests, eq(bookings.guestId, guests.id))
+    .innerJoin(rooms, eq(bookings.roomId, rooms.id))
+    .where(eq(bookings.id, bookingId))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateBookingStatus(bookingId: number, status: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(bookings)
+    .set({ status: status as any })
+    .where(eq(bookings.id, bookingId));
+}
+
+export async function getBookingsByGuestEmail(email: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db
+    .select({
+      booking: bookings,
+      guest: guests,
+      room: rooms
+    })
+    .from(bookings)
+    .innerJoin(guests, eq(bookings.guestId, guests.id))
+    .innerJoin(rooms, eq(bookings.roomId, rooms.id))
+    .where(eq(guests.email, email))
+    .orderBy(desc(bookings.createdAt));
+}

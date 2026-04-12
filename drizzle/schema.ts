@@ -25,4 +25,81 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Tabela de quartos do hostel
+ */
+export const rooms = mysqlTable("rooms", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  type: mysqlEnum("type", ["private", "shared", "dorm"]).notNull(),
+  capacity: int("capacity").notNull(),
+  pricePerNight: int("pricePerNight").notNull(), // em centavos
+  description: text("description"),
+  amenities: text("amenities"), // JSON stringified
+  imageUrl: text("imageUrl"),
+  status: mysqlEnum("status", ["available", "maintenance", "archived"]).default("available").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Room = typeof rooms.$inferSelect;
+export type InsertRoom = typeof rooms.$inferInsert;
+
+/**
+ * Tabela de camas individuais dentro dos quartos
+ */
+export const beds = mysqlTable("beds", {
+  id: int("id").autoincrement().primaryKey(),
+  roomId: int("roomId").notNull().references(() => rooms.id, { onDelete: "cascade" }),
+  bedNumber: int("bedNumber").notNull(),
+  type: mysqlEnum("type", ["single", "double", "bunk"]).notNull(),
+  status: mysqlEnum("status", ["available", "occupied", "maintenance"]).default("available").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Bed = typeof beds.$inferSelect;
+export type InsertBed = typeof beds.$inferInsert;
+
+/**
+ * Tabela de hóspedes
+ */
+export const guests = mysqlTable("guests", {
+  id: int("id").autoincrement().primaryKey(),
+  firstName: varchar("firstName", { length: 100 }).notNull(),
+  lastName: varchar("lastName", { length: 100 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  cpf: varchar("cpf", { length: 14 }),
+  nationality: varchar("nationality", { length: 100 }),
+  dateOfBirth: timestamp("dateOfBirth"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Guest = typeof guests.$inferSelect;
+export type InsertGuest = typeof guests.$inferInsert;
+
+/**
+ * Tabela de reservas
+ */
+export const bookings = mysqlTable("bookings", {
+  id: int("id").autoincrement().primaryKey(),
+  guestId: int("guestId").notNull().references(() => guests.id, { onDelete: "cascade" }),
+  roomId: int("roomId").notNull().references(() => rooms.id, { onDelete: "cascade" }),
+  bedId: int("bedId").references(() => beds.id, { onDelete: "set null" }),
+  checkInDate: timestamp("checkInDate").notNull(),
+  checkOutDate: timestamp("checkOutDate").notNull(),
+  numberOfGuests: int("numberOfGuests").notNull(),
+  totalPrice: int("totalPrice").notNull(), // em centavos
+  status: mysqlEnum("status", ["pending", "confirmed", "checked_in", "checked_out", "cancelled"]).default("pending").notNull(),
+  specialRequests: text("specialRequests"),
+  paymentMethod: varchar("paymentMethod", { length: 50 }),
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "refunded"]).default("pending").notNull(),
+  confirmationCode: varchar("confirmationCode", { length: 50 }).unique(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Booking = typeof bookings.$inferSelect;
+export type InsertBooking = typeof bookings.$inferInsert;
