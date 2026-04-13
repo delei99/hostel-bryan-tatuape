@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, Users, DollarSign } from "lucide-react";
+import { ArrowLeft, Calendar, Users, DollarSign, MessageCircle } from "lucide-react";
 import { Link } from "wouter";
 
 /**
@@ -36,6 +36,7 @@ export default function Booking() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
+  const [showReview, setShowReview] = useState(false);
 
   // Buscar quartos disponíveis
   const { data: rooms, isLoading: roomsLoading } = trpc.rooms.list.useQuery();
@@ -73,18 +74,22 @@ export default function Booking() {
     return checkOut > checkIn;
   };
 
-  // Validar formulário
+  // Validar formulário - TODOS OS CAMPOS OBRIGATÓRIOS
   const isFormValid = () => {
     return (
       formData.firstName.trim() &&
       formData.lastName.trim() &&
       formData.email.includes("@") &&
+      formData.phone.trim() &&
+      formData.cpf.trim() &&
+      formData.nationality.trim() &&
+      formData.roomId > 0 &&
       isValidDateRange() &&
       formData.numberOfGuests > 0
     );
   };
 
-  // Enviar reserva
+  // Enviar reserva - mostra página de revisão
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -93,6 +98,12 @@ export default function Booking() {
       return;
     }
 
+    // Mostrar página de revisão
+    setShowReview(true);
+  };
+
+  // Finalizar reserva
+  const handleFinalizeBooking = async () => {
     setIsSubmitting(true);
 
     try {
@@ -118,6 +129,7 @@ export default function Booking() {
       });
 
       setConfirmationCode(result.confirmationCode);
+      setShowReview(false);
       toast.success("Reserva criada com sucesso!");
     } catch (error) {
       toast.error("Erro ao criar reserva. Tente novamente.");
@@ -132,32 +144,26 @@ export default function Booking() {
     return (
       <div className="min-h-screen bg-background py-12">
         <div className="container max-w-2xl">
-          <Link href="/">
-            <Button variant="ghost" className="mb-8">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar para Home
-            </Button>
-          </Link>
-
-          <Card className="p-12 text-center bg-gradient-to-br from-accent/10 to-secondary/10">
+          <Card className="p-8 text-center">
             <div className="mb-6">
-              <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white text-2xl">✓</span>
+              <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <DollarSign className="w-8 h-8 text-accent" />
               </div>
+              <h2 className="text-3xl font-bold text-foreground mb-2">Reserva Confirmada!</h2>
+              <p className="text-foreground/70">Sua reserva foi criada com sucesso</p>
             </div>
-            <h2 className="text-3xl font-bold text-foreground mb-4">Reserva Confirmada!</h2>
-            <p className="text-foreground/70 mb-8">
-              Sua reserva foi criada com sucesso. Um email de confirmação foi enviado para {formData.email}.
-            </p>
-            <div className="bg-white rounded-lg p-6 mb-8 border-2 border-accent">
-              <p className="text-foreground/70 mb-2">Código de Confirmação</p>
-              <p className="text-3xl font-bold text-accent">{confirmationCode}</p>
+
+            <div className="bg-accent/10 rounded-lg p-6 mb-6">
+              <p className="text-sm text-foreground/70 mb-2">Código de Confirmação</p>
+              <p className="text-2xl font-bold text-accent font-mono">{confirmationCode}</p>
             </div>
+
             <p className="text-foreground/70 mb-8">
-              Guarde este código para referência futura. Você pode entrar em contato conosco usando este código.
+              Um e-mail de confirmação foi enviado para <strong>{formData.email}</strong>
             </p>
+
             <Link href="/">
-              <Button size="lg" className="bg-accent hover:bg-opacity-90">
+              <Button className="w-full bg-accent hover:bg-opacity-90 text-white">
                 Voltar para Home
               </Button>
             </Link>
@@ -167,29 +173,178 @@ export default function Booking() {
     );
   }
 
+  // Página de Resumo
+  if (showReview) {
+    const room = rooms?.find(r => r.id === formData.roomId);
+    const checkInDate = new Date(formData.checkInDate);
+    const checkOutDate = new Date(formData.checkOutDate);
+    const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Gerar mensagem WhatsApp
+    const whatsappMessage = `Olá! Gostaria de confirmar minha reserva no Hostel Bryan Tatuapé:\n\n` +
+      `*Dados do Hóspede:*\n` +
+      `Nome: ${formData.firstName} ${formData.lastName}\n` +
+      `Email: ${formData.email}\n` +
+      `Telefone: ${formData.phone}\n` +
+      `CPF: ${formData.cpf}\n\n` +
+      `*Detalhes da Reserva:*\n` +
+      `Quarto: ${room?.name}\n` +
+      `Check-in: ${checkInDate.toLocaleDateString('pt-BR')}\n` +
+      `Check-out: ${checkOutDate.toLocaleDateString('pt-BR')}\n` +
+      `Noites: ${nights}\n` +
+      `Hóspedes: ${formData.numberOfGuests} pessoa${formData.numberOfGuests > 1 ? 's' : ''}\n\n` +
+      `*Valores:*\n` +
+      `Subtotal: R$ ${(subtotal / 100).toFixed(2)}\n` +
+      `${discountAmount > 0 ? `Desconto (12%): -R$ ${(discountAmount / 100).toFixed(2)}\n` : ''}` +
+      `Limpeza: R$ ${(CLEANING_FEE / 100).toFixed(2)}\n` +
+      `*Total: R$ ${(totalPrice / 100).toFixed(2)}*\n\n` +
+      `${formData.specialRequests ? `Observações: ${formData.specialRequests}\n\n` : ''}` +
+      `Aguardo confirmação!`;
+
+    const whatsappUrl = `https://wa.me/5511952197283?text=${encodeURIComponent(whatsappMessage)}`;
+
+    return (
+      <div className="min-h-screen bg-background py-12">
+        <div className="container max-w-2xl">
+          <button
+            onClick={() => setShowReview(false)}
+            className="flex items-center gap-2 text-accent hover:text-accent/80 mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+          </button>
+
+          <Card className="p-8">
+            <h2 className="text-3xl font-bold text-foreground mb-8">Resumo da Reserva</h2>
+
+            {/* Dados do Hóspede */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-foreground mb-4">Dados do Hóspede</h3>
+              <div className="bg-accent/5 rounded-lg p-6 space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-foreground/70">Nome:</span>
+                  <span className="font-semibold text-foreground">{formData.firstName} {formData.lastName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-foreground/70">Email:</span>
+                  <span className="font-semibold text-foreground">{formData.email}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-foreground/70">Telefone:</span>
+                  <span className="font-semibold text-foreground">{formData.phone}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-foreground/70">CPF:</span>
+                  <span className="font-semibold text-foreground">{formData.cpf}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Detalhes da Reserva */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-foreground mb-4">Detalhes da Reserva</h3>
+              <div className="bg-accent/5 rounded-lg p-6 space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-foreground/70">Quarto:</span>
+                  <span className="font-semibold text-foreground">{room?.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-foreground/70">Check-in:</span>
+                  <span className="font-semibold text-foreground">{checkInDate.toLocaleDateString('pt-BR')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-foreground/70">Check-out:</span>
+                  <span className="font-semibold text-foreground">{checkOutDate.toLocaleDateString('pt-BR')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-foreground/70">Noites:</span>
+                  <span className="font-semibold text-foreground">{nights}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-foreground/70">Hóspedes:</span>
+                  <span className="font-semibold text-foreground">{formData.numberOfGuests} pessoa{formData.numberOfGuests > 1 ? 's' : ''}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Valores */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-foreground mb-4">Valores</h3>
+              <div className="bg-accent/5 rounded-lg p-6 space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-foreground/70">Subtotal ({nights}x):</span>
+                  <span className="font-semibold text-foreground">R$ {(subtotal / 100).toFixed(2)}</span>
+                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-accent">
+                    <span className="text-foreground/70">Desconto (12%):</span>
+                    <span className="font-semibold">-R$ {(discountAmount / 100).toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-foreground/70">Limpeza:</span>
+                  <span className="font-semibold text-foreground">R$ {(CLEANING_FEE / 100).toFixed(2)}</span>
+                </div>
+                <div className="border-t border-border pt-3 flex justify-between">
+                  <span className="text-lg font-bold text-foreground">Total:</span>
+                  <span className="text-lg font-bold text-accent">R$ {(totalPrice / 100).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div className="flex gap-4">
+              <Button
+                onClick={() => setShowReview(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                Editar Reserva
+              </Button>
+              <Button
+                onClick={async () => {
+                  await handleFinalizeBooking();
+                  if (confirmationCode) {
+                    setTimeout(() => {
+                      window.open(whatsappUrl, '_blank');
+                    }, 500);
+                  }
+                }}
+                disabled={isSubmitting}
+                className="flex-1 bg-accent hover:bg-opacity-90 text-white flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                {isSubmitting ? "Finalizando..." : "Finalizar e Enviar WhatsApp"}
+              </Button>
+              
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Formulário de Reserva
   return (
     <div className="min-h-screen bg-background py-12">
       <div className="container max-w-4xl">
         <Link href="/">
-          <Button variant="ghost" className="mb-8">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar para Home
-          </Button>
+          <button className="flex items-center gap-2 text-accent hover:text-accent/80 mb-8 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+          </button>
         </Link>
 
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Fazer Reserva</h1>
-          <p className="text-foreground/70">Preencha o formulário abaixo para reservar seu quarto no Hostel Bryan Tatuapé</p>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
           {/* Formulário */}
-          <div className="lg:col-span-2">
+          <div className="md:col-span-2">
             <Card className="p-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <h1 className="text-4xl font-bold text-foreground mb-8">Fazer Reserva</h1>
+
+              <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Seção: Dados Pessoais */}
                 <div>
-                  <h3 className="text-xl font-bold text-foreground mb-4">Dados Pessoais</h3>
+                  <h3 className="text-xl font-bold text-foreground mb-4">Dados Pessoais *</h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="firstName">Nome *</Label>
@@ -197,7 +352,6 @@ export default function Booking() {
                         id="firstName"
                         value={formData.firstName}
                         onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                        placeholder="Seu nome"
                         required
                       />
                     </div>
@@ -207,7 +361,6 @@ export default function Booking() {
                         id="lastName"
                         value={formData.lastName}
                         onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                        placeholder="Seu sobrenome"
                         required
                       />
                     </div>
@@ -216,8 +369,8 @@ export default function Booking() {
 
                 {/* Seção: Contato */}
                 <div>
-                  <h3 className="text-xl font-bold text-foreground mb-4">Contato</h3>
-                  <div className="space-y-4">
+                  <h3 className="text-xl font-bold text-foreground mb-4">Contato *</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="email">Email *</Label>
                       <Input
@@ -225,53 +378,54 @@ export default function Booking() {
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="seu.email@exemplo.com"
                         required
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone">Telefone</Label>
+                      <Label htmlFor="phone">Telefone *</Label>
                       <Input
                         id="phone"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="(11) 98765-4321"
+                        required
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Seção: Informações Adicionais */}
+                {/* Seção: Documentos */}
                 <div>
-                  <h3 className="text-xl font-bold text-foreground mb-4">Informações Adicionais</h3>
+                  <h3 className="text-xl font-bold text-foreground mb-4">Documentos *</h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="cpf">CPF</Label>
+                      <Label htmlFor="cpf">CPF *</Label>
                       <Input
                         id="cpf"
                         value={formData.cpf}
                         onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
                         placeholder="000.000.000-00"
+                        required
                       />
                     </div>
                     <div>
-                      <Label htmlFor="nationality">Nacionalidade</Label>
+                      <Label htmlFor="nationality">Nacionalidade *</Label>
                       <Input
                         id="nationality"
                         value={formData.nationality}
                         onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                        placeholder="Brasileira"
+                        placeholder="Ex: Brasileira"
+                        required
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Seção: Hospedagem */}
+                {/* Seção: Acomodação */}
                 <div>
-                  <h3 className="text-xl font-bold text-foreground mb-4">Detalhes da Hospedagem</h3>
-                  <div className="space-y-4">
+                  <h3 className="text-xl font-bold text-foreground mb-4">Acomodação *</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="roomId">Tipo de Quarto *</Label>
+                      <Label htmlFor="roomId">Quarto *</Label>
                       <Select
                         value={formData.roomId.toString()}
                         onValueChange={(value) => setFormData({ ...formData, roomId: parseInt(value) })}
@@ -281,43 +435,17 @@ export default function Booking() {
                         </SelectTrigger>
                         <SelectContent>
                           {roomsLoading ? (
-                            <div className="p-2 text-foreground/70">Carregando quartos...</div>
-                          ) : rooms && rooms.length > 0 ? (
-                            rooms.map((room) => (
+                            <SelectItem value="0" disabled>Carregando quartos...</SelectItem>
+                          ) : (
+                            rooms?.map(room => (
                               <SelectItem key={room.id} value={room.id.toString()}>
                                 {room.name} - R$ {(room.pricePerNight / 100).toFixed(2)}/noite
                               </SelectItem>
                             ))
-                          ) : (
-                            <div className="p-2 text-foreground/70">Nenhum quarto disponível</div>
                           )}
                         </SelectContent>
                       </Select>
                     </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="checkInDate">Check-in *</Label>
-                        <Input
-                          id="checkInDate"
-                          type="date"
-                          value={formData.checkInDate}
-                          onChange={(e) => setFormData({ ...formData, checkInDate: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="checkOutDate">Check-out *</Label>
-                        <Input
-                          id="checkOutDate"
-                          type="date"
-                          value={formData.checkOutDate}
-                          onChange={(e) => setFormData({ ...formData, checkOutDate: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-
                     <div>
                       <Label htmlFor="numberOfGuests">Número de Hóspedes *</Label>
                       <Select
@@ -336,44 +464,30 @@ export default function Booking() {
                   </div>
                 </div>
 
-                {/* Seção: Tipo de Diária */}
+                {/* Seção: Datas */}
                 <div>
-                  <h3 className="text-xl font-bold text-foreground mb-4">Tipo de Diária</h3>
-                  <div className="space-y-3">
-                    <label className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      formData.dailyType === "couple"
-                        ? "border-accent bg-accent/10"
-                        : "border-border hover:border-accent"
-                    }`}>
-                      <input
-                        type="radio"
-                        name="dailyType"
-                        value="couple"
-                        checked={formData.dailyType === "couple"}
-                        onChange={(e) => setFormData({ ...formData, dailyType: e.target.value as "couple" | "individual" })}
-                        className="mr-3"
+                  <h3 className="text-xl font-bold text-foreground mb-4">Datas *</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="checkInDate">Check-in *</Label>
+                      <Input
+                        id="checkInDate"
+                        type="date"
+                        value={formData.checkInDate}
+                        onChange={(e) => setFormData({ ...formData, checkInDate: e.target.value })}
+                        required
                       />
-                      <span className="font-semibold text-foreground">Diária de Casal</span>
-                      <p className="text-sm text-foreground/70 mt-1">Preço normal para 2 ou mais pessoas</p>
-                    </label>
-                    
-                    <label className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      formData.dailyType === "individual"
-                        ? "border-accent bg-accent/10"
-                        : "border-border hover:border-accent"
-                    }`}>
-                      <input
-                        type="radio"
-                        name="dailyType"
-                        value="individual"
-                        checked={formData.dailyType === "individual"}
-                        onChange={(e) => setFormData({ ...formData, dailyType: e.target.value as "couple" | "individual" })}
-                        className="mr-3"
+                    </div>
+                    <div>
+                      <Label htmlFor="checkOutDate">Check-out *</Label>
+                      <Input
+                        id="checkOutDate"
+                        type="date"
+                        value={formData.checkOutDate}
+                        onChange={(e) => setFormData({ ...formData, checkOutDate: e.target.value })}
+                        required
                       />
-                      <span className="font-semibold text-foreground">Diária Individual</span>
-                      <p className="text-sm text-accent font-semibold">Desconto de 12% para uma pessoa</p>
-                      <p className="text-sm text-foreground/70 mt-1">Aplica-se automaticamente quando há apenas 1 hóspede</p>
-                    </label>
+                    </div>
                   </div>
                 </div>
 
@@ -386,145 +500,66 @@ export default function Booking() {
                       id="specialRequests"
                       value={formData.specialRequests}
                       onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
-                      placeholder="Algum pedido especial? (ex: cama de casal, andar alto)"
-                      className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+                      placeholder="Deixe aqui qualquer observação importante..."
+                      className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
                       rows={4}
                     />
                   </div>
                 </div>
 
-                {/* Seção: Pagamento */}
-                <div>
-                  <h3 className="text-xl font-bold text-foreground mb-4">Método de Pagamento</h3>
-                  <div className="space-y-2">
-                    <label className="flex items-center p-3 border border-border rounded-lg cursor-pointer hover:bg-accent/5">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="cash"
-                        checked={formData.paymentMethod === "cash"}
-                        onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                        className="mr-3"
-                      />
-                      <span className="text-foreground">Dinheiro (no local)</span>
-                    </label>
-                    <label className="flex items-center p-3 border border-border rounded-lg cursor-pointer hover:bg-accent/5">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="card"
-                        checked={formData.paymentMethod === "card"}
-                        onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                        className="mr-3"
-                      />
-                      <span className="text-foreground">Cartão de Crédito</span>
-                    </label>
-                  </div>
-                </div>
-
+                {/* Botão Enviar */}
                 <Button
                   type="submit"
-                  size="lg"
-                  className="w-full bg-accent hover:bg-opacity-90 text-white"
-                  disabled={isSubmitting || !isFormValid()}
+                  disabled={!isFormValid() || isSubmitting}
+                  className="w-full bg-accent hover:bg-opacity-90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? "Processando..." : "Confirmar Reserva"}
+                  {isSubmitting ? "Processando..." : "Revisar Reserva"}
                 </Button>
               </form>
             </Card>
           </div>
 
-          {/* Resumo da Reserva */}
+          {/* Resumo Lateral */}
           <div>
-            <Card className="p-6 sticky top-24 bg-gradient-to-br from-accent/10 to-secondary/10">
-              <h3 className="text-xl font-bold text-foreground mb-6">Resumo da Reserva</h3>
-
-              <div className="space-y-4 mb-6">
-                <div>
-                  <p className="text-sm text-foreground/70 mb-1">Quarto</p>
-                  <p className="font-semibold text-foreground">
-                    {rooms?.find(r => r.id === formData.roomId)?.name || "Selecionando..."}
-                  </p>
-                  {rooms?.find(r => r.id === formData.roomId)?.imageUrl && (
-                    <div className="mt-3 rounded-lg overflow-hidden h-32 bg-gray-200">
-                      <img
-                        src={rooms.find(r => r.id === formData.roomId)?.imageUrl || ""}
-                        alt="Foto do quarto"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 text-foreground/70">
-                  <Calendar className="w-4 h-4" />
+            <Card className="p-6 sticky top-8">
+              <h3 className="text-lg font-bold text-foreground mb-6">Resumo</h3>
+              
+              {rooms && (
+                <div className="space-y-4">
                   <div>
-                    <p className="text-sm">
-                      {new Date(formData.checkInDate).toLocaleDateString('pt-BR')} até{" "}
-                      {new Date(formData.checkOutDate).toLocaleDateString('pt-BR')}
+                    <p className="text-sm text-foreground/70 mb-1">Quarto</p>
+                    <p className="font-semibold text-foreground">{rooms.find(r => r.id === formData.roomId)?.name}</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm text-foreground/70 mb-1">Período</p>
+                    <p className="font-semibold text-foreground">
+                      {new Date(formData.checkInDate).toLocaleDateString('pt-BR')} - {new Date(formData.checkOutDate).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2 text-foreground/70">
-                  <Users className="w-4 h-4" />
-                  <p className="text-sm">{formData.numberOfGuests} {formData.numberOfGuests === 1 ? "hóspede" : "hóspedes"}</p>
-                </div>
-              </div>
-
-              <div className="border-t border-border pt-6">
-                <div className="space-y-2 mb-6">
-                  <div className="flex justify-between text-foreground/70">
-                    <span>Diária</span>
-                    <span>
-                      R$ {rooms?.find(r => r.id === formData.roomId)?.pricePerNight ? 
-                        (rooms.find(r => r.id === formData.roomId)!.pricePerNight / 100).toFixed(2) : 
-                        "0.00"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-foreground/70">
-                    <span>Noites</span>
-                    <span>
-                      {priceCalculation.nights}
-                    </span>
-                  </div>
-                  <div className="flex justify-between font-semibold text-foreground">
-                    <span>Subtotal</span>
-                    <span>R$ {(subtotal / 100).toFixed(2)}</span>
-                  </div>
-                </div>
-
-                {discountAmount > 0 && (
-                  <div className="bg-green-50 rounded-lg p-3 mb-4 border border-green-200">
-                    <div className="flex justify-between text-green-700">
-                      <span className="font-semibold">Desconto 12% (1 pessoa)</span>
-                      <span>-R$ {(discountAmount / 100).toFixed(2)}</span>
+                  <div className="border-t border-border pt-4">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-foreground/70">Subtotal:</span>
+                      <span className="font-semibold">R$ {(subtotal / 100).toFixed(2)}</span>
                     </div>
-                  </div>
-                )}
-
-                <div className="space-y-2 mb-6 border-t border-border pt-4">
-                  <div className="flex justify-between text-foreground/70">
-                    <span>Limpeza</span>
-                    <span>R$ {(CLEANING_FEE / 100).toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border-2 border-accent">
-                  <div className="flex items-center justify-between">
-                    <span className="text-foreground font-semibold">Total</span>
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-5 h-5 text-accent" />
-                      <span className="text-2xl font-bold text-accent">
-                        {(totalPrice / 100).toFixed(2)}
-                      </span>
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between mb-2 text-accent">
+                        <span className="text-foreground/70">Desconto (12%):</span>
+                        <span className="font-semibold">-R$ {(discountAmount / 100).toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between mb-4">
+                      <span className="text-foreground/70">Limpeza:</span>
+                      <span className="font-semibold">R$ {(CLEANING_FEE / 100).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-border pt-4">
+                      <span className="font-bold text-foreground">Total:</span>
+                      <span className="text-lg font-bold text-accent">R$ {(totalPrice / 100).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </Card>
           </div>
         </div>

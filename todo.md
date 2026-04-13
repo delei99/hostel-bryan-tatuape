@@ -108,3 +108,12 @@
 - [x] Adicionar opção de escolher 1 pessoa ou 2 pessoas por quarto
 - [x] Atualizar descrição dos quartos com capacidade
 - [x] Validar desconto de 12% apenas para 1 pessoa
+
+
+## Fase 15: Remover Tipo de Diária e Adicionar Resumo
+- [x] Remover seção "Tipo de Diária" do formulário
+- [x] Criar página de resumo da reserva
+- [x] Validar todos os campos como obrigatórios
+- [x] Bloquear botão de reserva se campos vazios
+- [x] Enviar resumo para WhatsApp ao finalizar
+- [x] Exibir mensagem de sucesso com código de confirmação
