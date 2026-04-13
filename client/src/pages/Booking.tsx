@@ -157,10 +157,8 @@ export default function Booking() {
     }
 
     // Abrir WhatsApp
-    const whatsappUrl = `https://wa.me/5511952197283`;
-    setTimeout(() => {
-      window.open(whatsappUrl, '_blank');
-    }, 500);
+    const whatsappUrl = `https://wa.me/5511952197283?text=${encodeURIComponent(message)}`;
+    window.location.href = whatsappUrl;
   };
 
   if (bookingSuccess) {
