@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { ArrowLeft, MessageCircle, CheckCircle } from "lucide-react";
+import { ArrowLeft, MessageCircle, CheckCircle, Copy } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Booking() {
@@ -26,6 +26,7 @@ export default function Booking() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<any>(null);
+  const [showMessage, setShowMessage] = useState(false);
 
   // Buscar quartos
   const { data: rooms = [] } = trpc.rooms.list.useQuery();
@@ -113,6 +114,7 @@ export default function Booking() {
         roomId,
         numberOfGuests,
       });
+      setShowMessage(false);
 
     } catch (error) {
       console.error("Erro:", error);
@@ -122,13 +124,13 @@ export default function Booking() {
     }
   };
 
-  const handleSendWhatsApp = () => {
-    if (!bookingSuccess) return;
-
+  const generateMessage = () => {
+    if (!bookingSuccess) return "";
+    
     const room = rooms.find(r => r.id === bookingSuccess.roomId);
     const numberOfGuests = bookingSuccess.numberOfGuests;
     
-    const message = `*Reserva Confirmada - Hostel Bryan Tatuapé*\n\n` +
+    return `*Reserva Confirmada - Hostel Bryan Tatuapé*\n\n` +
       `*Código: ${bookingSuccess.confirmationCode}*\n\n` +
       `*Hóspede:* ${formData.firstName} ${formData.lastName}\n` +
       `*Email:* ${formData.email}\n` +
@@ -146,7 +148,23 @@ export default function Booking() {
       `*Total: R$ ${(priceCalculation.total / 100).toFixed(2)}*\n\n` +
       `${formData.specialRequests ? `Observações: ${formData.specialRequests}\n\n` : ''}` +
       `Aguardo confirmação!`;
+  };
 
+  const handleCopyMessage = () => {
+    const message = generateMessage();
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(message).then(() => {
+        toast.success('Mensagem copiada para o clipboard!');
+      }).catch(() => {
+        toast.error('Erro ao copiar mensagem');
+      });
+    }
+  };
+
+  const handleSendWhatsApp = () => {
+    if (!bookingSuccess) return;
+
+    const message = generateMessage();
     const phoneNumber = '5511952197283';
     const encodedMessage = encodeURIComponent(message);
     
@@ -163,8 +181,8 @@ export default function Booking() {
     return (
       <div className="min-h-screen bg-background py-12">
         <div className="container max-w-2xl">
-          <Card className="p-8 text-center">
-            <div className="mb-6">
+          <Card className="p-8">
+            <div className="mb-6 text-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
@@ -174,22 +192,56 @@ export default function Booking() {
               </p>
             </div>
 
-            <div className="bg-accent/5 p-4 rounded-lg mb-6">
-              <p className="text-foreground mb-4">
-                Clique no botão abaixo para enviar a confirmação automaticamente para o WhatsApp Business
-              </p>
-              <Button
-                onClick={handleSendWhatsApp}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg flex items-center justify-center gap-2"
-              >
-                <MessageCircle className="w-5 h-5" />
-                Enviar para WhatsApp Business
-              </Button>
-            </div>
+            {!showMessage ? (
+              <div className="bg-accent/5 p-4 rounded-lg mb-6">
+                <p className="text-foreground mb-4">
+                  Clique no botão abaixo para visualizar a mensagem que será enviada
+                </p>
+                <Button
+                  onClick={() => setShowMessage(true)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Ver Mensagem
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-green-50 border border-green-200 p-4 rounded-lg max-h-96 overflow-y-auto">
+                  <p className="text-foreground whitespace-pre-wrap text-sm font-mono">
+                    {generateMessage()}
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setShowMessage(false)}
+                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-6 text-lg"
+                  >
+                    Voltar
+                  </Button>
+                  <Button
+                    onClick={handleCopyMessage}
+                    className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white py-6 text-lg flex items-center justify-center gap-2"
+                  >
+                    <Copy className="w-5 h-5" />
+                    Copiar
+                  </Button>
+                  <Button
+                    onClick={handleSendWhatsApp}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-6 text-lg flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    Enviar
+                  </Button>
+                </div>
+              </div>
+            )}
 
-            <Link href="/" className="text-accent hover:text-accent/80">
-              Voltar para Home
-            </Link>
+            <div className="mt-6 text-center">
+              <Link href="/" className="text-accent hover:text-accent/80">
+                Voltar para Home
+              </Link>
+            </div>
           </Card>
         </div>
       </div>
