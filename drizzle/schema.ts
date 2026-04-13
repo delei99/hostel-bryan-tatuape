@@ -103,6 +103,8 @@ export const bookings = mysqlTable("bookings", {
   paymentMethod: varchar("paymentMethod", { length: 50 }),
   paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "refunded"]).default("pending").notNull(),
   confirmationCode: varchar("confirmationCode", { length: 50 }).unique(),
+  checkInTime: varchar("checkInTime", { length: 5 }).notNull(), // HH:mm format (14:00 até 23:30)
+  checkOutTime: varchar("checkOutTime", { length: 5 }).notNull(), // HH:mm format (até 12:00)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

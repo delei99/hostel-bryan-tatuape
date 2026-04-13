@@ -32,6 +32,8 @@ export default function Booking() {
     roomId: "1",
     checkInDate: getLocalDateString(today),
     checkOutDate: getLocalDateString(tomorrow),
+    checkInTime: "14:00",
+    checkOutTime: "12:00",
     numberOfGuests: "1",
     specialRequests: "",
   });
@@ -141,6 +143,8 @@ export default function Booking() {
         roomId,
         checkInDate,
         checkOutDate,
+        checkInTime: formData.checkInTime,
+        checkOutTime: formData.checkOutTime,
         numberOfGuests,
         dailyType: numberOfGuests === 1 ? "individual" : "couple",
         subtotal: priceCalculation.subtotal,
@@ -180,8 +184,8 @@ export default function Booking() {
       `*CPF:* ${formData.cpf}\n` +
       `*Nacionalidade:* ${formData.nationality}\n\n` +
       `*Quarto:* ${room?.name}\n` +
-      `*Check-in:* ${new Date(new Date(formData.checkInDate).getTime() + 86400000).toLocaleDateString('pt-BR')}\n` +
-      `*Check-out:* ${new Date(new Date(formData.checkOutDate).getTime() + 86400000).toLocaleDateString('pt-BR')}\n` +
+      `*Check-in:* ${new Date(new Date(formData.checkInDate).getTime() + 86400000).toLocaleDateString('pt-BR')} às ${formData.checkInTime}\n` +
+      `*Check-out:* ${new Date(new Date(formData.checkOutDate).getTime() + 86400000).toLocaleDateString('pt-BR')} às ${formData.checkOutTime}\n` +
       `*Hóspedes:* ${numberOfGuests} pessoa${numberOfGuests > 1 ? 's' : ''}\n\n` +
       `*Valores:*\n` +
       `Subtotal: R$ ${(priceCalculation.subtotal / 100).toFixed(2)}\n` +
@@ -319,6 +323,46 @@ export default function Booking() {
                 {isDateBlocked(formData.checkInDate, formData.checkOutDate) && (
                   <p className="text-red-600 text-sm mt-2">⚠️ Data bloqueada!</p>
                 )}
+              </div>
+
+              {/* Aviso de Horários */}
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800 font-semibold">⏰ Horários de Check-in e Check-out</p>
+                <p className="text-sm text-blue-700 mt-2">Check-in: 14h00 às 23h30 | Check-out: até 12h00</p>
+              </div>
+
+              {/* Check-in Time */}
+              <div>
+                <Label htmlFor="checkInTime">Horário de Check-in *</Label>
+                <Select value={formData.checkInTime} onValueChange={(value) => handleSelectChange('checkInTime', value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00', '23:30'].map(time => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Check-out Time */}
+              <div>
+                <Label htmlFor="checkOutTime">Horário de Check-out *</Label>
+                <Select value={formData.checkOutTime} onValueChange={(value) => handleSelectChange('checkOutTime', value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00'].map(time => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

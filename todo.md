@@ -166,3 +166,13 @@
 - [x] Adicionar +1 dia na exibição da data na mensagem WhatsApp
 - [x] Validar datas corretas no celular
 - [x] Todos os testes Vitest passando
+
+
+## Fase 23: Adicionar Horários de Check-in e Check-out
+- [x] Adicionar aviso com horários: Check-in 14h-23h30, Check-out até 12h
+- [x] Criar dropdown para escolher horário de check-in (14h até 23h30)
+- [x] Criar dropdown para escolher horário de check-out (até 12h)
+- [x] Tornar ambos os campos obrigatórios
+- [x] Incluir horários na mensagem de confirmação WhatsApp
+- [x] Validar formulário com novos campos
+- [x] Testar fluxo completo com horários
