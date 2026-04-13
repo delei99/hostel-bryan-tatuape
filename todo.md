@@ -185,3 +185,9 @@
 - [x] Permitir bloquear/desbloquear múltiplos quartos de uma vez
 - [x] Manter estrutura atual do site intacta
 - [x] Testar seleção e ações em massa
+
+## Fase 26: Corrigir Bug de Desbloquear Múltiplas Datas
+- [x] Corrigir sincronização do checkbox "Selecionar Tudo"
+- [x] Adicionar useEffect para sincronizar selectAll automaticamente
+- [x] Limpar seleção ao trocar de quarto
+- [x] Testar desbloquear múltiplas datas sem sair da página

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,23 @@ export default function BlockedDates() {
 
   const createBlockedDate = trpc.blockedDates.create.useMutation();
   const deleteBlockedDate = trpc.blockedDates.delete.useMutation();
+
+  // Sincronizar selectAll quando selectedBlockedIds ou blockedDates muda
+  useEffect(() => {
+    if (blockedDates.length > 0) {
+      const allSelected = selectedBlockedIds.length === blockedDates.length && 
+                         blockedDates.every(b => selectedBlockedIds.includes(b.id));
+      setSelectAll(allSelected);
+    } else {
+      setSelectAll(false);
+    }
+  }, [selectedBlockedIds, blockedDates]);
+
+  // Limpar selecao quando trocar de quarto
+  useEffect(() => {
+    setSelectedBlockedIds([]);
+    setSelectAll(false);
+  }, [roomIds]);
 
   const handleBlockDate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,12 +140,13 @@ export default function BlockedDates() {
   };
 
   const toggleSelectAll = () => {
-    if (selectAll) {
-      setSelectedBlockedIds([]);
-    } else {
+    const newSelectAll = !selectAll;
+    if (newSelectAll) {
       setSelectedBlockedIds(blockedDates.map(b => b.id));
+    } else {
+      setSelectedBlockedIds([]);
     }
-    setSelectAll(!selectAll);
+    setSelectAll(newSelectAll);
   };
 
   const toggleRoom = (rid: string) => {
