@@ -70,7 +70,7 @@ export const appRouter = router({
         paymentMethod: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        const { createOrUpdateGuest, createBooking } = await import("./db");
+        const { createOrUpdateGuest, createBooking, createBlockedDate } = await import("./db");
         const { nanoid } = await import("nanoid");
         const { notifyOwner } = await import("./_core/notification");
         
@@ -105,6 +105,19 @@ export const appRouter = router({
             paymentMethod: input.paymentMethod,
             confirmationCode,
           });
+          
+          // Bloquear automaticamente as datas da reserva
+          try {
+            await createBlockedDate({
+              roomId: input.roomId,
+              startDate: input.checkInDate,
+              endDate: input.checkOutDate,
+              reason: "booking",
+            });
+          } catch (blockError) {
+            console.warn("[Warning] Failed to create automatic blocked date:", blockError);
+            // Não falhar a reserva se o bloqueio automático falhar
+          }
           
           // Notificar dono
           const checkInFormatted = input.checkInDate.toLocaleDateString('pt-BR');

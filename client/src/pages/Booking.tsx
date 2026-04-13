@@ -41,6 +41,13 @@ export default function Booking() {
 
   // Buscar quartos
   const { data: rooms = [] } = trpc.rooms.list.useQuery();
+  
+  // Buscar datas bloqueadas
+  const { data: blockedDates = [] } = trpc.blockedDates.list.useQuery(
+    { roomId: parseInt(formData.roomId) },
+    { enabled: !!formData.roomId }
+  );
+  
   const createBooking = trpc.bookings.create.useMutation();
 
   // Constantes
@@ -72,9 +79,26 @@ export default function Booking() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Verificar se a data está bloqueada
+  const isDateBlocked = (checkInStr: string, checkOutStr: string) => {
+    const checkIn = new Date(checkInStr);
+    const checkOut = new Date(checkOutStr);
+    
+    return blockedDates.some(blocked => {
+      const blockedStart = new Date(blocked.startDate);
+      const blockedEnd = new Date(blocked.endDate);
+      
+      // Verificar conflito de datas
+      return checkIn < blockedEnd && checkOut > blockedStart;
+    });
+  };
+
   // Validação simples
   const canSubmit = () => {
+    const isBlocked = isDateBlocked(formData.checkInDate, formData.checkOutDate);
+    
     return (
+      !isBlocked &&
       formData.firstName.trim() !== "" &&
       formData.lastName.trim() !== "" &&
       formData.email.trim() !== "" &&
@@ -90,7 +114,11 @@ export default function Booking() {
     e.preventDefault();
 
     if (!canSubmit()) {
-      toast.error("Por favor, preencha todos os campos!");
+      if (isDateBlocked(formData.checkInDate, formData.checkOutDate)) {
+        toast.error("Desculpe, essas datas estão bloqueadas. Escolha outras datas.");
+      } else {
+        toast.error("Por favor, preencha todos os campos!");
+      }
       return;
     }
 
