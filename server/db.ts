@@ -1,6 +1,6 @@
 import { and, desc, eq, gt, lt, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto } from "../drizzle/schema";
+import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -311,4 +311,50 @@ export async function updateRoomPhoto(photoId: number, updates: Partial<InsertRo
     console.error("[Database] Failed to update room photo:", error);
     throw error;
   }
+}
+
+
+/**
+ * Query helpers para bloqueio de datas
+ */
+export async function createBlockedDate(blockedDateData: InsertBlockedDate) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(blockedDates).values(blockedDateData);
+  return result[0].insertId;
+}
+
+export async function getBlockedDates(roomId: number, startDate: Date, endDate: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db
+    .select()
+    .from(blockedDates)
+    .where(
+      and(
+        eq(blockedDates.roomId, roomId),
+        lt(blockedDates.startDate, endDate),
+        gt(blockedDates.endDate, startDate)
+      )
+    );
+}
+
+export async function deleteBlockedDate(blockedDateId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(blockedDates).where(eq(blockedDates.id, blockedDateId));
+}
+
+export async function getAllBlockedDates(roomId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db
+    .select()
+    .from(blockedDates)
+    .where(eq(blockedDates.roomId, roomId))
+    .orderBy(desc(blockedDates.startDate));
 }

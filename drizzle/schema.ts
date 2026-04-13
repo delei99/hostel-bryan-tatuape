@@ -126,3 +126,18 @@ export const roomPhotos = mysqlTable("roomPhotos", {
 
 export type RoomPhoto = typeof roomPhotos.$inferSelect;
 export type InsertRoomPhoto = typeof roomPhotos.$inferInsert;
+/**
+ * Tabela de bloqueio de datas
+ */
+export const blockedDates = mysqlTable("blockedDates", {
+  id: int("id").autoincrement().primaryKey(),
+  roomId: int("roomId").notNull().references(() => rooms.id, { onDelete: "cascade" }),
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate").notNull(),
+  reason: varchar("reason", { length: 255 }), // "booking" ou "manual"
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BlockedDate = typeof blockedDates.$inferSelect;
+export type InsertBlockedDate = typeof blockedDates.$inferInsert;

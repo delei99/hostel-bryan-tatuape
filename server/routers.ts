@@ -253,6 +253,77 @@ export const appRouter = router({
         return { success };
       }),
   }),
+
+  blockedDates: router({
+    create: protectedProcedure
+      .input(z.object({
+        roomId: z.number(),
+        startDate: z.date(),
+        endDate: z.date(),
+        reason: z.string().optional(),
+        password: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== "admin") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Apenas administradores podem bloquear datas"
+          });
+        }
+
+        // Verificar senha
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+        if (input.password !== ADMIN_PASSWORD) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Senha incorreta"
+          });
+        }
+
+        const { createBlockedDate } = await import("./db");
+        const id = await createBlockedDate({
+          roomId: input.roomId,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          reason: input.reason || "manual",
+        });
+        return { id, success: true };
+      }),
+
+    list: publicProcedure
+      .input(z.object({ roomId: z.number() }))
+      .query(async ({ input }) => {
+        const { getAllBlockedDates } = await import("./db");
+        return getAllBlockedDates(input.roomId);
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({
+        blockedDateId: z.number(),
+        password: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== "admin") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Apenas administradores podem desbloquear datas"
+          });
+        }
+
+        // Verificar senha
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+        if (input.password !== ADMIN_PASSWORD) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Senha incorreta"
+          });
+        }
+
+        const { deleteBlockedDate } = await import("./db");
+        await deleteBlockedDate(input.blockedDateId);
+        return { success: true };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;;
 
