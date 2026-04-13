@@ -31,9 +31,9 @@ export default function Booking() {
   const createBooking = trpc.bookings.create.useMutation();
 
   // Constantes
-  const PRICE_PER_NIGHT = 8000; // R$ 80,00 em centavos
-  const CLEANING_FEE = 700; // R$ 7,00 em centavos
-  const DISCOUNT_PERCENTAGE = 12; // 12% de desconto para uma pessoa
+  const PRICE_PER_NIGHT = 8000;
+  const CLEANING_FEE = 700;
+  const DISCOUNT_PERCENTAGE = 12;
 
   // Calcular preço
   const priceCalculation = useMemo(() => {
@@ -59,11 +59,25 @@ export default function Booking() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const isFormValid = formData.firstName && formData.lastName && formData.email && formData.phone && formData.cpf && formData.nationality && formData.checkInDate && formData.checkOutDate;
+  // Validação simples
+  const canSubmit = () => {
+    return (
+      formData.firstName.trim() !== "" &&
+      formData.lastName.trim() !== "" &&
+      formData.email.trim() !== "" &&
+      formData.phone.trim() !== "" &&
+      formData.cpf.trim() !== "" &&
+      formData.nationality.trim() !== "" &&
+      formData.checkInDate !== "" &&
+      formData.checkOutDate !== ""
+    );
+  };
 
-  const handleFinalizeBooking = async () => {
-    if (!isFormValid) {
-      toast.error("Por favor, preencha todos os campos obrigatórios!");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!canSubmit()) {
+      toast.error("Por favor, preencha todos os campos!");
       return;
     }
 
@@ -73,12 +87,12 @@ export default function Booking() {
       const numberOfGuests = parseInt(formData.numberOfGuests);
       
       const result = await createBooking.mutateAsync({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        cpf: formData.cpf,
-        nationality: formData.nationality,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        cpf: formData.cpf.trim(),
+        nationality: formData.nationality.trim(),
         roomId,
         checkInDate: new Date(formData.checkInDate),
         checkOutDate: new Date(formData.checkOutDate),
@@ -89,7 +103,7 @@ export default function Booking() {
         discountAmount: priceCalculation.discount,
         cleaningFee: CLEANING_FEE,
         totalPrice: priceCalculation.total,
-        specialRequests: formData.specialRequests,
+        specialRequests: formData.specialRequests.trim(),
       });
 
       toast.success("Reserva criada com sucesso!");
@@ -117,12 +131,10 @@ export default function Booking() {
 
       // Abrir WhatsApp
       const whatsappUrl = `https://wa.me/5511952197283?text=${encodeURIComponent(message)}`;
-      setTimeout(() => {
-        window.open(whatsappUrl, '_blank');
-      }, 500);
+      window.open(whatsappUrl, '_blank');
 
     } catch (error) {
-      console.error("Erro ao criar reserva:", error);
+      console.error("Erro:", error);
       toast.error("Erro ao criar reserva. Tente novamente.");
     } finally {
       setIsSubmitting(false);
@@ -140,168 +152,178 @@ export default function Booking() {
         <Card className="p-8">
           <h1 className="text-3xl font-bold text-foreground mb-8">Fazer Reserva</h1>
 
-          {/* Seleção de Quarto */}
-          <div className="mb-6">
-            <Label htmlFor="roomId">Quarto *</Label>
-            <Select value={formData.roomId} onValueChange={(value) => handleSelectChange('roomId', value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {rooms.map(room => (
-                  <SelectItem key={room.id} value={room.id.toString()}>
-                    {room.name} - R$ 80,00/noite
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Seleção de Quarto */}
+            <div>
+              <Label htmlFor="roomId">Quarto *</Label>
+              <Select value={formData.roomId} onValueChange={(value) => handleSelectChange('roomId', value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {rooms.map(room => (
+                    <SelectItem key={room.id} value={room.id.toString()}>
+                      {room.name} - R$ 80,00/noite
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Datas */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div>
-              <Label htmlFor="checkInDate">Check-in *</Label>
-              <Input
-                type="date"
-                name="checkInDate"
-                value={formData.checkInDate}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div>
-              <Label htmlFor="checkOutDate">Check-out *</Label>
-              <Input
-                type="date"
-                name="checkOutDate"
-                value={formData.checkOutDate}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-
-          {/* Número de Hóspedes */}
-          <div className="mb-6">
-            <Label htmlFor="numberOfGuests">Número de Hóspedes *</Label>
-            <Select value={formData.numberOfGuests} onValueChange={(value) => handleSelectChange('numberOfGuests', value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">1 Pessoa</SelectItem>
-                <SelectItem value="2">2 Pessoas</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Dados Pessoais */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div>
-              <Label htmlFor="firstName">Primeiro Nome *</Label>
-              <Input
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                placeholder="João"
-              />
-            </div>
-            <div>
-              <Label htmlFor="lastName">Sobrenome *</Label>
-              <Input
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleInputChange}
-                placeholder="Silva"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="joao@example.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone">Telefone *</Label>
-              <Input
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="(11) 99999-9999"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div>
-              <Label htmlFor="cpf">CPF *</Label>
-              <Input
-                name="cpf"
-                value={formData.cpf}
-                onChange={handleInputChange}
-                placeholder="123.456.789-00"
-              />
-            </div>
-            <div>
-              <Label htmlFor="nationality">Nacionalidade *</Label>
-              <Input
-                name="nationality"
-                value={formData.nationality}
-                onChange={handleInputChange}
-                placeholder="Brasileira"
-              />
-            </div>
-          </div>
-
-          {/* Observações */}
-          <div className="mb-8">
-            <Label htmlFor="specialRequests">Observações</Label>
-            <textarea
-              name="specialRequests"
-              value={formData.specialRequests}
-              onChange={handleInputChange}
-              placeholder="Alguma solicitação especial?"
-              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-              rows={3}
-            />
-          </div>
-
-          {/* Resumo de Preço */}
-          <div className="mb-8 p-4 bg-accent/5 rounded-lg">
-            <div className="flex justify-between mb-2">
-              <span>Subtotal ({priceCalculation.nights} noites):</span>
-              <span>R$ {(priceCalculation.subtotal / 100).toFixed(2)}</span>
-            </div>
-            {priceCalculation.discount > 0 && (
-              <div className="flex justify-between mb-2 text-green-600">
-                <span>Desconto (12%):</span>
-                <span>-R$ {(priceCalculation.discount / 100).toFixed(2)}</span>
+            {/* Datas */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="checkInDate">Check-in *</Label>
+                <Input
+                  type="date"
+                  name="checkInDate"
+                  value={formData.checkInDate}
+                  onChange={handleInputChange}
+                  required
+                />
               </div>
-            )}
-            <div className="flex justify-between mb-2">
-              <span>Limpeza:</span>
-              <span>R$ {(priceCalculation.cleaning / 100).toFixed(2)}</span>
+              <div>
+                <Label htmlFor="checkOutDate">Check-out *</Label>
+                <Input
+                  type="date"
+                  name="checkOutDate"
+                  value={formData.checkOutDate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
             </div>
-            <div className="flex justify-between text-lg font-bold border-t pt-2">
-              <span>Total:</span>
-              <span className="text-accent">R$ {(priceCalculation.total / 100).toFixed(2)}</span>
-            </div>
-          </div>
 
-          {/* Botão */}
-          <Button
-            onClick={handleFinalizeBooking}
-            disabled={!isFormValid || isSubmitting}
-            className="w-full bg-accent hover:bg-opacity-90 text-white py-6 text-lg flex items-center justify-center gap-2"
-          >
-            <MessageCircle className="w-5 h-5" />
-            {isSubmitting ? "Finalizando..." : "Finalizar e Enviar para WhatsApp"}
-          </Button>
+            {/* Número de Hóspedes */}
+            <div>
+              <Label htmlFor="numberOfGuests">Número de Hóspedes *</Label>
+              <Select value={formData.numberOfGuests} onValueChange={(value) => handleSelectChange('numberOfGuests', value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 Pessoa</SelectItem>
+                  <SelectItem value="2">2 Pessoas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Dados Pessoais */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="firstName">Primeiro Nome *</Label>
+                <Input
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  placeholder="João"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="lastName">Sobrenome *</Label>
+                <Input
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  placeholder="Silva"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="joao@example.com"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">Telefone *</Label>
+                <Input
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="(11) 99999-9999"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="cpf">CPF *</Label>
+                <Input
+                  name="cpf"
+                  value={formData.cpf}
+                  onChange={handleInputChange}
+                  placeholder="123.456.789-00"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="nationality">Nacionalidade *</Label>
+                <Input
+                  name="nationality"
+                  value={formData.nationality}
+                  onChange={handleInputChange}
+                  placeholder="Brasileira"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Observações */}
+            <div>
+              <Label htmlFor="specialRequests">Observações</Label>
+              <textarea
+                name="specialRequests"
+                value={formData.specialRequests}
+                onChange={handleInputChange}
+                placeholder="Alguma solicitação especial?"
+                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                rows={3}
+              />
+            </div>
+
+            {/* Resumo de Preço */}
+            <div className="p-4 bg-accent/5 rounded-lg">
+              <div className="flex justify-between mb-2">
+                <span>Subtotal ({priceCalculation.nights} noites):</span>
+                <span>R$ {(priceCalculation.subtotal / 100).toFixed(2)}</span>
+              </div>
+              {priceCalculation.discount > 0 && (
+                <div className="flex justify-between mb-2 text-green-600">
+                  <span>Desconto (12%):</span>
+                  <span>-R$ {(priceCalculation.discount / 100).toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between mb-2">
+                <span>Limpeza:</span>
+                <span>R$ {(priceCalculation.cleaning / 100).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-lg font-bold border-t pt-2">
+                <span>Total:</span>
+                <span className="text-accent">R$ {(priceCalculation.total / 100).toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Botão */}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-accent hover:bg-opacity-90 text-white py-6 text-lg flex items-center justify-center gap-2"
+            >
+              <MessageCircle className="w-5 h-5" />
+              {isSubmitting ? "Finalizando..." : "Finalizar e Enviar para WhatsApp"}
+            </Button>
+          </form>
         </Card>
       </div>
     </div>
