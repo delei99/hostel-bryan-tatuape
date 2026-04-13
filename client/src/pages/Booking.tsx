@@ -147,8 +147,10 @@ export default function Booking() {
       `${formData.specialRequests ? `Observações: ${formData.specialRequests}\n\n` : ''}` +
       `Aguardo confirmação!`;
 
-    // Abrir WhatsApp com mensagem pré-preenchida
-    const whatsappUrl = `https://wa.me/5511952197283?text=${encodeURIComponent(message)}`;
+    // Abrir WhatsApp Business com mensagem pré-preenchida
+    // Tentar primeiro o WhatsApp Business, depois fallback para wa.me
+    const whatsappBusinessUrl = `https://api.whatsapp.com/send?phone=5511952197283&text=${encodeURIComponent(message)}`;
+    const whatsappUrl = whatsappBusinessUrl;
     
     // Criar um link temporário e clicar nele (funciona melhor em mobile)
     const link = document.createElement('a');

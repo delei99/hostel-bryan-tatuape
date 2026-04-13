@@ -144,3 +144,9 @@
 - [x] Remover mensagem de "copiar e colar"
 - [x] Enviar automaticamente para WhatsApp ao clicar no botão
 - [x] Sem necessidade de copiar manualmente
+
+
+## Fase 20: Abrir WhatsApp Business em vez de WhatsApp Normal
+- [x] Modificar link para abrir WhatsApp Business (wa.me → api.whatsapp.com ou whatsapp business)
+- [x] Testar em celular para garantir que abre o Business
+- [x] Validar que a mensagem é enviada corretamente
