@@ -88,10 +88,9 @@ export const appRouter = router({
           // Gerar código de confirmação
           const confirmationCode = nanoid(12).toUpperCase();
           
-          // Converter strings de data para Date objects
+          // Converter strings de data para Date objects (midnight UTC)
           const stringToDate = (dateStr: string) => {
-            const [year, month, day] = dateStr.split('-').map(Number);
-            return new Date(year, month - 1, day);
+            return new Date(dateStr + 'T00:00:00Z');
           };
           
           // Criar reserva
