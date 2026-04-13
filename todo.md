@@ -59,3 +59,13 @@
 - [x] Testar responsividade em mobile
 - [x] Validar notificações por email
 - [x] Criar checkpoint final
+
+
+## Fase 9: Atualizar Informações e Adicionar Fotos dos Quartos
+- [x] Atualizar informações de contato (telefone, endereço, CEP)
+- [x] Adicionar campo de URL de foto para cada quarto
+- [x] Criar página de gerenciamento de fotos dos quartos no admin
+- [x] Implementar upload de fotos via painel admin
+- [ ] Criar 7 quartos no banco de dados com preços e descrições
+- [ ] Exibir fotos dos quartos na página de reserva
+- [ ] Exibir fotos dos quartos na galeria da landing page

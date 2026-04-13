@@ -1,6 +1,6 @@
 import { and, desc, eq, gt, lt, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking } from "../drizzle/schema";
+import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -243,4 +243,72 @@ export async function getBookingsByGuestEmail(email: string) {
     .innerJoin(rooms, eq(bookings.roomId, rooms.id))
     .where(eq(guests.email, email))
     .orderBy(desc(bookings.createdAt));
+}
+
+// Funções para gerenciar fotos dos quartos
+export async function addRoomPhoto(photo: InsertRoomPhoto) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot add room photo: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.insert(roomPhotos).values(photo);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to add room photo:", error);
+    throw error;
+  }
+}
+
+export async function getRoomPhotos(roomId: number): Promise<RoomPhoto[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return db
+      .select()
+      .from(roomPhotos)
+      .where(eq(roomPhotos.roomId, roomId))
+      .orderBy(roomPhotos.displayOrder);
+  } catch (error) {
+    console.error("[Database] Failed to get room photos:", error);
+    return [];
+  }
+}
+
+export async function deleteRoomPhoto(photoId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot delete room photo: database not available");
+    return false;
+  }
+
+  try {
+    await db.delete(roomPhotos).where(eq(roomPhotos.id, photoId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to delete room photo:", error);
+    return false;
+  }
+}
+
+export async function updateRoomPhoto(photoId: number, updates: Partial<InsertRoomPhoto>) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update room photo: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db
+      .update(roomPhotos)
+      .set(updates)
+      .where(eq(roomPhotos.id, photoId));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to update room photo:", error);
+    throw error;
+  }
 }

@@ -36,7 +36,8 @@ export const rooms = mysqlTable("rooms", {
   pricePerNight: int("pricePerNight").notNull(), // em centavos
   description: text("description"),
   amenities: text("amenities"), // JSON stringified
-  imageUrl: text("imageUrl"),
+  imageUrl: text("imageUrl"), // URL principal da foto do quarto
+  additionalImages: text("additionalImages"), // JSON array com URLs adicionais
   status: mysqlEnum("status", ["available", "maintenance", "archived"]).default("available").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -103,3 +104,20 @@ export const bookings = mysqlTable("bookings", {
 
 export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = typeof bookings.$inferInsert;
+
+/**
+ * Tabela de fotos dos quartos
+ */
+export const roomPhotos = mysqlTable("roomPhotos", {
+  id: int("id").autoincrement().primaryKey(),
+  roomId: int("roomId").notNull().references(() => rooms.id, { onDelete: "cascade" }),
+  photoUrl: text("photoUrl").notNull(),
+  caption: varchar("caption", { length: 255 }),
+  displayOrder: int("displayOrder").default(0),
+  isMainPhoto: int("isMainPhoto").default(0), // 0 = false, 1 = true
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type RoomPhoto = typeof roomPhotos.$inferSelect;
+export type InsertRoomPhoto = typeof roomPhotos.$inferInsert;

@@ -174,7 +174,56 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
-});
 
-export type AppRouter = typeof appRouter;
+  roomPhotos: router({
+    getByRoomId: publicProcedure
+      .input(z.object({ roomId: z.number() }))
+      .query(async ({ input }) => {
+        const { getRoomPhotos } = await import("./db");
+        return getRoomPhotos(input.roomId);
+      }),
+
+    add: protectedProcedure
+      .input(z.object({
+        roomId: z.number(),
+        photoUrl: z.string().url(),
+        caption: z.string().optional(),
+        displayOrder: z.number().default(0),
+        isMainPhoto: z.number().default(0),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== "admin") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Apenas administradores podem adicionar fotos"
+          });
+        }
+        
+        const { addRoomPhoto } = await import("./db");
+        return addRoomPhoto({
+          roomId: input.roomId,
+          photoUrl: input.photoUrl,
+          caption: input.caption,
+          displayOrder: input.displayOrder,
+          isMainPhoto: input.isMainPhoto,
+        });
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ photoId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== "admin") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Apenas administradores podem deletar fotos"
+          });
+        }
+        
+        const { deleteRoomPhoto } = await import("./db");
+        const success = await deleteRoomPhoto(input.photoId);
+        return { success };
+      }),
+  }),
+});
+export type AppRouter = typeof appRouter;;
 

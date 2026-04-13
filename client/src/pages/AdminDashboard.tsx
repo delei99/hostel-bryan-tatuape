@@ -3,10 +3,12 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Calendar, Users, DollarSign, CheckCircle, Clock, X, Eye } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { Link } from "wouter";
 
 /**
  * Painel administrativo para gerenciar reservas
@@ -125,9 +127,16 @@ export default function AdminDashboard() {
     <DashboardLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-4xl font-bold text-foreground mb-2">Painel Administrativo</h1>
-          <p className="text-foreground/70">Gerencie todas as reservas do Hostel Bryan Tatuapé</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground mb-2">Painel Administrativo</h1>
+            <p className="text-foreground/70">Gerencie todas as reservas do Hostel Bryan Tatuapé</p>
+          </div>
+          <Link href="/admin/fotos">
+            <Button className="bg-accent hover:bg-opacity-90">
+              Gerenciar Fotos
+            </Button>
+          </Link>
         </div>
 
         {/* Estatísticas */}

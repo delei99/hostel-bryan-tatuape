@@ -93,16 +93,16 @@ export default function Home() {
                 O Hostel Bryan Tatuapé é um espaço sofisticado e acolhedor, perfeito para viajantes que buscam conforto e convivência. Localizado no bairro tradicional de Tatuapé, oferecemos uma experiência única com design elegante e serviços de qualidade.
               </p>
               <p className="text-foreground/70 mb-6 leading-relaxed">
-                Nossos quartos combinam privacidade e conforto, enquanto nossas áreas comuns promovem encontros memoráveis entre hóspedes de todo o mundo.
+                Com 7 quartos confortáveis, combinamos privacidade e conforto, enquanto nossas áreas comuns promovem encontros memoráveis entre hóspedes de todo o mundo.
               </p>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <MapPin className="w-5 h-5 text-accent" />
-                  <span className="text-foreground">Rua Tatuapé, São Paulo - SP</span>
+                  <span className="text-foreground">Rua Mauro Pinheiro 69, Chácara Califórnia - São Paulo, SP</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone className="w-5 h-5 text-accent" />
-                  <span className="text-foreground">(11) 98765-4321</span>
+                  <span className="text-foreground">(11) 99521-97283</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Mail className="w-5 h-5 text-accent" />
@@ -129,12 +129,12 @@ export default function Home() {
                 Estamos estrategicamente localizados no bairro de Tatuapé, um dos mais tradicionais de São Paulo, com fácil acesso a transportes públicos, restaurantes, comércios e pontos turísticos.
               </p>
               <p className="text-foreground/70 mb-8 leading-relaxed">
-                Clique no botão abaixo para traçar uma rota até o nostel usando seu aplicativo de mapas favorito.
+                Clique no botão abaixo para traçar uma rota até o hostel usando seu aplicativo de mapas favorito.
               </p>
               <Button 
                 size="lg" 
                 className="bg-accent hover:bg-opacity-90 text-white"
-                onClick={() => window.open('https://maps.google.com/?q=Tatuapé,+São+Paulo', '_blank')}
+                onClick={() => window.open('https://maps.google.com/?q=Rua+Mauro+Pinheiro+69,+Chácara+Califórnia,+São+Paulo', '_blank')}
               >
                 <MapPin className="w-5 h-5 mr-2" />
                 Ver Rotas no Google Maps
@@ -218,12 +218,14 @@ export default function Home() {
             </div>
             <div>
               <h4 className="font-bold mb-4">Contato</h4>
-              <p className="text-white/70 text-sm mb-2">(11) 98765-4321</p>
+              <p className="text-white/70 text-sm mb-2">(11) 99521-97283</p>
               <p className="text-white/70 text-sm">contato@hostelbryan.com.br</p>
             </div>
             <div>
               <h4 className="font-bold mb-4">Endereço</h4>
-              <p className="text-white/70 text-sm">Rua Tatuapé, São Paulo - SP</p>
+              <p className="text-white/70 text-sm">Rua Mauro Pinheiro 69</p>
+              <p className="text-white/70 text-sm">Chácara Califórnia</p>
+              <p className="text-white/70 text-sm">CEP 03404-120</p>
             </div>
             <div>
               <h4 className="font-bold mb-4">Links Rápidos</h4>
