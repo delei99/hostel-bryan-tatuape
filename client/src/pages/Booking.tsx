@@ -10,6 +10,18 @@ import { ArrowLeft, MessageCircle, CheckCircle, Copy } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Booking() {
+  // Funcao para obter data local sem timezone
+  const getLocalDateString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -18,8 +30,8 @@ export default function Booking() {
     cpf: "",
     nationality: "",
     roomId: "1",
-    checkInDate: new Date().toISOString().split('T')[0],
-    checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    checkInDate: getLocalDateString(today),
+    checkOutDate: getLocalDateString(tomorrow),
     numberOfGuests: "1",
     specialRequests: "",
   });
