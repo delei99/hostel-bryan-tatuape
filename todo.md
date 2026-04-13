@@ -176,3 +176,12 @@
 - [x] Incluir horários na mensagem de confirmação WhatsApp
 - [x] Validar formulário com novos campos
 - [x] Testar fluxo completo com horários
+
+
+## Fase 24: Seleção Múltipla de Datas e Quartos no Admin
+- [x] Adicionar checkbox para seleção múltipla de datas
+- [x] Adicionar checkbox para seleção múltipla de quartos
+- [x] Permitir bloquear/desbloquear múltiplas datas de uma vez
+- [x] Permitir bloquear/desbloquear múltiplos quartos de uma vez
+- [x] Manter estrutura atual do site intacta
+- [x] Testar seleção e ações em massa
