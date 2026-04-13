@@ -147,19 +147,10 @@ export default function Booking() {
       `${formData.specialRequests ? `Observações: ${formData.specialRequests}\n\n` : ''}` +
       `Aguardo confirmação!`;
 
-    // Copiar para clipboard
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(message).then(() => {
-        toast.success('Mensagem copiada! Abra o WhatsApp e cole.');
-      }).catch(() => {
-        toast.error('Erro ao copiar mensagem');
-      });
-    }
-
-    // Abrir WhatsApp
+    // Abrir WhatsApp com mensagem pré-preenchida
     const whatsappUrl = `https://wa.me/5511952197283?text=${encodeURIComponent(message)}`;
     
-    // Criar um link temporário e clicar nele
+    // Criar um link temporário e clicar nele (funciona melhor em mobile)
     const link = document.createElement('a');
     link.href = whatsappUrl;
     link.target = '_blank';
@@ -167,6 +158,8 @@ export default function Booking() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    toast.success('Abrindo WhatsApp...');
   };
 
   if (bookingSuccess) {
@@ -186,7 +179,7 @@ export default function Booking() {
 
             <div className="bg-accent/5 p-4 rounded-lg mb-6">
               <p className="text-foreground mb-4">
-                Clique no botão abaixo para enviar a confirmação para o WhatsApp
+                Clique no botão abaixo para enviar a confirmação automaticamente para o WhatsApp
               </p>
               <Button
                 onClick={handleSendWhatsApp}
