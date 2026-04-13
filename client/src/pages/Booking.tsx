@@ -180,8 +180,8 @@ export default function Booking() {
       `*CPF:* ${formData.cpf}\n` +
       `*Nacionalidade:* ${formData.nationality}\n\n` +
       `*Quarto:* ${room?.name}\n` +
-      `*Check-in:* ${new Date(formData.checkInDate).toLocaleDateString('pt-BR')}\n` +
-      `*Check-out:* ${new Date(formData.checkOutDate).toLocaleDateString('pt-BR')}\n` +
+      `*Check-in:* ${new Date(new Date(formData.checkInDate).getTime() + 86400000).toLocaleDateString('pt-BR')}\n` +
+      `*Check-out:* ${new Date(new Date(formData.checkOutDate).getTime() + 86400000).toLocaleDateString('pt-BR')}\n` +
       `*Hóspedes:* ${numberOfGuests} pessoa${numberOfGuests > 1 ? 's' : ''}\n\n` +
       `*Valores:*\n` +
       `Subtotal: R$ ${(priceCalculation.subtotal / 100).toFixed(2)}\n` +
