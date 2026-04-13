@@ -65,6 +65,7 @@ export const appRouter = router({
         discountAmount: z.number().default(0),
         cleaningFee: z.number().default(700),
         totalPrice: z.number(),
+        // Validação: desconto de 12% deve ser aplicado apenas para diária individual
         specialRequests: z.string().optional(),
         paymentMethod: z.string().optional(),
       }))

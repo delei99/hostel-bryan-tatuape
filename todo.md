@@ -81,7 +81,23 @@
 ## Fase 11: Integração Real de WhatsApp e Testes
 - [x] Integrar galeria da landing page com fotos reais dos quartos
 - [x] Criar testes Vitest para cálculo de preço com desconto
+- [x] Ajustar lógica de desconto para usar dailyType consistentemente
+- [x] Validar fluxo completo de reserva com desconto e limpeza
 - [ ] Integrar API real de WhatsApp (Twilio ou WhatsApp Cloud API)
-- [ ] Ajustar lógica de desconto para usar dailyType consistentemente
 - [ ] Criar testes Vitest para envio de WhatsApp
-- [ ] Validar fluxo completo de reserva com desconto e limpeza
+
+## Fase 12: Integração de WhatsApp e Testes de Integração
+- [ ] Implementar integração real com Twilio ou WhatsApp Cloud API
+- [ ] Criar testes de integração para bookings.create com desconto e limpeza
+- [ ] Validar persistência de campos no banco de dados
+- [ ] Testar fluxo completo de reserva com notificação ao dono
+- [ ] Implementar retry/fallback para falhas de WhatsApp
+
+
+## Fase 13: Ajustes de Layout e Comodidades
+- [x] Reorganizar espaçamento da landing page para melhor legibilidade
+- [x] Converter seleção de quartos em dropdown/select
+- [x] Atualizar preço de todos os quartos para R$ 80,00
+- [x] Remover comodidades: Ar Condicionado, Café da Manhã, Cozinha Compartilhada
+- [x] Manter apenas: WiFi, Espaço Social, Localização Estratégica
+- [x] Ajustar layout responsivo para mobile

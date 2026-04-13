@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { MapPin, Phone, Mail, Wifi, Coffee, Users, Utensils, Wind } from "lucide-react";
+import { MapPin, Phone, Mail, Wifi, Users } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
@@ -44,10 +44,7 @@ export default function Home() {
   // Comodidades do hostel
   const amenities = [
     { icon: Wifi, title: "WiFi Rápido", description: "Conexão de alta velocidade em todos os ambientes" },
-    { icon: Coffee, title: "Café da Manhã", description: "Café completo incluído na sua hospedagem" },
     { icon: Users, title: "Espaço Social", description: "Área comum para conhecer outros hóspedes" },
-    { icon: Utensils, title: "Cozinha Compartilhada", description: "Cozinha totalmente equipada para seus pratos" },
-    { icon: Wind, title: "Ar Condicionado", description: "Climatização em todos os quartos" },
     { icon: MapPin, title: "Localização Estratégica", description: "Próximo a pontos turísticos e transportes" },
   ];
 
@@ -173,7 +170,7 @@ export default function Home() {
       </section>
 
       {/* Comodidades */}
-      <section id="comodidades" className="py-20 md:py-32">
+      <section id="comodidades" className="py-24 md:py-40 bg-white/50">
         <div className="container">
           <h3 className="text-4xl font-bold text-foreground mb-12 text-center">Nossas Comodidades</h3>
           <div className="grid md:grid-cols-3 gap-8">
@@ -192,7 +189,7 @@ export default function Home() {
       </section>
 
       {/* Galeria */}
-      <section id="galeria" className="py-20 md:py-32 bg-accent/5">
+      <section id="galeria" className="py-24 md:py-40 bg-accent/5">
         <div className="container">
           <h3 className="text-4xl font-bold text-foreground mb-12 text-center">Galeria</h3>
           <div className="grid md:grid-cols-3 gap-6">
@@ -225,7 +222,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 md:py-32 bg-gradient-to-r from-accent to-secondary">
+      <section className="py-24 md:py-40 bg-gradient-to-r from-accent to-secondary">
         <div className="container text-center">
           <h3 className="text-4xl font-bold text-white mb-6">Pronto para sua próxima aventura?</h3>
           <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">

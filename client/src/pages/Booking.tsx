@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { ArrowLeft, Calendar, Users, DollarSign } from "lucide-react";
@@ -274,45 +275,27 @@ export default function Booking() {
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="roomId">Tipo de Quarto *</Label>
-                      <div className="space-y-3">
-                        {roomsLoading ? (
-                          <p className="text-foreground/70">Carregando quartos...</p>
-                        ) : rooms && rooms.length > 0 ? (
-                          rooms.map((room) => (
-                            <label
-                              key={room.id}
-                              className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                                formData.roomId === room.id
-                                  ? "border-accent bg-accent/10"
-                                  : "border-border hover:border-accent"
-                              }`}
-                            >
-                              <input
-                                type="radio"
-                                name="roomId"
-                                value={room.id}
-                                checked={formData.roomId === room.id}
-                                onChange={(e) => setFormData({ ...formData, roomId: parseInt(e.target.value) })}
-                                className="mr-3"
-                              />
-                              <span className="font-semibold text-foreground">{room.name}</span>
-                              <span className="text-accent ml-2 font-bold">R$ {(room.pricePerNight / 100).toFixed(2)}/noite</span>
-                              <p className="text-sm text-foreground/70 mt-1">{room.description}</p>
-                              {room.amenities && (
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  {JSON.parse(room.amenities).map((amenity: string, idx: number) => (
-                                    <span key={idx} className="text-xs bg-accent/20 text-accent px-2 py-1 rounded">
-                                      {amenity}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </label>
-                          ))
-                        ) : (
-                          <p className="text-foreground/70">Nenhum quarto disponível</p>
-                        )}
-                      </div>
+                      <Select
+                        value={formData.roomId.toString()}
+                        onValueChange={(value) => setFormData({ ...formData, roomId: parseInt(value) })}
+                      >
+                        <SelectTrigger id="roomId" className="w-full">
+                          <SelectValue placeholder="Selecione um quarto" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {roomsLoading ? (
+                            <div className="p-2 text-foreground/70">Carregando quartos...</div>
+                          ) : rooms && rooms.length > 0 ? (
+                            rooms.map((room) => (
+                              <SelectItem key={room.id} value={room.id.toString()}>
+                                {room.name} - R$ {(room.pricePerNight / 100).toFixed(2)}/noite
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <div className="p-2 text-foreground/70">Nenhum quarto disponível</div>
+                          )}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-4">
