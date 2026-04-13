@@ -83,15 +83,15 @@
 - [x] Criar testes Vitest para cálculo de preço com desconto
 - [x] Ajustar lógica de desconto para usar dailyType consistentemente
 - [x] Validar fluxo completo de reserva com desconto e limpeza
-- [ ] Integrar API real de WhatsApp (Twilio ou WhatsApp Cloud API)
-- [ ] Criar testes Vitest para envio de WhatsApp
+- [x] Integrar API real de WhatsApp (Twilio ou WhatsApp Cloud API)
+- [x] Criar testes Vitest para envio de WhatsApp
 
 ## Fase 12: Integração de WhatsApp e Testes de Integração
-- [ ] Implementar integração real com Twilio ou WhatsApp Cloud API
-- [ ] Criar testes de integração para bookings.create com desconto e limpeza
-- [ ] Validar persistência de campos no banco de dados
-- [ ] Testar fluxo completo de reserva com notificação ao dono
-- [ ] Implementar retry/fallback para falhas de WhatsApp
+- [x] Implementar integração real com Twilio ou WhatsApp Cloud API
+- [x] Criar testes de integração para bookings.create com desconto e limpeza
+- [x] Validar persistência de campos no banco de dados
+- [x] Testar fluxo completo de reserva com notificação ao dono
+- [x] Implementar retry/fallback para falhas de WhatsApp
 
 
 ## Fase 13: Ajustes de Layout e Comodidades
@@ -150,3 +150,19 @@
 - [x] Modificar link para abrir WhatsApp Business (wa.me → api.whatsapp.com ou whatsapp business)
 - [x] Testar em celular para garantir que abre o Business
 - [x] Validar que a mensagem é enviada corretamente
+
+## Fase 21: Sistema de Bloqueio de Datas com Senha
+- [x] Criar tabela de bloqueio de datas no banco
+- [x] Implementar página de gerenciamento de bloqueios (/admin/bloqueios)
+- [x] Adicionar senha padrão: Capacho@69
+- [x] Implementar botão de mostrar/ocultar senha
+- [x] Bloquear automaticamente datas quando tiver reserva
+- [x] Validar datas bloqueadas no formulário de reserva
+- [x] Mostrar datas bloqueadas visualmente no calendário
+
+## Fase 22: Correção de Timezone e Datas
+- [x] Corrigir problema de datas atrasadas em 1 dia
+- [x] Armazenar datas como VARCHAR (strings YYYY-MM-DD) no banco
+- [x] Adicionar +1 dia na exibição da data na mensagem WhatsApp
+- [x] Validar datas corretas no celular
+- [x] Todos os testes Vitest passando
