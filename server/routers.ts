@@ -56,8 +56,8 @@ export const appRouter = router({
         cpf: z.string().optional(),
         nationality: z.string().optional(),
         roomId: z.number(),
-        checkInDate: z.union([z.date(), z.string()]).transform(val => typeof val === 'string' ? new Date(val) : val),
-        checkOutDate: z.union([z.date(), z.string()]).transform(val => typeof val === 'string' ? new Date(val) : val),
+        checkInDate: z.string(),
+        checkOutDate: z.string(),
         numberOfGuests: z.number(),
         dailyType: z.enum(["couple", "individual"]).default("couple"),
         subtotal: z.number(),
@@ -88,12 +88,18 @@ export const appRouter = router({
           // Gerar código de confirmação
           const confirmationCode = nanoid(12).toUpperCase();
           
+          // Converter strings de data para Date objects
+          const stringToDate = (dateStr: string) => {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            return new Date(year, month - 1, day);
+          };
+          
           // Criar reserva
           const bookingId = await createBooking({
             guestId,
             roomId: input.roomId,
-            checkInDate: input.checkInDate,
-            checkOutDate: input.checkOutDate,
+            checkInDate: stringToDate(input.checkInDate),
+            checkOutDate: stringToDate(input.checkOutDate),
             numberOfGuests: input.numberOfGuests,
             dailyType: input.dailyType,
             discountPercentage: input.discountPercentage,
@@ -110,8 +116,8 @@ export const appRouter = router({
           try {
             await createBlockedDate({
               roomId: input.roomId,
-              startDate: input.checkInDate,
-              endDate: input.checkOutDate,
+              startDate: stringToDate(input.checkInDate),
+              endDate: stringToDate(input.checkOutDate),
               reason: "booking",
             });
           } catch (blockError) {
@@ -120,8 +126,12 @@ export const appRouter = router({
           }
           
           // Notificar dono
-          const checkInFormatted = input.checkInDate.toLocaleDateString('pt-BR');
-          const checkOutFormatted = input.checkOutDate.toLocaleDateString('pt-BR');
+          const parseDate = (dateStr: string) => {
+            const [year, month, day] = dateStr.split('-');
+            return `${day}/${month}/${year}`;
+          };
+          const checkInFormatted = parseDate(input.checkInDate);
+          const checkOutFormatted = parseDate(input.checkOutDate);
           const priceFormatted = (input.totalPrice / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
           const subtotalFormatted = (input.subtotal / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
           const discountFormatted = (input.discountAmount / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
