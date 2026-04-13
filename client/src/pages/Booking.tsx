@@ -129,9 +129,11 @@ export default function Booking() {
         `${formData.specialRequests ? `Observações: ${formData.specialRequests}\n\n` : ''}` +
         `Aguardo confirmação!`;
 
-      // Abrir WhatsApp
-      const whatsappUrl = `https://wa.me/5511952197283?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
+      // Abrir WhatsApp com delay
+      setTimeout(() => {
+        const whatsappUrl = `https://wa.me/5511952197283?text=${encodeURIComponent(message)}`;
+        window.location.href = whatsappUrl;
+      }, 500);
 
     } catch (error) {
       console.error("Erro:", error);
