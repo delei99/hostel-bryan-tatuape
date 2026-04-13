@@ -88,19 +88,12 @@ export const appRouter = router({
           // Gerar código de confirmação
           const confirmationCode = nanoid(12).toUpperCase();
           
-          // Converter strings de data para Date objects (midnight UTC + 1 dia)
-          const stringToDate = (dateStr: string) => {
-            const date = new Date(dateStr + 'T00:00:00Z');
-            date.setUTCDate(date.getUTCDate() + 1);
-            return date;
-          };
-          
-          // Criar reserva
+          // Criar reserva (manter datas como strings)
           const bookingId = await createBooking({
             guestId,
             roomId: input.roomId,
-            checkInDate: stringToDate(input.checkInDate),
-            checkOutDate: stringToDate(input.checkOutDate),
+            checkInDate: input.checkInDate,
+            checkOutDate: input.checkOutDate,
             numberOfGuests: input.numberOfGuests,
             dailyType: input.dailyType,
             discountPercentage: input.discountPercentage,
@@ -115,6 +108,10 @@ export const appRouter = router({
           
           // Bloquear automaticamente as datas da reserva
           try {
+            // Converter strings para Date objects para bloqueio
+            const stringToDate = (dateStr: string) => {
+              return new Date(dateStr + 'T00:00:00Z');
+            };
             await createBlockedDate({
               roomId: input.roomId,
               startDate: stringToDate(input.checkInDate),

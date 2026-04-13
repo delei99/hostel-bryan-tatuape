@@ -43,6 +43,13 @@
       "when": 1776097877522,
       "tag": "0005_tiresome_colleen_wing",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1776100444811,
+      "tag": "0006_left_stranger",
+      "breakpoints": true
     }
   ]
 }
