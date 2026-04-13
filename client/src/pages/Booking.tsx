@@ -127,6 +127,10 @@ export default function Booking() {
       const roomId = parseInt(formData.roomId);
       const numberOfGuests = parseInt(formData.numberOfGuests);
       
+      // Converter strings de data para Date corrigindo timezone
+      const checkInDate = new Date(formData.checkInDate + 'T00:00:00');
+      const checkOutDate = new Date(formData.checkOutDate + 'T00:00:00');
+      
       const result = await createBooking.mutateAsync({
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
@@ -135,8 +139,8 @@ export default function Booking() {
         cpf: formData.cpf.trim(),
         nationality: formData.nationality.trim(),
         roomId,
-        checkInDate: new Date(formData.checkInDate),
-        checkOutDate: new Date(formData.checkOutDate),
+        checkInDate,
+        checkOutDate,
         numberOfGuests,
         dailyType: numberOfGuests === 1 ? "individual" : "couple",
         subtotal: priceCalculation.subtotal,
