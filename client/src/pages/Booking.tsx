@@ -147,21 +147,34 @@ export default function Booking() {
       `${formData.specialRequests ? `Observações: ${formData.specialRequests}\n\n` : ''}` +
       `Aguardo confirmação!`;
 
-    // Abrir WhatsApp Business com mensagem pré-preenchida
-    // Tentar primeiro o WhatsApp Business, depois fallback para wa.me
-    const whatsappBusinessUrl = `https://api.whatsapp.com/send?phone=5511952197283&text=${encodeURIComponent(message)}`;
-    const whatsappUrl = whatsappBusinessUrl;
+    const phoneNumber = '5511952197283';
+    const encodedMessage = encodeURIComponent(message);
     
-    // Criar um link temporário e clicar nele (funciona melhor em mobile)
+    // Deep link do WhatsApp Business para Android (com.whatsapp.w4b)
+    const whatsappBusinessDeepLink = `intent://send?phone=${phoneNumber}&text=${encodedMessage}#Intent;scheme=whatsapp;package=com.whatsapp.w4b;end`;
+    
+    // Fallback para wa.me
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    
+    // Tentar abrir o deep link primeiro
     const link = document.createElement('a');
-    link.href = whatsappUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
+    link.href = whatsappBusinessDeepLink;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
     
-    toast.success('Abrindo WhatsApp...');
+    // Se não funcionar, tentar wa.me após 1 segundo
+    setTimeout(() => {
+      const fallbackLink = document.createElement('a');
+      fallbackLink.href = whatsappUrl;
+      fallbackLink.target = '_blank';
+      fallbackLink.rel = 'noopener noreferrer';
+      document.body.appendChild(fallbackLink);
+      fallbackLink.click();
+      document.body.removeChild(fallbackLink);
+    }, 1000);
+    
+    document.body.removeChild(link);
+    toast.success('Abrindo WhatsApp Business...');
   };
 
   if (bookingSuccess) {
@@ -181,14 +194,14 @@ export default function Booking() {
 
             <div className="bg-accent/5 p-4 rounded-lg mb-6">
               <p className="text-foreground mb-4">
-                Clique no botão abaixo para enviar a confirmação automaticamente para o WhatsApp
+                Clique no botão abaixo para enviar a confirmação automaticamente para o WhatsApp Business
               </p>
               <Button
                 onClick={handleSendWhatsApp}
                 className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg flex items-center justify-center gap-2"
               >
                 <MessageCircle className="w-5 h-5" />
-                Enviar para WhatsApp
+                Enviar para WhatsApp Business
               </Button>
             </div>
 
