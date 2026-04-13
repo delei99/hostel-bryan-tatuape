@@ -117,3 +117,10 @@
 - [x] Bloquear botão de reserva se campos vazios
 - [x] Enviar resumo para WhatsApp ao finalizar
 - [x] Exibir mensagem de sucesso com código de confirmação
+
+
+## Fase 16: Botão de Envio para WhatsApp
+- [x] Adicionar botão "Enviar para WhatsApp" na página de resumo
+- [x] Integrar número do dono (11 95219-7283)
+- [x] Formatar mensagem com todos os detalhes da reserva
+- [x] Testar fluxo completo de envio
