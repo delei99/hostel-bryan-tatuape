@@ -147,8 +147,20 @@ export default function Booking() {
       `${formData.specialRequests ? `Observações: ${formData.specialRequests}\n\n` : ''}` +
       `Aguardo confirmação!`;
 
-    const whatsappUrl = `https://wa.me/5511952197283?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    // Copiar para clipboard
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(message).then(() => {
+        toast.success('Mensagem copiada! Abra o WhatsApp e cole.');
+      }).catch(() => {
+        toast.error('Erro ao copiar mensagem');
+      });
+    }
+
+    // Abrir WhatsApp
+    const whatsappUrl = `https://wa.me/5511952197283`;
+    setTimeout(() => {
+      window.open(whatsappUrl, '_blank');
+    }, 500);
   };
 
   if (bookingSuccess) {
