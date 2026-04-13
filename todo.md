@@ -101,3 +101,10 @@
 - [x] Remover comodidades: Ar Condicionado, Café da Manhã, Cozinha Compartilhada
 - [x] Manter apenas: WiFi, Espaço Social, Localização Estratégica
 - [x] Ajustar layout responsivo para mobile
+
+
+## Fase 14: Corrigir Nomes dos Quartos e Opções de Ocupação
+- [x] Renomear quartos para "Quarto 01" até "Quarto 07"
+- [x] Adicionar opção de escolher 1 pessoa ou 2 pessoas por quarto
+- [x] Atualizar descrição dos quartos com capacidade
+- [x] Validar desconto de 12% apenas para 1 pessoa

@@ -25,7 +25,7 @@ export default function Booking() {
     checkInDate: new Date().toISOString().split('T')[0],
     checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
     numberOfGuests: 1,
-    dailyType: "couple" as "couple" | "individual",
+    dailyType: "individual" as "couple" | "individual",
     specialRequests: "",
     paymentMethod: "cash",
   });
@@ -51,17 +51,14 @@ export default function Booking() {
     
     const room = rooms.find(r => r.id === formData.roomId);
     if (!room) return { subtotal: 0, discountAmount: 0, totalPrice: 0, nights: 0 };
-
+    
     const checkIn = new Date(formData.checkInDate);
     const checkOut = new Date(formData.checkOutDate);
     const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
     
     const subtotal = Math.max(0, nights) * room.pricePerNight;
-    
-    // Aplicar desconto de 12% se for uma pessoa
+    // Desconto de 12% apenas para 1 pessoa
     const discountAmount = formData.numberOfGuests === 1 ? Math.floor(subtotal * (DISCOUNT_PERCENTAGE / 100)) : 0;
-    
-    // Total com desconto + limpeza
     const totalPrice = subtotal - discountAmount + CLEANING_FEE;
     
     return { subtotal, discountAmount, totalPrice, nights };
@@ -323,14 +320,18 @@ export default function Booking() {
 
                     <div>
                       <Label htmlFor="numberOfGuests">Número de Hóspedes *</Label>
-                      <Input
-                        id="numberOfGuests"
-                        type="number"
-                        min="1"
-                        value={formData.numberOfGuests}
-                        onChange={(e) => setFormData({ ...formData, numberOfGuests: parseInt(e.target.value) })}
-                        required
-                      />
+                      <Select
+                        value={formData.numberOfGuests.toString()}
+                        onValueChange={(value) => setFormData({ ...formData, numberOfGuests: parseInt(value) })}
+                      >
+                        <SelectTrigger id="numberOfGuests" className="w-full">
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 Pessoa</SelectItem>
+                          <SelectItem value="2">2 Pessoas</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
