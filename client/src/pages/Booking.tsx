@@ -6,13 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, Users, DollarSign, MessageCircle } from "lucide-react";
+import { ArrowLeft, MessageCircle } from "lucide-react";
 import { Link } from "wouter";
 
-/**
- * Página de reserva com formulário elegante
- * Permite seleção de quarto, datas, hóspedes e cálculo automático de preço
- */
 export default function Booking() {
   const [formData, setFormData] = useState({
     firstName: "",
@@ -21,92 +17,66 @@ export default function Booking() {
     phone: "",
     cpf: "",
     nationality: "",
-    roomId: 1,
+    roomId: "1",
     checkInDate: new Date().toISOString().split('T')[0],
     checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    numberOfGuests: 1,
-    dailyType: "individual" as "couple" | "individual",
+    numberOfGuests: "1",
     specialRequests: "",
-    paymentMethod: "cash",
   });
 
+  const [showReview, setShowReview] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
+
+  // Buscar quartos
+  const { data: rooms = [] } = trpc.rooms.list.useQuery();
+  const createBooking = trpc.bookings.create.useMutation();
+
   // Constantes
+  const PRICE_PER_NIGHT = 8000; // R$ 80,00 em centavos
   const CLEANING_FEE = 700; // R$ 7,00 em centavos
   const DISCOUNT_PERCENTAGE = 12; // 12% de desconto para uma pessoa
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
-  const [showReview, setShowReview] = useState(false);
-
-  // Buscar quartos disponíveis
-  const { data: rooms, isLoading: roomsLoading } = trpc.rooms.list.useQuery();
-
-  // Criar reserva
-  const createBooking = trpc.bookings.create.useMutation();
-
-  // Calcular preço total com desconto e limpeza
+  // Calcular preço
   const priceCalculation = useMemo(() => {
-    if (!rooms || !formData.checkInDate || !formData.checkOutDate) {
-      return { subtotal: 0, discountAmount: 0, totalPrice: 0, nights: 0 };
-    }
-    
-    const room = rooms.find(r => r.id === formData.roomId);
-    if (!room) return { subtotal: 0, discountAmount: 0, totalPrice: 0, nights: 0 };
-    
     const checkIn = new Date(formData.checkInDate);
     const checkOut = new Date(formData.checkOutDate);
     const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
     
-    const subtotal = Math.max(0, nights) * room.pricePerNight;
-    // Desconto de 12% apenas para 1 pessoa
-    const discountAmount = formData.numberOfGuests === 1 ? Math.floor(subtotal * (DISCOUNT_PERCENTAGE / 100)) : 0;
-    const totalPrice = subtotal - discountAmount + CLEANING_FEE;
-    
-    return { subtotal, discountAmount, totalPrice, nights };
-  }, [rooms, formData.checkInDate, formData.checkOutDate, formData.roomId, formData.numberOfGuests]);
+    if (nights <= 0) return { nights: 0, subtotal: 0, discount: 0, cleaning: CLEANING_FEE, total: 0 };
 
-  const { subtotal, discountAmount, totalPrice } = priceCalculation;
+    const subtotal = nights * PRICE_PER_NIGHT;
+    const discount = formData.numberOfGuests === "1" ? Math.floor(subtotal * DISCOUNT_PERCENTAGE / 100) : 0;
+    const total = subtotal - discount + CLEANING_FEE;
 
-  // Validar datas
-  const isValidDateRange = () => {
-    const checkIn = new Date(formData.checkInDate);
-    const checkOut = new Date(formData.checkOutDate);
-    return checkOut > checkIn;
+    return { nights, subtotal, discount, cleaning: CLEANING_FEE, total };
+  }, [formData.checkInDate, formData.checkOutDate, formData.numberOfGuests]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Validar formulário - TODOS OS CAMPOS OBRIGATÓRIOS
-  const isFormValid = () => {
-    return (
-      formData.firstName.trim() &&
-      formData.lastName.trim() &&
-      formData.email.includes("@") &&
-      formData.phone.trim() &&
-      formData.cpf.trim() &&
-      formData.nationality.trim() &&
-      formData.roomId > 0 &&
-      isValidDateRange() &&
-      formData.numberOfGuests > 0
-    );
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Enviar reserva - mostra página de revisão
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const isFormValid = formData.firstName && formData.lastName && formData.email && formData.phone && formData.cpf && formData.nationality && formData.checkInDate && formData.checkOutDate;
 
-    if (!isFormValid()) {
-      toast.error("Por favor, preencha todos os campos corretamente");
+  const handleReviewClick = () => {
+    if (!isFormValid) {
+      toast.error("Por favor, preencha todos os campos obrigatórios!");
       return;
     }
-
-    // Mostrar página de revisão
     setShowReview(true);
   };
 
-  // Finalizar reserva
   const handleFinalizeBooking = async () => {
-    setIsSubmitting(true);
-
     try {
+      setIsSubmitting(true);
+      const roomId = parseInt(formData.roomId);
+      const numberOfGuests = parseInt(formData.numberOfGuests);
+      
       const result = await createBooking.mutateAsync({
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -114,101 +84,64 @@ export default function Booking() {
         phone: formData.phone,
         cpf: formData.cpf,
         nationality: formData.nationality,
-        roomId: formData.roomId,
+        roomId,
         checkInDate: new Date(formData.checkInDate),
         checkOutDate: new Date(formData.checkOutDate),
-        numberOfGuests: formData.numberOfGuests,
-        dailyType: formData.dailyType,
-        subtotal,
-        discountPercentage: formData.numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : 0,
-        discountAmount,
+        numberOfGuests,
+        dailyType: numberOfGuests === 1 ? "individual" : "couple",
+        subtotal: priceCalculation.subtotal,
+        discountPercentage: numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : 0,
+        discountAmount: priceCalculation.discount,
         cleaningFee: CLEANING_FEE,
-        totalPrice,
+        totalPrice: priceCalculation.total,
         specialRequests: formData.specialRequests,
-        paymentMethod: formData.paymentMethod,
       });
 
       setConfirmationCode(result.confirmationCode);
-      setShowReview(false);
       toast.success("Reserva criada com sucesso!");
+
+      // Gerar mensagem WhatsApp
+      const room = rooms.find(r => r.id === roomId);
+      const message = `*Reserva Confirmada - Hostel Bryan Tatuapé*\n\n` +
+        `*Código: ${result.confirmationCode}*\n\n` +
+        `*Hóspede:* ${formData.firstName} ${formData.lastName}\n` +
+        `*Email:* ${formData.email}\n` +
+        `*Telefone:* ${formData.phone}\n` +
+        `*CPF:* ${formData.cpf}\n` +
+        `*Nacionalidade:* ${formData.nationality}\n\n` +
+        `*Quarto:* ${room?.name}\n` +
+        `*Check-in:* ${new Date(formData.checkInDate).toLocaleDateString('pt-BR')}\n` +
+        `*Check-out:* ${new Date(formData.checkOutDate).toLocaleDateString('pt-BR')}\n` +
+        `*Hóspedes:* ${numberOfGuests} pessoa${numberOfGuests > 1 ? 's' : ''}\n\n` +
+        `*Valores:*\n` +
+        `Subtotal: R$ ${(priceCalculation.subtotal / 100).toFixed(2)}\n` +
+        `${priceCalculation.discount > 0 ? `Desconto (12%): -R$ ${(priceCalculation.discount / 100).toFixed(2)}\n` : ''}` +
+        `Limpeza: R$ ${(priceCalculation.cleaning / 100).toFixed(2)}\n` +
+        `*Total: R$ ${(priceCalculation.total / 100).toFixed(2)}*\n\n` +
+        `${formData.specialRequests ? `Observações: ${formData.specialRequests}\n\n` : ''}` +
+        `Aguardo confirmação!`;
+
+      // Abrir WhatsApp
+      const whatsappUrl = `https://wa.me/5511952197283?text=${encodeURIComponent(message)}`;
+      setTimeout(() => {
+        window.open(whatsappUrl, '_blank');
+      }, 500);
+
     } catch (error) {
+      console.error("Erro ao criar reserva:", error);
       toast.error("Erro ao criar reserva. Tente novamente.");
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Tela de confirmação
-  if (confirmationCode) {
-    return (
-      <div className="min-h-screen bg-background py-12">
-        <div className="container max-w-2xl">
-          <Card className="p-8 text-center">
-            <div className="mb-6">
-              <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <DollarSign className="w-8 h-8 text-accent" />
-              </div>
-              <h2 className="text-3xl font-bold text-foreground mb-2">Reserva Confirmada!</h2>
-              <p className="text-foreground/70">Sua reserva foi criada com sucesso</p>
-            </div>
-
-            <div className="bg-accent/10 rounded-lg p-6 mb-6">
-              <p className="text-sm text-foreground/70 mb-2">Código de Confirmação</p>
-              <p className="text-2xl font-bold text-accent font-mono">{confirmationCode}</p>
-            </div>
-
-            <p className="text-foreground/70 mb-8">
-              Um e-mail de confirmação foi enviado para <strong>{formData.email}</strong>
-            </p>
-
-            <Link href="/">
-              <Button className="w-full bg-accent hover:bg-opacity-90 text-white">
-                Voltar para Home
-              </Button>
-            </Link>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  // Página de Resumo
   if (showReview) {
-    const room = rooms?.find(r => r.id === formData.roomId);
-    const checkInDate = new Date(formData.checkInDate);
-    const checkOutDate = new Date(formData.checkOutDate);
-    const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    // Gerar mensagem WhatsApp
-    const whatsappMessage = `Olá! Gostaria de confirmar minha reserva no Hostel Bryan Tatuapé:\n\n` +
-      `*Dados do Hóspede:*\n` +
-      `Nome: ${formData.firstName} ${formData.lastName}\n` +
-      `Email: ${formData.email}\n` +
-      `Telefone: ${formData.phone}\n` +
-      `CPF: ${formData.cpf}\n\n` +
-      `*Detalhes da Reserva:*\n` +
-      `Quarto: ${room?.name}\n` +
-      `Check-in: ${checkInDate.toLocaleDateString('pt-BR')}\n` +
-      `Check-out: ${checkOutDate.toLocaleDateString('pt-BR')}\n` +
-      `Noites: ${nights}\n` +
-      `Hóspedes: ${formData.numberOfGuests} pessoa${formData.numberOfGuests > 1 ? 's' : ''}\n\n` +
-      `*Valores:*\n` +
-      `Subtotal: R$ ${(subtotal / 100).toFixed(2)}\n` +
-      `${discountAmount > 0 ? `Desconto (12%): -R$ ${(discountAmount / 100).toFixed(2)}\n` : ''}` +
-      `Limpeza: R$ ${(CLEANING_FEE / 100).toFixed(2)}\n` +
-      `*Total: R$ ${(totalPrice / 100).toFixed(2)}*\n\n` +
-      `${formData.specialRequests ? `Observações: ${formData.specialRequests}\n\n` : ''}` +
-      `Aguardo confirmação!`;
-
-    const whatsappUrl = `https://wa.me/5511952197283?text=${encodeURIComponent(whatsappMessage)}`;
-
     return (
       <div className="min-h-screen bg-background py-12">
         <div className="container max-w-2xl">
           <button
             onClick={() => setShowReview(false)}
-            className="flex items-center gap-2 text-accent hover:text-accent/80 mb-6 transition-colors"
+            className="flex items-center gap-2 text-accent hover:text-accent/80 mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
             Voltar
@@ -220,74 +153,48 @@ export default function Booking() {
             {/* Dados do Hóspede */}
             <div className="mb-8">
               <h3 className="text-xl font-bold text-foreground mb-4">Dados do Hóspede</h3>
-              <div className="bg-accent/5 rounded-lg p-6 space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-foreground/70">Nome:</span>
-                  <span className="font-semibold text-foreground">{formData.firstName} {formData.lastName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground/70">Email:</span>
-                  <span className="font-semibold text-foreground">{formData.email}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground/70">Telefone:</span>
-                  <span className="font-semibold text-foreground">{formData.phone}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground/70">CPF:</span>
-                  <span className="font-semibold text-foreground">{formData.cpf}</span>
-                </div>
+              <div className="bg-accent/5 rounded-lg p-6 space-y-2">
+                <div><span className="text-foreground/70">Nome:</span> <span className="font-semibold">{formData.firstName} {formData.lastName}</span></div>
+                <div><span className="text-foreground/70">Email:</span> <span className="font-semibold">{formData.email}</span></div>
+                <div><span className="text-foreground/70">Telefone:</span> <span className="font-semibold">{formData.phone}</span></div>
+                <div><span className="text-foreground/70">CPF:</span> <span className="font-semibold">{formData.cpf}</span></div>
+                <div><span className="text-foreground/70">Nacionalidade:</span> <span className="font-semibold">{formData.nationality}</span></div>
               </div>
             </div>
 
             {/* Detalhes da Reserva */}
             <div className="mb-8">
               <h3 className="text-xl font-bold text-foreground mb-4">Detalhes da Reserva</h3>
-              <div className="bg-accent/5 rounded-lg p-6 space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-foreground/70">Quarto:</span>
-                  <span className="font-semibold text-foreground">{room?.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground/70">Check-in:</span>
-                  <span className="font-semibold text-foreground">{checkInDate.toLocaleDateString('pt-BR')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground/70">Check-out:</span>
-                  <span className="font-semibold text-foreground">{checkOutDate.toLocaleDateString('pt-BR')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground/70">Noites:</span>
-                  <span className="font-semibold text-foreground">{nights}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground/70">Hóspedes:</span>
-                  <span className="font-semibold text-foreground">{formData.numberOfGuests} pessoa{formData.numberOfGuests > 1 ? 's' : ''}</span>
-                </div>
+              <div className="bg-accent/5 rounded-lg p-6 space-y-2">
+                <div><span className="text-foreground/70">Quarto:</span> <span className="font-semibold">{rooms.find(r => r.id === parseInt(formData.roomId))?.name}</span></div>
+                <div><span className="text-foreground/70">Check-in:</span> <span className="font-semibold">{new Date(formData.checkInDate).toLocaleDateString('pt-BR')}</span></div>
+                <div><span className="text-foreground/70">Check-out:</span> <span className="font-semibold">{new Date(formData.checkOutDate).toLocaleDateString('pt-BR')}</span></div>
+                <div><span className="text-foreground/70">Noites:</span> <span className="font-semibold">{priceCalculation.nights}</span></div>
+                <div><span className="text-foreground/70">Hóspedes:</span> <span className="font-semibold">{formData.numberOfGuests} pessoa{parseInt(formData.numberOfGuests) > 1 ? 's' : ''}</span></div>
               </div>
             </div>
 
             {/* Valores */}
             <div className="mb-8">
               <h3 className="text-xl font-bold text-foreground mb-4">Valores</h3>
-              <div className="bg-accent/5 rounded-lg p-6 space-y-3">
+              <div className="bg-accent/5 rounded-lg p-6 space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-foreground/70">Subtotal ({nights}x):</span>
-                  <span className="font-semibold text-foreground">R$ {(subtotal / 100).toFixed(2)}</span>
+                  <span className="text-foreground/70">Subtotal ({priceCalculation.nights}x):</span>
+                  <span className="font-semibold">R$ {(priceCalculation.subtotal / 100).toFixed(2)}</span>
                 </div>
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-accent">
-                    <span className="text-foreground/70">Desconto (12%):</span>
-                    <span className="font-semibold">-R$ {(discountAmount / 100).toFixed(2)}</span>
+                {priceCalculation.discount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Desconto (12%):</span>
+                    <span className="font-semibold">-R$ {(priceCalculation.discount / 100).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span className="text-foreground/70">Limpeza:</span>
-                  <span className="font-semibold text-foreground">R$ {(CLEANING_FEE / 100).toFixed(2)}</span>
+                  <span className="font-semibold">R$ {(priceCalculation.cleaning / 100).toFixed(2)}</span>
                 </div>
-                <div className="border-t border-border pt-3 flex justify-between">
-                  <span className="text-lg font-bold text-foreground">Total:</span>
-                  <span className="text-lg font-bold text-accent">R$ {(totalPrice / 100).toFixed(2)}</span>
+                <div className="flex justify-between border-t pt-2 text-lg">
+                  <span className="font-bold text-foreground">Total:</span>
+                  <span className="font-bold text-accent">R$ {(priceCalculation.total / 100).toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -303,14 +210,7 @@ export default function Booking() {
                 Voltar
               </Button>
               <Button
-                onClick={async () => {
-                  await handleFinalizeBooking();
-                  if (confirmationCode) {
-                    setTimeout(() => {
-                      window.open(whatsappUrl, '_blank');
-                    }, 500);
-                  }
-                }}
+                onClick={handleFinalizeBooking}
                 disabled={isSubmitting}
                 className="flex-1 bg-accent hover:bg-opacity-90 text-white flex items-center justify-center gap-2"
               >
@@ -324,245 +224,179 @@ export default function Booking() {
     );
   }
 
-  // Formulário de Reserva
   return (
     <div className="min-h-screen bg-background py-12">
-      <div className="container max-w-4xl">
-        <Link href="/">
-          <button className="flex items-center gap-2 text-accent hover:text-accent/80 mb-8 transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            Voltar
-          </button>
+      <div className="container max-w-2xl">
+        <Link href="/" className="flex items-center gap-2 text-accent hover:text-accent/80 mb-6">
+          <ArrowLeft className="w-4 h-4" />
+          Voltar
         </Link>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* Formulário */}
-          <div className="md:col-span-2">
-            <Card className="p-8">
-              <h1 className="text-4xl font-bold text-foreground mb-8">Fazer Reserva</h1>
+        <Card className="p-8">
+          <h1 className="text-3xl font-bold text-foreground mb-8">Fazer Reserva</h1>
 
-              <form onSubmit={handleSubmit} className="space-y-8">
-                {/* Seção: Dados Pessoais */}
-                <div>
-                  <h3 className="text-xl font-bold text-foreground mb-4">Dados Pessoais *</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="firstName">Nome *</Label>
-                      <Input
-                        id="firstName"
-                        value={formData.firstName}
-                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="lastName">Sobrenome *</Label>
-                      <Input
-                        id="lastName"
-                        value={formData.lastName}
-                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Seção: Contato */}
-                <div>
-                  <h3 className="text-xl font-bold text-foreground mb-4">Contato *</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="email">Email *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">Telefone *</Label>
-                      <Input
-                        id="phone"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Seção: Documentos */}
-                <div>
-                  <h3 className="text-xl font-bold text-foreground mb-4">Documentos *</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="cpf">CPF *</Label>
-                      <Input
-                        id="cpf"
-                        value={formData.cpf}
-                        onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
-                        placeholder="000.000.000-00"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="nationality">Nacionalidade *</Label>
-                      <Input
-                        id="nationality"
-                        value={formData.nationality}
-                        onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                        placeholder="Ex: Brasileira"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Seção: Acomodação */}
-                <div>
-                  <h3 className="text-xl font-bold text-foreground mb-4">Acomodação *</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="roomId">Quarto *</Label>
-                      <Select
-                        value={formData.roomId.toString()}
-                        onValueChange={(value) => setFormData({ ...formData, roomId: parseInt(value) })}
-                      >
-                        <SelectTrigger id="roomId" className="w-full">
-                          <SelectValue placeholder="Selecione um quarto" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {roomsLoading ? (
-                            <SelectItem value="0" disabled>Carregando quartos...</SelectItem>
-                          ) : (
-                            rooms?.map(room => (
-                              <SelectItem key={room.id} value={room.id.toString()}>
-                                {room.name} - R$ {(room.pricePerNight / 100).toFixed(2)}/noite
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="numberOfGuests">Número de Hóspedes *</Label>
-                      <Select
-                        value={formData.numberOfGuests.toString()}
-                        onValueChange={(value) => setFormData({ ...formData, numberOfGuests: parseInt(value) })}
-                      >
-                        <SelectTrigger id="numberOfGuests" className="w-full">
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1 Pessoa</SelectItem>
-                          <SelectItem value="2">2 Pessoas</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Seção: Datas */}
-                <div>
-                  <h3 className="text-xl font-bold text-foreground mb-4">Datas *</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="checkInDate">Check-in *</Label>
-                      <Input
-                        id="checkInDate"
-                        type="date"
-                        value={formData.checkInDate}
-                        onChange={(e) => setFormData({ ...formData, checkInDate: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="checkOutDate">Check-out *</Label>
-                      <Input
-                        id="checkOutDate"
-                        type="date"
-                        value={formData.checkOutDate}
-                        onChange={(e) => setFormData({ ...formData, checkOutDate: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Seção: Pedidos Especiais */}
-                <div>
-                  <h3 className="text-xl font-bold text-foreground mb-4">Pedidos Especiais</h3>
-                  <div>
-                    <Label htmlFor="specialRequests">Observações</Label>
-                    <textarea
-                      id="specialRequests"
-                      value={formData.specialRequests}
-                      onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
-                      placeholder="Deixe aqui qualquer observação importante..."
-                      className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
-                      rows={4}
-                    />
-                  </div>
-                </div>
-
-                {/* Botão Enviar */}
-                <Button
-                  type="submit"
-                  disabled={!isFormValid() || isSubmitting}
-                  className="w-full bg-accent hover:bg-opacity-90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? "Processando..." : "Revisar Reserva"}
-                </Button>
-              </form>
-            </Card>
+          {/* Seleção de Quarto */}
+          <div className="mb-6">
+            <Label htmlFor="roomId">Quarto *</Label>
+            <Select value={formData.roomId} onValueChange={(value) => handleSelectChange('roomId', value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {rooms.map(room => (
+                  <SelectItem key={room.id} value={room.id.toString()}>
+                    {room.name} - R$ 80,00/noite
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Resumo Lateral */}
-          <div>
-            <Card className="p-6 sticky top-8">
-              <h3 className="text-lg font-bold text-foreground mb-6">Resumo</h3>
-              
-              {rooms && (
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-foreground/70 mb-1">Quarto</p>
-                    <p className="font-semibold text-foreground">{rooms.find(r => r.id === formData.roomId)?.name}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm text-foreground/70 mb-1">Período</p>
-                    <p className="font-semibold text-foreground">
-                      {new Date(formData.checkInDate).toLocaleDateString('pt-BR')} - {new Date(formData.checkOutDate).toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
-
-                  <div className="border-t border-border pt-4">
-                    <div className="flex justify-between mb-2">
-                      <span className="text-foreground/70">Subtotal:</span>
-                      <span className="font-semibold">R$ {(subtotal / 100).toFixed(2)}</span>
-                    </div>
-                    {discountAmount > 0 && (
-                      <div className="flex justify-between mb-2 text-accent">
-                        <span className="text-foreground/70">Desconto (12%):</span>
-                        <span className="font-semibold">-R$ {(discountAmount / 100).toFixed(2)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between mb-4">
-                      <span className="text-foreground/70">Limpeza:</span>
-                      <span className="font-semibold">R$ {(CLEANING_FEE / 100).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between border-t border-border pt-4">
-                      <span className="font-bold text-foreground">Total:</span>
-                      <span className="text-lg font-bold text-accent">R$ {(totalPrice / 100).toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </Card>
+          {/* Datas */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <Label htmlFor="checkInDate">Check-in *</Label>
+              <Input
+                type="date"
+                name="checkInDate"
+                value={formData.checkInDate}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="checkOutDate">Check-out *</Label>
+              <Input
+                type="date"
+                name="checkOutDate"
+                value={formData.checkOutDate}
+                onChange={handleInputChange}
+              />
+            </div>
           </div>
-        </div>
+
+          {/* Número de Hóspedes */}
+          <div className="mb-6">
+            <Label htmlFor="numberOfGuests">Número de Hóspedes *</Label>
+            <Select value={formData.numberOfGuests} onValueChange={(value) => handleSelectChange('numberOfGuests', value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1 Pessoa</SelectItem>
+                <SelectItem value="2">2 Pessoas</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Dados Pessoais */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <Label htmlFor="firstName">Primeiro Nome *</Label>
+              <Input
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                placeholder="João"
+              />
+            </div>
+            <div>
+              <Label htmlFor="lastName">Sobrenome *</Label>
+              <Input
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                placeholder="Silva"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="joao@example.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone">Telefone *</Label>
+              <Input
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                placeholder="(11) 99999-9999"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <Label htmlFor="cpf">CPF *</Label>
+              <Input
+                name="cpf"
+                value={formData.cpf}
+                onChange={handleInputChange}
+                placeholder="123.456.789-00"
+              />
+            </div>
+            <div>
+              <Label htmlFor="nationality">Nacionalidade *</Label>
+              <Input
+                name="nationality"
+                value={formData.nationality}
+                onChange={handleInputChange}
+                placeholder="Brasileira"
+              />
+            </div>
+          </div>
+
+          {/* Observações */}
+          <div className="mb-8">
+            <Label htmlFor="specialRequests">Observações</Label>
+            <textarea
+              name="specialRequests"
+              value={formData.specialRequests}
+              onChange={handleInputChange}
+              placeholder="Alguma solicitação especial?"
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+              rows={3}
+            />
+          </div>
+
+          {/* Resumo de Preço */}
+          <div className="mb-8 p-4 bg-accent/5 rounded-lg">
+            <div className="flex justify-between mb-2">
+              <span>Subtotal ({priceCalculation.nights} noites):</span>
+              <span>R$ {(priceCalculation.subtotal / 100).toFixed(2)}</span>
+            </div>
+            {priceCalculation.discount > 0 && (
+              <div className="flex justify-between mb-2 text-green-600">
+                <span>Desconto (12%):</span>
+                <span>-R$ {(priceCalculation.discount / 100).toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between mb-2">
+              <span>Limpeza:</span>
+              <span>R$ {(priceCalculation.cleaning / 100).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-lg font-bold border-t pt-2">
+              <span>Total:</span>
+              <span className="text-accent">R$ {(priceCalculation.total / 100).toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Botão */}
+          <Button
+            onClick={handleReviewClick}
+            disabled={!isFormValid}
+            className="w-full bg-accent hover:bg-opacity-90 text-white py-6 text-lg"
+          >
+            Revisar Reserva
+          </Button>
+        </Card>
       </div>
     </div>
   );
