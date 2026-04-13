@@ -69,3 +69,18 @@
 - [ ] Criar 7 quartos no banco de dados com preços e descrições
 - [ ] Exibir fotos dos quartos na página de reserva
 - [ ] Exibir fotos dos quartos na galeria da landing page
+
+## Fase 10: Adicionar Desconto, Limpeza e Notificação WhatsApp
+- [x] Adicionar opção de escolher diária de casal ou individual
+- [x] Implementar desconto de 12% para uma pessoa
+- [x] Adicionar taxa de limpeza única (R$ 7,00)
+- [x] Integrar envio de confirmação via WhatsApp
+- [x] Atualizar cálculo de preço com desconto e limpeza
+- [x] Exibir resumo com desconto e limpeza no formulário
+
+## Fase 11: Integração Real de WhatsApp e Testes
+- [ ] Integrar API real de WhatsApp (Twilio ou WhatsApp Cloud API)
+- [ ] Ajustar lógica de desconto para usar dailyType consistentemente
+- [ ] Criar testes Vitest para cálculo de preço com desconto
+- [ ] Criar testes Vitest para envio de WhatsApp
+- [ ] Validar fluxo completo de reserva com desconto e limpeza

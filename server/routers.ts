@@ -59,6 +59,11 @@ export const appRouter = router({
         checkInDate: z.date(),
         checkOutDate: z.date(),
         numberOfGuests: z.number(),
+        dailyType: z.enum(["couple", "individual"]).default("couple"),
+        subtotal: z.number(),
+        discountPercentage: z.number().default(0),
+        discountAmount: z.number().default(0),
+        cleaningFee: z.number().default(700),
         totalPrice: z.number(),
         specialRequests: z.string().optional(),
         paymentMethod: z.string().optional(),
@@ -89,6 +94,11 @@ export const appRouter = router({
             checkInDate: input.checkInDate,
             checkOutDate: input.checkOutDate,
             numberOfGuests: input.numberOfGuests,
+            dailyType: input.dailyType,
+            discountPercentage: input.discountPercentage,
+            discountAmount: input.discountAmount,
+            cleaningFee: input.cleaningFee,
+            subtotal: input.subtotal,
             totalPrice: input.totalPrice,
             specialRequests: input.specialRequests,
             paymentMethod: input.paymentMethod,
@@ -99,25 +109,43 @@ export const appRouter = router({
           const checkInFormatted = input.checkInDate.toLocaleDateString('pt-BR');
           const checkOutFormatted = input.checkOutDate.toLocaleDateString('pt-BR');
           const priceFormatted = (input.totalPrice / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          const subtotalFormatted = (input.subtotal / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          const discountFormatted = (input.discountAmount / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          const cleaningFormatted = (input.cleaningFee / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          
+          const whatsappMessage = `Olá! Sua reserva foi confirmada!\n\n📋 Detalhes da Reserva:\nCódigo: ${confirmationCode}\nDiária: ${input.dailyType === 'couple' ? 'Casal' : 'Individual'}\n\n📅 Datas:\nCheck-in: ${checkInFormatted}\nCheck-out: ${checkOutFormatted}\nHóspedes: ${input.numberOfGuests}\n\n💰 Valores:\nSubtotal: ${subtotalFormatted}${input.discountAmount > 0 ? `\nDesconto 12%: -${discountFormatted}` : ''}\nLimpeza: ${cleaningFormatted}\nTOTAL: ${priceFormatted}\n\nObrigado por escolher o Hostel Bryan Tatuapé!`;
           
           await notifyOwner({
-            title: `Nova Reserva - ${input.firstName} ${input.lastName}`,
-            content: `Uma nova reserva foi confirmada no Hostel Bryan Tatuapé!\n\n` +
-              `Hóspede: ${input.firstName} ${input.lastName}\n` +
+            title: `🆕 Nova Reserva - ${input.firstName} ${input.lastName}`,
+            content: `✅ NOVA RESERVA CONFIRMADA\n\n` +
+              `👤 HÓSPEDE:\n` +
+              `Nome: ${input.firstName} ${input.lastName}\n` +
               `Email: ${input.email}\n` +
-              `Telefone: ${input.phone || 'N/A'}\n\n` +
-              `Quarto: ${input.roomId}\n` +
+              `Telefone: ${input.phone || 'Não informado'}\n` +
+              `CPF: ${input.cpf || 'Não informado'}\n` +
+              `Nacionalidade: ${input.nationality || 'Não informado'}\n\n` +
+              `🏠 ACOMODAÇÃO:\n` +
+              `Tipo de Diária: ${input.dailyType === 'couple' ? 'Casal' : 'Individual'}\n\n` +
+              `📅 PERÍODO:\n` +
               `Check-in: ${checkInFormatted}\n` +
               `Check-out: ${checkOutFormatted}\n` +
-              `Hóspedes: ${input.numberOfGuests}\n` +
-              `Valor Total: ${priceFormatted}\n\n` +
-              `Código de Confirmação: ${confirmationCode}`
+              `Hóspedes: ${input.numberOfGuests}\n\n` +
+              `💰 VALORES:\n` +
+              `Subtotal: ${subtotalFormatted}\n` +
+              `${input.discountAmount > 0 ? `Desconto 12%: -${discountFormatted}\n` : ''}` +
+              `Limpeza: ${cleaningFormatted}\n` +
+              `TOTAL: ${priceFormatted}\n\n` +
+              `📝 Observações: ${input.specialRequests || 'Nenhuma'}\n\n` +
+              `✅ Código de Confirmação: ${confirmationCode}\n\n` +
+              `📱 MENSAGEM WHATSAPP A ENVIAR:\n` +
+              `${whatsappMessage}`
           });
           
           return {
             success: true,
             bookingId,
             confirmationCode,
+            whatsappMessage,
           };
         } catch (error) {
           console.error("Error creating booking:", error);

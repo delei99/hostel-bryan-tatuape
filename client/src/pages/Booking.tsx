@@ -24,9 +24,14 @@ export default function Booking() {
     checkInDate: new Date().toISOString().split('T')[0],
     checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
     numberOfGuests: 1,
+    dailyType: "couple" as "couple" | "individual",
     specialRequests: "",
     paymentMethod: "cash",
   });
+
+  // Constantes
+  const CLEANING_FEE = 700; // R$ 7,00 em centavos
+  const DISCOUNT_PERCENTAGE = 12; // 12% de desconto para uma pessoa
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
@@ -37,19 +42,31 @@ export default function Booking() {
   // Criar reserva
   const createBooking = trpc.bookings.create.useMutation();
 
-  // Calcular preço total
-  const totalPrice = useMemo(() => {
-    if (!rooms || !formData.checkInDate || !formData.checkOutDate) return 0;
+  // Calcular preço total com desconto e limpeza
+  const priceCalculation = useMemo(() => {
+    if (!rooms || !formData.checkInDate || !formData.checkOutDate) {
+      return { subtotal: 0, discountAmount: 0, totalPrice: 0, nights: 0 };
+    }
     
     const room = rooms.find(r => r.id === formData.roomId);
-    if (!room) return 0;
+    if (!room) return { subtotal: 0, discountAmount: 0, totalPrice: 0, nights: 0 };
 
     const checkIn = new Date(formData.checkInDate);
     const checkOut = new Date(formData.checkOutDate);
     const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
     
-    return Math.max(0, nights) * room.pricePerNight;
-  }, [rooms, formData.checkInDate, formData.checkOutDate, formData.roomId]);
+    const subtotal = Math.max(0, nights) * room.pricePerNight;
+    
+    // Aplicar desconto de 12% se for uma pessoa
+    const discountAmount = formData.numberOfGuests === 1 ? Math.floor(subtotal * (DISCOUNT_PERCENTAGE / 100)) : 0;
+    
+    // Total com desconto + limpeza
+    const totalPrice = subtotal - discountAmount + CLEANING_FEE;
+    
+    return { subtotal, discountAmount, totalPrice, nights };
+  }, [rooms, formData.checkInDate, formData.checkOutDate, formData.roomId, formData.numberOfGuests]);
+
+  const { subtotal, discountAmount, totalPrice } = priceCalculation;
 
   // Validar datas
   const isValidDateRange = () => {
@@ -92,6 +109,11 @@ export default function Booking() {
         checkInDate: new Date(formData.checkInDate),
         checkOutDate: new Date(formData.checkOutDate),
         numberOfGuests: formData.numberOfGuests,
+        dailyType: formData.dailyType,
+        subtotal,
+        discountPercentage: formData.numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : 0,
+        discountAmount,
+        cleaningFee: CLEANING_FEE,
         totalPrice,
         specialRequests: formData.specialRequests,
         paymentMethod: formData.paymentMethod,
@@ -252,25 +274,45 @@ export default function Booking() {
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="roomId">Tipo de Quarto *</Label>
-                      <select
-                        id="roomId"
-                        value={formData.roomId}
-                        onChange={(e) => setFormData({ ...formData, roomId: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
-                        required
-                      >
+                      <div className="space-y-3">
                         {roomsLoading ? (
-                          <option>Carregando quartos...</option>
+                          <p className="text-foreground/70">Carregando quartos...</p>
                         ) : rooms && rooms.length > 0 ? (
                           rooms.map((room) => (
-                            <option key={room.id} value={room.id}>
-                              {room.name} - R$ {(room.pricePerNight / 100).toFixed(2)}/noite
-                            </option>
+                            <label
+                              key={room.id}
+                              className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                                formData.roomId === room.id
+                                  ? "border-accent bg-accent/10"
+                                  : "border-border hover:border-accent"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="roomId"
+                                value={room.id}
+                                checked={formData.roomId === room.id}
+                                onChange={(e) => setFormData({ ...formData, roomId: parseInt(e.target.value) })}
+                                className="mr-3"
+                              />
+                              <span className="font-semibold text-foreground">{room.name}</span>
+                              <span className="text-accent ml-2 font-bold">R$ {(room.pricePerNight / 100).toFixed(2)}/noite</span>
+                              <p className="text-sm text-foreground/70 mt-1">{room.description}</p>
+                              {room.amenities && (
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  {JSON.parse(room.amenities).map((amenity: string, idx: number) => (
+                                    <span key={idx} className="text-xs bg-accent/20 text-accent px-2 py-1 rounded">
+                                      {amenity}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </label>
                           ))
                         ) : (
-                          <option>Nenhum quarto disponível</option>
+                          <p className="text-foreground/70">Nenhum quarto disponível</p>
                         )}
-                      </select>
+                      </div>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-4">
@@ -307,6 +349,47 @@ export default function Booking() {
                         required
                       />
                     </div>
+                  </div>
+                </div>
+
+                {/* Seção: Tipo de Diária */}
+                <div>
+                  <h3 className="text-xl font-bold text-foreground mb-4">Tipo de Diária</h3>
+                  <div className="space-y-3">
+                    <label className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      formData.dailyType === "couple"
+                        ? "border-accent bg-accent/10"
+                        : "border-border hover:border-accent"
+                    }`}>
+                      <input
+                        type="radio"
+                        name="dailyType"
+                        value="couple"
+                        checked={formData.dailyType === "couple"}
+                        onChange={(e) => setFormData({ ...formData, dailyType: e.target.value as "couple" | "individual" })}
+                        className="mr-3"
+                      />
+                      <span className="font-semibold text-foreground">Diária de Casal</span>
+                      <p className="text-sm text-foreground/70 mt-1">Preço normal para 2 ou mais pessoas</p>
+                    </label>
+                    
+                    <label className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      formData.dailyType === "individual"
+                        ? "border-accent bg-accent/10"
+                        : "border-border hover:border-accent"
+                    }`}>
+                      <input
+                        type="radio"
+                        name="dailyType"
+                        value="individual"
+                        checked={formData.dailyType === "individual"}
+                        onChange={(e) => setFormData({ ...formData, dailyType: e.target.value as "couple" | "individual" })}
+                        className="mr-3"
+                      />
+                      <span className="font-semibold text-foreground">Diária Individual</span>
+                      <p className="text-sm text-accent font-semibold">Desconto de 12% para uma pessoa</p>
+                      <p className="text-sm text-foreground/70 mt-1">Aplica-se automaticamente quando há apenas 1 hóspede</p>
+                    </label>
                   </div>
                 </div>
 
@@ -378,6 +461,18 @@ export default function Booking() {
                   <p className="font-semibold text-foreground">
                     {rooms?.find(r => r.id === formData.roomId)?.name || "Selecionando..."}
                   </p>
+                  {rooms?.find(r => r.id === formData.roomId)?.imageUrl && (
+                    <div className="mt-3 rounded-lg overflow-hidden h-32 bg-gray-200">
+                      <img
+                        src={rooms.find(r => r.id === formData.roomId)?.imageUrl || ""}
+                        alt="Foto do quarto"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 text-foreground/70">
@@ -409,11 +504,28 @@ export default function Booking() {
                   <div className="flex justify-between text-foreground/70">
                     <span>Noites</span>
                     <span>
-                      {Math.ceil(
-                        (new Date(formData.checkOutDate).getTime() - new Date(formData.checkInDate).getTime()) / 
-                        (1000 * 60 * 60 * 24)
-                      )}
+                      {priceCalculation.nights}
                     </span>
+                  </div>
+                  <div className="flex justify-between font-semibold text-foreground">
+                    <span>Subtotal</span>
+                    <span>R$ {(subtotal / 100).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {discountAmount > 0 && (
+                  <div className="bg-green-50 rounded-lg p-3 mb-4 border border-green-200">
+                    <div className="flex justify-between text-green-700">
+                      <span className="font-semibold">Desconto 12% (1 pessoa)</span>
+                      <span>-R$ {(discountAmount / 100).toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2 mb-6 border-t border-border pt-4">
+                  <div className="flex justify-between text-foreground/70">
+                    <span>Limpeza</span>
+                    <span>R$ {(CLEANING_FEE / 100).toFixed(2)}</span>
                   </div>
                 </div>
 

@@ -92,7 +92,12 @@ export const bookings = mysqlTable("bookings", {
   checkInDate: timestamp("checkInDate").notNull(),
   checkOutDate: timestamp("checkOutDate").notNull(),
   numberOfGuests: int("numberOfGuests").notNull(),
-  totalPrice: int("totalPrice").notNull(), // em centavos
+  dailyType: mysqlEnum("dailyType", ["couple", "individual"]).default("couple").notNull(),
+  discountPercentage: int("discountPercentage").default(0),
+  discountAmount: int("discountAmount").default(0),
+  cleaningFee: int("cleaningFee").default(700),
+  subtotal: int("subtotal").notNull(),
+  totalPrice: int("totalPrice").notNull(),
   status: mysqlEnum("status", ["pending", "confirmed", "checked_in", "checked_out", "cancelled"]).default("pending").notNull(),
   specialRequests: text("specialRequests"),
   paymentMethod: varchar("paymentMethod", { length: 50 }),
