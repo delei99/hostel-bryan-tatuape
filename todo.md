@@ -124,3 +124,10 @@
 - [x] Integrar número do dono (11 95219-7283)
 - [x] Formatar mensagem com todos os detalhes da reserva
 - [x] Testar fluxo completo de envio
+
+
+## Fase 17: Corrigir Fluxo de Finalização
+- [x] Remover botão "Editar Reserva" da página de resumo
+- [x] Deixar apenas botão "Enviar para WhatsApp" como ação principal
+- [x] Botão deve finalizar a reserva E abrir WhatsApp automaticamente
+- [x] Validar fluxo completo

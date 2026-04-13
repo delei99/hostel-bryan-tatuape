@@ -293,7 +293,15 @@ export default function Booking() {
             </div>
 
             {/* Botões */}
-            <div className="flex flex-col gap-3">
+            <div className="flex gap-4">
+              <Button
+                onClick={() => setShowReview(false)}
+                variant="outline"
+                className="flex-1"
+                disabled={isSubmitting}
+              >
+                Voltar
+              </Button>
               <Button
                 onClick={async () => {
                   await handleFinalizeBooking();
@@ -304,18 +312,10 @@ export default function Booking() {
                   }
                 }}
                 disabled={isSubmitting}
-                className="w-full bg-accent hover:bg-opacity-90 text-white flex items-center justify-center gap-2"
+                className="flex-1 bg-accent hover:bg-opacity-90 text-white flex items-center justify-center gap-2"
               >
                 <MessageCircle className="w-4 h-4" />
                 {isSubmitting ? "Finalizando..." : "Enviar para WhatsApp"}
-              </Button>
-              <Button
-                onClick={() => setShowReview(false)}
-                variant="outline"
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                Editar Reserva
               </Button>
             </div>
           </Card>
