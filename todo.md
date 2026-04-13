@@ -66,9 +66,9 @@
 - [x] Adicionar campo de URL de foto para cada quarto
 - [x] Criar página de gerenciamento de fotos dos quartos no admin
 - [x] Implementar upload de fotos via painel admin
-- [ ] Criar 7 quartos no banco de dados com preços e descrições
-- [ ] Exibir fotos dos quartos na página de reserva
-- [ ] Exibir fotos dos quartos na galeria da landing page
+- [x] Criar 7 quartos no banco de dados com preços e descrições
+- [x] Exibir fotos dos quartos na página de reserva
+- [x] Exibir fotos dos quartos na galeria da landing page
 
 ## Fase 10: Adicionar Desconto, Limpeza e Notificação WhatsApp
 - [x] Adicionar opção de escolher diária de casal ou individual
@@ -79,8 +79,9 @@
 - [x] Exibir resumo com desconto e limpeza no formulário
 
 ## Fase 11: Integração Real de WhatsApp e Testes
+- [x] Integrar galeria da landing page com fotos reais dos quartos
+- [x] Criar testes Vitest para cálculo de preço com desconto
 - [ ] Integrar API real de WhatsApp (Twilio ou WhatsApp Cloud API)
 - [ ] Ajustar lógica de desconto para usar dailyType consistentemente
-- [ ] Criar testes Vitest para cálculo de preço com desconto
 - [ ] Criar testes Vitest para envio de WhatsApp
 - [ ] Validar fluxo completo de reserva com desconto e limpeza

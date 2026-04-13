@@ -2,7 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Wifi, Coffee, Users, Utensils, Wind } from "lucide-react";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { trpc } from "@/lib/trpc";
 
 /**
  * Landing page elegante e sofisticada para o Hostel Bryan Tatuapé
@@ -11,8 +12,11 @@ import { useState } from "react";
 export default function Home() {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
 
-  // Imagens de exemplo da galeria
-  const galleryImages = [
+  // Buscar fotos reais dos quartos
+  const { data: rooms } = trpc.rooms.list.useQuery();
+  
+  // Fotos padrão de exemplo como fallback
+  const defaultGalleryImages = [
     { id: 1, title: "Recepção", alt: "Recepção elegante do hostel" },
     { id: 2, title: "Quarto Compartilhado", alt: "Quarto compartilhado moderno" },
     { id: 3, title: "Quarto Privado", alt: "Quarto privado confortável" },
@@ -20,6 +24,22 @@ export default function Home() {
     { id: 5, title: "Cozinha", alt: "Cozinha equipada" },
     { id: 6, title: "Varanda", alt: "Varanda com vista" },
   ];
+
+  // Integrar fotos reais dos quartos com fallback para padrão
+  const galleryImages = useMemo(() => {
+    if (rooms && rooms.length > 0) {
+      return rooms
+        .filter(room => room.imageUrl)
+        .map(room => ({
+          id: room.id,
+          title: room.name,
+          alt: room.name,
+          imageUrl: room.imageUrl || undefined,
+        }))
+        .slice(0, 6) as Array<{ id: number; title: string; alt: string; imageUrl?: string }>;
+    }
+    return defaultGalleryImages as Array<{ id: number; title: string; alt: string; imageUrl?: string }>;
+  }, [rooms]);
 
   // Comodidades do hostel
   const amenities = [
@@ -182,11 +202,22 @@ export default function Home() {
                 onClick={() => setSelectedImage(image.id)}
                 className="bg-gradient-to-br from-accent/20 to-secondary/20 rounded-xl overflow-hidden h-64 cursor-pointer hover:shadow-lg transition-all hover:scale-105"
               >
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-foreground font-semibold">{image.title}</p>
+                {image.imageUrl ? (
+                  <img
+                    src={image.imageUrl}
+                    alt={image.alt}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="text-foreground font-semibold">{image.title}</p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             ))}
           </div>
