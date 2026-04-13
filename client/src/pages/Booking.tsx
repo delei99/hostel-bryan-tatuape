@@ -127,14 +127,13 @@ export default function Booking() {
       const roomId = parseInt(formData.roomId);
       const numberOfGuests = parseInt(formData.numberOfGuests);
       
-      // Converter strings de data adicionando 1 dia para compensar timezone
-      const addDayToDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        date.setDate(date.getDate() + 1);
-        return date;
+      // Converter strings de data para UTC midnight
+      const toUTCDate = (dateStr: string) => {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(Date.UTC(year, month - 1, day));
       };
-      const checkInDate = addDayToDate(formData.checkInDate);
-      const checkOutDate = addDayToDate(formData.checkOutDate);
+      const checkInDate = toUTCDate(formData.checkInDate);
+      const checkOutDate = toUTCDate(formData.checkOutDate);
       
       const result = await createBooking.mutateAsync({
         firstName: formData.firstName.trim(),
