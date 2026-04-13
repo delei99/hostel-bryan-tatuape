@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import { ArrowLeft, MessageCircle, CheckCircle } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Booking() {
@@ -25,6 +25,7 @@ export default function Booking() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState<any>(null);
 
   // Buscar quartos
   const { data: rooms = [] } = trpc.rooms.list.useQuery();
@@ -107,33 +108,11 @@ export default function Booking() {
       });
 
       toast.success("Reserva criada com sucesso!");
-
-      // Gerar mensagem WhatsApp
-      const room = rooms.find(r => r.id === roomId);
-      const message = `*Reserva Confirmada - Hostel Bryan Tatuapé*\n\n` +
-        `*Código: ${result.confirmationCode}*\n\n` +
-        `*Hóspede:* ${formData.firstName} ${formData.lastName}\n` +
-        `*Email:* ${formData.email}\n` +
-        `*Telefone:* ${formData.phone}\n` +
-        `*CPF:* ${formData.cpf}\n` +
-        `*Nacionalidade:* ${formData.nationality}\n\n` +
-        `*Quarto:* ${room?.name}\n` +
-        `*Check-in:* ${new Date(formData.checkInDate).toLocaleDateString('pt-BR')}\n` +
-        `*Check-out:* ${new Date(formData.checkOutDate).toLocaleDateString('pt-BR')}\n` +
-        `*Hóspedes:* ${numberOfGuests} pessoa${numberOfGuests > 1 ? 's' : ''}\n\n` +
-        `*Valores:*\n` +
-        `Subtotal: R$ ${(priceCalculation.subtotal / 100).toFixed(2)}\n` +
-        `${priceCalculation.discount > 0 ? `Desconto (12%): -R$ ${(priceCalculation.discount / 100).toFixed(2)}\n` : ''}` +
-        `Limpeza: R$ ${(priceCalculation.cleaning / 100).toFixed(2)}\n` +
-        `*Total: R$ ${(priceCalculation.total / 100).toFixed(2)}*\n\n` +
-        `${formData.specialRequests ? `Observações: ${formData.specialRequests}\n\n` : ''}` +
-        `Aguardo confirmação!`;
-
-      // Abrir WhatsApp com delay
-      setTimeout(() => {
-        const whatsappUrl = `https://wa.me/5511952197283?text=${encodeURIComponent(message)}`;
-        window.location.href = whatsappUrl;
-      }, 500);
+      setBookingSuccess({
+        ...result,
+        roomId,
+        numberOfGuests,
+      });
 
     } catch (error) {
       console.error("Erro:", error);
@@ -142,6 +121,72 @@ export default function Booking() {
       setIsSubmitting(false);
     }
   };
+
+  const handleSendWhatsApp = () => {
+    if (!bookingSuccess) return;
+
+    const room = rooms.find(r => r.id === bookingSuccess.roomId);
+    const numberOfGuests = bookingSuccess.numberOfGuests;
+    
+    const message = `*Reserva Confirmada - Hostel Bryan Tatuapé*\n\n` +
+      `*Código: ${bookingSuccess.confirmationCode}*\n\n` +
+      `*Hóspede:* ${formData.firstName} ${formData.lastName}\n` +
+      `*Email:* ${formData.email}\n` +
+      `*Telefone:* ${formData.phone}\n` +
+      `*CPF:* ${formData.cpf}\n` +
+      `*Nacionalidade:* ${formData.nationality}\n\n` +
+      `*Quarto:* ${room?.name}\n` +
+      `*Check-in:* ${new Date(formData.checkInDate).toLocaleDateString('pt-BR')}\n` +
+      `*Check-out:* ${new Date(formData.checkOutDate).toLocaleDateString('pt-BR')}\n` +
+      `*Hóspedes:* ${numberOfGuests} pessoa${numberOfGuests > 1 ? 's' : ''}\n\n` +
+      `*Valores:*\n` +
+      `Subtotal: R$ ${(priceCalculation.subtotal / 100).toFixed(2)}\n` +
+      `${priceCalculation.discount > 0 ? `Desconto (12%): -R$ ${(priceCalculation.discount / 100).toFixed(2)}\n` : ''}` +
+      `Limpeza: R$ ${(priceCalculation.cleaning / 100).toFixed(2)}\n` +
+      `*Total: R$ ${(priceCalculation.total / 100).toFixed(2)}*\n\n` +
+      `${formData.specialRequests ? `Observações: ${formData.specialRequests}\n\n` : ''}` +
+      `Aguardo confirmação!`;
+
+    const whatsappUrl = `https://wa.me/5511952197283?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  if (bookingSuccess) {
+    return (
+      <div className="min-h-screen bg-background py-12">
+        <div className="container max-w-2xl">
+          <Card className="p-8 text-center">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Reserva Confirmada!</h1>
+              <p className="text-lg text-muted-foreground mb-4">
+                Código: <span className="font-bold text-accent">{bookingSuccess.confirmationCode}</span>
+              </p>
+            </div>
+
+            <div className="bg-accent/5 p-4 rounded-lg mb-6">
+              <p className="text-foreground mb-4">
+                Clique no botão abaixo para enviar a confirmação para o WhatsApp
+              </p>
+              <Button
+                onClick={handleSendWhatsApp}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-5 h-5" />
+                Enviar para WhatsApp
+              </Button>
+            </div>
+
+            <Link href="/" className="text-accent hover:text-accent/80">
+              Voltar para Home
+            </Link>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background py-12">
@@ -323,7 +368,7 @@ export default function Booking() {
               className="w-full bg-accent hover:bg-opacity-90 text-white py-6 text-lg flex items-center justify-center gap-2"
             >
               <MessageCircle className="w-5 h-5" />
-              {isSubmitting ? "Finalizando..." : "Finalizar e Enviar para WhatsApp"}
+              {isSubmitting ? "Finalizando..." : "Finalizar Reserva"}
             </Button>
           </form>
         </Card>
