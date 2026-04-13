@@ -115,14 +115,29 @@ export default function BlockedDates() {
 
     try {
       setIsSubmitting(true);
-      for (const id of selectedBlockedIds) {
-        await deleteBlockedDate.mutateAsync({
-          blockedDateId: id,
-          password: pwd,
-        });
+      
+      // Filtrar apenas IDs válidos que existem na lista atual
+      const validIds = selectedBlockedIds.filter(id => 
+        blockedDates.some(b => b.id === id)
+      );
+
+      if (validIds.length === 0) {
+        toast.error("Nenhuma data válida selecionada");
+        setIsSubmitting(false);
+        return;
       }
 
-      toast.success(`${selectedBlockedIds.length} data(s) desbloqueada(s)!`);
+      // Usar Promise.all em vez de loop sequencial
+      await Promise.all(
+        validIds.map(id =>
+          deleteBlockedDate.mutateAsync({
+            blockedDateId: id,
+            password: pwd,
+          })
+        )
+      );
+
+      toast.success(`${validIds.length} data(s) desbloqueada(s)!`);
       setSelectedBlockedIds([]);
       setSelectAll(false);
       refetch();
@@ -163,24 +178,20 @@ export default function BlockedDates() {
           Voltar
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid gap-6 lg:grid-cols-3">
           {/* Formulário de bloqueio */}
           <Card className="p-6 lg:col-span-1">
-            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <Lock className="w-5 h-5" />
-              Bloquear Data
-            </h2>
-
+            <h1 className="text-2xl font-bold text-foreground mb-6">Bloquear Datas</h1>
             <form onSubmit={handleBlockDate} className="space-y-4">
               <div>
-                <Label>Quartos (Múltipla Seleção)</Label>
-                <div className="border rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
-                  {rooms.map(room => (
+                <Label htmlFor="rooms">Quartos</Label>
+                <div className="space-y-2">
+                  {rooms.map((room) => (
                     <div key={room.id} className="flex items-center gap-2">
                       <Checkbox
                         id={`room-${room.id}`}
-                        checked={roomIds.includes(room.id.toString())}
-                        onCheckedChange={() => toggleRoom(room.id.toString())}
+                        checked={roomIds.includes(String(room.id))}
+                        onCheckedChange={() => toggleRoom(String(room.id))}
                       />
                       <label htmlFor={`room-${room.id}`} className="text-sm cursor-pointer">
                         {room.name}
@@ -237,11 +248,7 @@ export default function BlockedDates() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -249,10 +256,10 @@ export default function BlockedDates() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-6 text-lg flex items-center justify-center gap-2"
+                className="w-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
               >
-                <Lock className="w-5 h-5" />
-                {isSubmitting ? "Bloqueando..." : "Bloquear Data"}
+                <Lock className="w-4 h-4" />
+                Bloquear
               </Button>
             </form>
           </Card>
