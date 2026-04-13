@@ -270,6 +270,20 @@ export default function Booking() {
                   ))}
                 </SelectContent>
               </Select>
+              {blockedDates.length > 0 && (
+                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800 font-semibold">📅 Datas bloqueadas neste quarto:</p>
+                  <ul className="text-sm text-yellow-700 mt-2 space-y-1">
+                    {blockedDates.map((blocked, idx) => {
+                      const startDate = new Date(blocked.startDate).toLocaleDateString('pt-BR');
+                      const endDate = new Date(blocked.endDate).toLocaleDateString('pt-BR');
+                      return (
+                        <li key={idx}>• {startDate} até {endDate}</li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
             </div>
 
             {/* Datas */}
@@ -282,7 +296,11 @@ export default function Booking() {
                   value={formData.checkInDate}
                   onChange={handleInputChange}
                   required
+                  className={isDateBlocked(formData.checkInDate, formData.checkOutDate) ? "border-red-500 bg-red-50" : ""}
                 />
+                {isDateBlocked(formData.checkInDate, formData.checkOutDate) && (
+                  <p className="text-red-600 text-sm mt-2">⚠️ Data bloqueada!</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="checkOutDate">Check-out *</Label>
@@ -292,7 +310,11 @@ export default function Booking() {
                   value={formData.checkOutDate}
                   onChange={handleInputChange}
                   required
+                  className={isDateBlocked(formData.checkInDate, formData.checkOutDate) ? "border-red-500 bg-red-50" : ""}
                 />
+                {isDateBlocked(formData.checkInDate, formData.checkOutDate) && (
+                  <p className="text-red-600 text-sm mt-2">⚠️ Data bloqueada!</p>
+                )}
               </div>
             </div>
 
