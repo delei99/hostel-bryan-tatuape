@@ -179,14 +179,7 @@ export async function createBooking(bookingData: InsertBooking) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  // Garantir que as datas sejam apenas data (sem hora) em UTC
-  const normalizedData = {
-    ...bookingData,
-    checkInDate: new Date(new Date(bookingData.checkInDate).toISOString().split('T')[0] + 'T00:00:00Z'),
-    checkOutDate: new Date(new Date(bookingData.checkOutDate).toISOString().split('T')[0] + 'T00:00:00Z'),
-  };
-  
-  const result = await db.insert(bookings).values(normalizedData);
+  const result = await db.insert(bookings).values(bookingData);
   return result[0].insertId;
 }
 
@@ -328,14 +321,7 @@ export async function createBlockedDate(blockedDateData: InsertBlockedDate) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  // Garantir que as datas sejam apenas data (sem hora) em UTC
-  const normalizedData = {
-    ...blockedDateData,
-    startDate: new Date(new Date(blockedDateData.startDate).toISOString().split('T')[0] + 'T00:00:00Z'),
-    endDate: new Date(new Date(blockedDateData.endDate).toISOString().split('T')[0] + 'T00:00:00Z'),
-  };
-  
-  const result = await db.insert(blockedDates).values(normalizedData);
+  const result = await db.insert(blockedDates).values(blockedDateData);
   return result[0].insertId;
 }
 
