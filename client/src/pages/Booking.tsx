@@ -26,7 +26,6 @@ export default function Booking() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<any>(null);
-  const [showMessage, setShowMessage] = useState(false);
 
   // Buscar quartos
   const { data: rooms = [] } = trpc.rooms.list.useQuery();
@@ -114,7 +113,6 @@ export default function Booking() {
         roomId,
         numberOfGuests,
       });
-      setShowMessage(false);
 
     } catch (error) {
       console.error("Erro:", error);
@@ -150,17 +148,6 @@ export default function Booking() {
       `Aguardo confirmação!`;
   };
 
-  const handleCopyMessage = () => {
-    const message = generateMessage();
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(message).then(() => {
-        toast.success('Mensagem copiada para o clipboard!');
-      }).catch(() => {
-        toast.error('Erro ao copiar mensagem');
-      });
-    }
-  };
-
   const handleSendWhatsApp = () => {
     if (!bookingSuccess) return;
 
@@ -192,50 +179,18 @@ export default function Booking() {
               </p>
             </div>
 
-            {!showMessage ? (
-              <div className="bg-accent/5 p-4 rounded-lg mb-6">
-                <p className="text-foreground mb-4">
-                  Clique no botão abaixo para visualizar a mensagem que será enviada
-                </p>
-                <Button
-                  onClick={() => setShowMessage(true)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg flex items-center justify-center gap-2"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  Ver Mensagem
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-green-50 border border-green-200 p-4 rounded-lg max-h-96 overflow-y-auto">
-                  <p className="text-foreground whitespace-pre-wrap text-sm font-mono">
-                    {generateMessage()}
-                  </p>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    onClick={() => setShowMessage(false)}
-                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-6 text-lg"
-                  >
-                    Voltar
-                  </Button>
-                  <Button
-                    onClick={handleCopyMessage}
-                    className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white py-6 text-lg flex items-center justify-center gap-2"
-                  >
-                    <Copy className="w-5 h-5" />
-                    Copiar
-                  </Button>
-                  <Button
-                    onClick={handleSendWhatsApp}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-6 text-lg flex items-center justify-center gap-2"
-                  >
-                    <MessageCircle className="w-5 h-5" />
-                    Enviar
-                  </Button>
-                </div>
-              </div>
-            )}
+            <div className="bg-accent/5 p-4 rounded-lg mb-6">
+              <p className="text-foreground mb-4">
+                Clique no botão abaixo para enviar a confirmação para o WhatsApp
+              </p>
+              <Button
+                onClick={handleSendWhatsApp}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-5 h-5" />
+                Enviar para WhatsApp
+              </Button>
+            </div>
 
             <div className="mt-6 text-center">
               <Link href="/" className="text-accent hover:text-accent/80">
