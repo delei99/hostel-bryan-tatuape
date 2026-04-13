@@ -24,9 +24,7 @@ export default function Booking() {
     specialRequests: "",
   });
 
-  const [showReview, setShowReview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
 
   // Buscar quartos
   const { data: rooms = [] } = trpc.rooms.list.useQuery();
@@ -63,15 +61,12 @@ export default function Booking() {
 
   const isFormValid = formData.firstName && formData.lastName && formData.email && formData.phone && formData.cpf && formData.nationality && formData.checkInDate && formData.checkOutDate;
 
-  const handleReviewClick = () => {
+  const handleFinalizeBooking = async () => {
     if (!isFormValid) {
       toast.error("Por favor, preencha todos os campos obrigatórios!");
       return;
     }
-    setShowReview(true);
-  };
 
-  const handleFinalizeBooking = async () => {
     try {
       setIsSubmitting(true);
       const roomId = parseInt(formData.roomId);
@@ -97,7 +92,6 @@ export default function Booking() {
         specialRequests: formData.specialRequests,
       });
 
-      setConfirmationCode(result.confirmationCode);
       toast.success("Reserva criada com sucesso!");
 
       // Gerar mensagem WhatsApp
@@ -134,95 +128,6 @@ export default function Booking() {
       setIsSubmitting(false);
     }
   };
-
-  if (showReview) {
-    return (
-      <div className="min-h-screen bg-background py-12">
-        <div className="container max-w-2xl">
-          <button
-            onClick={() => setShowReview(false)}
-            className="flex items-center gap-2 text-accent hover:text-accent/80 mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar
-          </button>
-
-          <Card className="p-8">
-            <h2 className="text-3xl font-bold text-foreground mb-8">Resumo da Reserva</h2>
-
-            {/* Dados do Hóspede */}
-            <div className="mb-8">
-              <h3 className="text-xl font-bold text-foreground mb-4">Dados do Hóspede</h3>
-              <div className="bg-accent/5 rounded-lg p-6 space-y-2">
-                <div><span className="text-foreground/70">Nome:</span> <span className="font-semibold">{formData.firstName} {formData.lastName}</span></div>
-                <div><span className="text-foreground/70">Email:</span> <span className="font-semibold">{formData.email}</span></div>
-                <div><span className="text-foreground/70">Telefone:</span> <span className="font-semibold">{formData.phone}</span></div>
-                <div><span className="text-foreground/70">CPF:</span> <span className="font-semibold">{formData.cpf}</span></div>
-                <div><span className="text-foreground/70">Nacionalidade:</span> <span className="font-semibold">{formData.nationality}</span></div>
-              </div>
-            </div>
-
-            {/* Detalhes da Reserva */}
-            <div className="mb-8">
-              <h3 className="text-xl font-bold text-foreground mb-4">Detalhes da Reserva</h3>
-              <div className="bg-accent/5 rounded-lg p-6 space-y-2">
-                <div><span className="text-foreground/70">Quarto:</span> <span className="font-semibold">{rooms.find(r => r.id === parseInt(formData.roomId))?.name}</span></div>
-                <div><span className="text-foreground/70">Check-in:</span> <span className="font-semibold">{new Date(formData.checkInDate).toLocaleDateString('pt-BR')}</span></div>
-                <div><span className="text-foreground/70">Check-out:</span> <span className="font-semibold">{new Date(formData.checkOutDate).toLocaleDateString('pt-BR')}</span></div>
-                <div><span className="text-foreground/70">Noites:</span> <span className="font-semibold">{priceCalculation.nights}</span></div>
-                <div><span className="text-foreground/70">Hóspedes:</span> <span className="font-semibold">{formData.numberOfGuests} pessoa{parseInt(formData.numberOfGuests) > 1 ? 's' : ''}</span></div>
-              </div>
-            </div>
-
-            {/* Valores */}
-            <div className="mb-8">
-              <h3 className="text-xl font-bold text-foreground mb-4">Valores</h3>
-              <div className="bg-accent/5 rounded-lg p-6 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-foreground/70">Subtotal ({priceCalculation.nights}x):</span>
-                  <span className="font-semibold">R$ {(priceCalculation.subtotal / 100).toFixed(2)}</span>
-                </div>
-                {priceCalculation.discount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Desconto (12%):</span>
-                    <span className="font-semibold">-R$ {(priceCalculation.discount / 100).toFixed(2)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-foreground/70">Limpeza:</span>
-                  <span className="font-semibold">R$ {(priceCalculation.cleaning / 100).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between border-t pt-2 text-lg">
-                  <span className="font-bold text-foreground">Total:</span>
-                  <span className="font-bold text-accent">R$ {(priceCalculation.total / 100).toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Botões */}
-            <div className="flex gap-4">
-              <Button
-                onClick={() => setShowReview(false)}
-                variant="outline"
-                className="flex-1"
-                disabled={isSubmitting}
-              >
-                Voltar
-              </Button>
-              <Button
-                onClick={handleFinalizeBooking}
-                disabled={isSubmitting}
-                className="flex-1 bg-accent hover:bg-opacity-90 text-white flex items-center justify-center gap-2"
-              >
-                <MessageCircle className="w-4 h-4" />
-                {isSubmitting ? "Finalizando..." : "Enviar para WhatsApp"}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background py-12">
@@ -390,11 +295,12 @@ export default function Booking() {
 
           {/* Botão */}
           <Button
-            onClick={handleReviewClick}
-            disabled={!isFormValid}
-            className="w-full bg-accent hover:bg-opacity-90 text-white py-6 text-lg"
+            onClick={handleFinalizeBooking}
+            disabled={!isFormValid || isSubmitting}
+            className="w-full bg-accent hover:bg-opacity-90 text-white py-6 text-lg flex items-center justify-center gap-2"
           >
-            Revisar Reserva
+            <MessageCircle className="w-5 h-5" />
+            {isSubmitting ? "Finalizando..." : "Finalizar e Enviar para WhatsApp"}
           </Button>
         </Card>
       </div>

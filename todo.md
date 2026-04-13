@@ -131,3 +131,10 @@
 - [x] Deixar apenas botão "Enviar para WhatsApp" como ação principal
 - [x] Botão deve finalizar a reserva E abrir WhatsApp automaticamente
 - [x] Validar fluxo completo
+
+
+## Fase 18: Remover Página de Resumo - Enviar Direto para WhatsApp
+- [ ] Remover página de resumo (showReview)
+- [ ] Botão "Finalizar e Enviar para WhatsApp" deve validar e enviar direto
+- [ ] Exibir confirmação de sucesso após envio
+- [ ] Testar fluxo completo
