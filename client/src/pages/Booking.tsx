@@ -158,7 +158,15 @@ export default function Booking() {
 
     // Abrir WhatsApp
     const whatsappUrl = `https://wa.me/5511952197283?text=${encodeURIComponent(message)}`;
-    window.location.href = whatsappUrl;
+    
+    // Criar um link temporário e clicar nele
+    const link = document.createElement('a');
+    link.href = whatsappUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (bookingSuccess) {
