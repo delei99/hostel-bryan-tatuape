@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, date } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -89,8 +89,8 @@ export const bookings = mysqlTable("bookings", {
   guestId: int("guestId").notNull().references(() => guests.id, { onDelete: "cascade" }),
   roomId: int("roomId").notNull().references(() => rooms.id, { onDelete: "cascade" }),
   bedId: int("bedId").references(() => beds.id, { onDelete: "set null" }),
-  checkInDate: timestamp("checkInDate").notNull(),
-  checkOutDate: timestamp("checkOutDate").notNull(),
+  checkInDate: date("checkInDate").notNull(),
+  checkOutDate: date("checkOutDate").notNull(),
   numberOfGuests: int("numberOfGuests").notNull(),
   dailyType: mysqlEnum("dailyType", ["couple", "individual"]).default("couple").notNull(),
   discountPercentage: int("discountPercentage").default(0),

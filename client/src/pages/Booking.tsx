@@ -127,13 +127,9 @@ export default function Booking() {
       const roomId = parseInt(formData.roomId);
       const numberOfGuests = parseInt(formData.numberOfGuests);
       
-      // Converter strings de data para Date mantendo a data local
-      const parseLocalDate = (dateStr: string) => {
-        const [year, month, day] = dateStr.split('-').map(Number);
-        return new Date(year, month - 1, day);
-      };
-      const checkInDate = parseLocalDate(formData.checkInDate);
-      const checkOutDate = parseLocalDate(formData.checkOutDate);
+      // Manter datas como strings (serão convertidas para DATE no banco)
+      const checkInDate = formData.checkInDate;
+      const checkOutDate = formData.checkOutDate;
       
       const result = await createBooking.mutateAsync({
         firstName: formData.firstName.trim(),
