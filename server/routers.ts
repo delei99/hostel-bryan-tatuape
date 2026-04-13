@@ -285,7 +285,7 @@ export const appRouter = router({
         }
 
         // Verificar senha
-        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Capacho@69";
         if (input.password !== ADMIN_PASSWORD) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
@@ -324,7 +324,7 @@ export const appRouter = router({
         }
 
         // Verificar senha
-        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Capacho@69";
         if (input.password !== ADMIN_PASSWORD) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
