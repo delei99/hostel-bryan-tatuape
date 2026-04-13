@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ export default function BlockedDates() {
   const [roomIds, setRoomIds] = useState<string[]>(["1"]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [reason, setReason] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,10 +35,10 @@ export default function BlockedDates() {
   const createBlockedDate = trpc.blockedDates.create.useMutation();
   const deleteBlockedDate = trpc.blockedDates.delete.useMutation();
 
-  const handleBlockDate = async (e: React.FormEvent) => {
+  const handleBlockDate = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!startDate || !endDate || !password || roomIds.length === 0) {
+    if (!startDate || !endDate || !reason || !password || roomIds.length === 0) {
       toast.error("Preencha todos os campos!");
       return;
     }
@@ -50,6 +51,7 @@ export default function BlockedDates() {
           roomId: parseInt(rid),
           startDate: new Date(startDate),
           endDate: new Date(endDate),
+          reason,
           password,
         });
       }
@@ -57,6 +59,7 @@ export default function BlockedDates() {
       toast.success(`Data bloqueada em ${roomIds.length} quarto(s)!`);
       setStartDate("");
       setEndDate("");
+      setReason("");
       setPassword("");
       refetch();
     } catch (error: any) {
@@ -185,6 +188,17 @@ export default function BlockedDates() {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="reason">Motivo do Bloqueio</Label>
+                <Input
+                  type="text"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Ex: Manutenção, Evento privado, etc."
                   required
                 />
               </div>
