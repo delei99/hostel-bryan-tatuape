@@ -150,31 +150,13 @@ export default function Booking() {
     const phoneNumber = '5511952197283';
     const encodedMessage = encodeURIComponent(message);
     
-    // Deep link do WhatsApp Business para Android (com.whatsapp.w4b)
-    const whatsappBusinessDeepLink = `intent://send?phone=${phoneNumber}&text=${encodedMessage}#Intent;scheme=whatsapp;package=com.whatsapp.w4b;end`;
-    
-    // Fallback para wa.me
+    // Usar wa.me que funciona melhor em mobile
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
     
-    // Tentar abrir o deep link primeiro
-    const link = document.createElement('a');
-    link.href = whatsappBusinessDeepLink;
-    document.body.appendChild(link);
-    link.click();
+    // Abrir em nova aba
+    window.open(whatsappUrl, '_blank');
     
-    // Se não funcionar, tentar wa.me após 1 segundo
-    setTimeout(() => {
-      const fallbackLink = document.createElement('a');
-      fallbackLink.href = whatsappUrl;
-      fallbackLink.target = '_blank';
-      fallbackLink.rel = 'noopener noreferrer';
-      document.body.appendChild(fallbackLink);
-      fallbackLink.click();
-      document.body.removeChild(fallbackLink);
-    }, 1000);
-    
-    document.body.removeChild(link);
-    toast.success('Abrindo WhatsApp Business...');
+    toast.success('Abrindo WhatsApp...');
   };
 
   if (bookingSuccess) {
