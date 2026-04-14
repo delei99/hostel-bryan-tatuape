@@ -193,13 +193,14 @@ export default function BlockedDates() {
               blockedDates={blockedDates}
               roomId={roomIds.length > 0 ? parseInt(roomIds[0]) : 1}
               onBlockPeriod={async (startDate, endDate, reason) => {
-                const start = startDate.toISOString().split('T')[0];
-                const end = endDate.toISOString().split('T')[0];
+                // Usar datas locais sem conversão UTC
+                const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0, 0);
+                const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() + 1, 0, 0, 0, 0);
                 for (const rid of roomIds) {
                   await createBlockedDate.mutateAsync({
                     roomId: parseInt(rid),
-                    startDate: new Date(start),
-                    endDate: new Date(end),
+                    startDate: start,
+                    endDate: end,
                     reason,
                     password,
                   });
