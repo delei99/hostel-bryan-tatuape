@@ -199,3 +199,12 @@
 - [x] Criar página de Painel de Controle de Acesso
 - [x] Criar página de Logs de Auditoria
 - [x] Testar fluxo completo
+
+## Fase 28: Alertas de Atividade Suspeita
+- [x] Criar tabela failedUnblockAttempts no schema
+- [x] Implementar funções de banco de dados para registrar tentativas falhadas
+- [x] Atualizar rota tRPC para registrar tentativas falhadas
+- [x] Criar lógica de detecção de atividade suspeita (3+ tentativas em 5 minutos)
+- [x] Implementar notificação ao admin via notifyOwner
+- [x] Criar página de Alertas de Segurança
+- [x] Testar fluxo completo

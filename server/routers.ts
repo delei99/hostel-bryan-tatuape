@@ -150,6 +150,30 @@ export const appRouter = router({
       }),
   }),
 
+  securityAlerts: router({
+    getFailedAttempts: protectedProcedure
+      .input(z.object({
+        limit: z.number().default(50),
+        offset: z.number().default(0),
+      }))
+      .query(async ({ input }) => {
+        const db = await (await import("./db")).getDb();
+        if (!db) return [];
+        
+        const { failedUnblockAttempts } = await import("../drizzle/schema");
+        const { desc, gt } = await import("drizzle-orm");
+        
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        return db
+          .select()
+          .from(failedUnblockAttempts)
+          .where(gt(failedUnblockAttempts.createdAt, oneDayAgo))
+          .orderBy(desc(failedUnblockAttempts.createdAt))
+          .limit(input.limit)
+          .offset(input.offset);
+      }),
+  }),
+
   blockedDates: router({
     create: protectedProcedure
       .input(z.object({
@@ -209,6 +233,30 @@ export const appRouter = router({
         // Verificar senha - qualquer usuario autenticado pode desbloquear com a senha correta
         const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Capacho@69";
         if (input.password !== ADMIN_PASSWORD) {
+          // Registrar tentativa falhada
+          const { recordFailedUnblockAttempt, getRecentFailedAttempts } = await import("./db");
+          const { notifyOwner } = await import("./_core/notification");
+          
+          const ipAddress = ctx.req.headers['x-forwarded-for'] as string || ctx.req.socket.remoteAddress || 'unknown';
+          
+          await recordFailedUnblockAttempt({
+            userId: ctx.user.id,
+            ipAddress,
+            userAgent: ctx.req.headers['user-agent'] as string || undefined,
+            blockedDateId: input.blockedDateId,
+            reason: "Senha incorreta",
+          });
+          
+          // Verificar se há atividade suspeita (3+ tentativas em 5 minutos)
+          const recentAttempts = await getRecentFailedAttempts(ipAddress, 5);
+          if (recentAttempts.length >= 3) {
+            // Notificar admin sobre atividade suspeita
+            await notifyOwner({
+              title: "🚨 Alerta de Segurança: Atividade Suspeita Detectada",
+              content: `Múltiplas tentativas de desbloqueio falhadas detectadas.\n\nIP: ${ipAddress}\nTentativas: ${recentAttempts.length}\nPeríodo: Últimos 5 minutos\n\nPor favor, verifique os logs de auditoria para mais detalhes.`,
+            });
+          }
+          
           throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "Senha incorreta"

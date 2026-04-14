@@ -163,3 +163,19 @@ export const auditLogs = mysqlTable("auditLogs", {
 
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = typeof auditLogs.$inferInsert;
+
+/**
+ * Tabela de tentativas falhadas de desbloqueio para detecção de atividade suspeita
+ */
+export const failedUnblockAttempts = mysqlTable("failedUnblockAttempts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  ipAddress: varchar("ipAddress", { length: 45 }).notNull(),
+  userAgent: text("userAgent"),
+  blockedDateId: int("blockedDateId").notNull().references(() => blockedDates.id, { onDelete: "cascade" }),
+  reason: varchar("reason", { length: 255 }).default("Senha incorreta").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type FailedUnblockAttempt = typeof failedUnblockAttempts.$inferSelect;
+export type InsertFailedUnblockAttempt = typeof failedUnblockAttempts.$inferInsert;

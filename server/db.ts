@@ -1,6 +1,6 @@
 import { and, desc, eq, gt, lt, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog } from "../drizzle/schema";
+import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog, failedUnblockAttempts, InsertFailedUnblockAttempt, FailedUnblockAttempt } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -410,4 +410,60 @@ export async function getAuditLogsByRoom(roomId: number, limit: number = 50, off
 
 export async function getAuditLogsByUser(userId: number, limit: number = 50, offset: number = 0): Promise<AuditLog[]> {
   return getAuditLogs({ userId, limit, offset });
+}
+
+
+/**
+ * Funções para gerenciar tentativas falhadas de desbloqueio
+ */
+export async function recordFailedUnblockAttempt(data: InsertFailedUnblockAttempt): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(failedUnblockAttempts).values(data);
+}
+
+export async function getRecentFailedAttempts(ipAddress: string, minutes: number = 5): Promise<FailedUnblockAttempt[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const fiveMinutesAgo = new Date(Date.now() - minutes * 60 * 1000);
+  
+  return db
+    .select()
+    .from(failedUnblockAttempts)
+    .where(
+      and(
+        eq(failedUnblockAttempts.ipAddress, ipAddress),
+        gt(failedUnblockAttempts.createdAt, fiveMinutesAgo)
+      )
+    )
+    .orderBy(desc(failedUnblockAttempts.createdAt));
+}
+
+export async function getFailedAttemptsByUser(userId: number, minutes: number = 5): Promise<FailedUnblockAttempt[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const fiveMinutesAgo = new Date(Date.now() - minutes * 60 * 1000);
+  
+  return db
+    .select()
+    .from(failedUnblockAttempts)
+    .where(
+      and(
+        eq(failedUnblockAttempts.userId, userId),
+        gt(failedUnblockAttempts.createdAt, fiveMinutesAgo)
+      )
+    )
+    .orderBy(desc(failedUnblockAttempts.createdAt));
+}
+
+export async function cleanupOldFailedAttempts(hoursOld: number = 24): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  
+  const cutoffTime = new Date(Date.now() - hoursOld * 60 * 60 * 1000);
+  
+  await db.delete(failedUnblockAttempts).where(lt(failedUnblockAttempts.createdAt, cutoffTime));
 }

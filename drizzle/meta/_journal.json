@@ -64,6 +64,13 @@
       "when": 1776173064509,
       "tag": "0008_wise_shatterstar",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1776177259276,
+      "tag": "0009_flimsy_starhawk",
+      "breakpoints": true
     }
   ]
 }
