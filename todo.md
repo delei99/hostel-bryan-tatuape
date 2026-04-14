@@ -208,3 +208,9 @@
 - [x] Implementar notificação ao admin via notifyOwner
 - [x] Criar página de Alertas de Segurança
 - [x] Testar fluxo completo
+
+## Bug: Bloquear/Desbloquear Datas Falha no Desktop
+- [x] Investigar erro específico do navegador desktop
+- [x] Verificar compatibilidade de tipos de dados
+- [x] Corrigir problema de responsividade
+- [x] Testar em múltiplos navegadores

@@ -52,7 +52,7 @@ export default function BlockedDates() {
     setSelectAll(false);
   }, [roomIds]);
 
-  const handleBlockDate = async (e: React.FormEvent) => {
+  const handleBlockDate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!startDate || !endDate || !reason || !password || roomIds.length === 0) {
@@ -60,14 +60,21 @@ export default function BlockedDates() {
       return;
     }
 
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (start >= end) {
+      toast.error("Data inicial deve ser anterior a data final!");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      // Bloquear para todos os quartos selecionados
       for (const rid of roomIds) {
         await createBlockedDate.mutateAsync({
           roomId: parseInt(rid),
-          startDate: new Date(startDate),
-          endDate: new Date(endDate),
+          startDate: start,
+          endDate: end,
           reason,
           password,
         });
