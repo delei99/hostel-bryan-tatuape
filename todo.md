@@ -214,3 +214,9 @@
 - [x] Verificar compatibilidade de tipos de dados
 - [x] Corrigir problema de responsividade
 - [x] Testar em múltiplos navegadores
+
+## Bug: Calendário Mostra Data Anterior ao Bloquear
+- [x] Investigar problema de timezone no calendário
+- [x] Corrigir conversão de datas entre frontend e backend
+- [x] Sincronizar horário local com horário do servidor
+- [x] Testar bloqueio em múltiplas datas

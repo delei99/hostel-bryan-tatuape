@@ -82,13 +82,23 @@ export default function Booking() {
   };
 
   // Verificar se a data está bloqueada
+  // Funcao para normalizar data sem timezone (apenas YYYY-MM-DD)
+  const normalizeDate = (dateStr: string | Date): Date => {
+    if (typeof dateStr === 'string') {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      return new Date(year, month - 1, day, 0, 0, 0, 0);
+    }
+    const d = new Date(dateStr);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+  };
+
   const isDateBlocked = (checkInStr: string, checkOutStr: string) => {
-    const checkIn = new Date(checkInStr);
-    const checkOut = new Date(checkOutStr);
+    const checkIn = normalizeDate(checkInStr);
+    const checkOut = normalizeDate(checkOutStr);
     
     return blockedDates.some(blocked => {
-      const blockedStart = new Date(blocked.startDate);
-      const blockedEnd = new Date(blocked.endDate);
+      const blockedStart = normalizeDate(blocked.startDate);
+      const blockedEnd = normalizeDate(blocked.endDate);
       
       // Verificar conflito de datas
       return checkIn < blockedEnd && checkOut > blockedStart;
