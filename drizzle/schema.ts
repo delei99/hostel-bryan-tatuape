@@ -143,3 +143,23 @@ export const blockedDates = mysqlTable("blockedDates", {
 
 export type BlockedDate = typeof blockedDates.$inferSelect;
 export type InsertBlockedDate = typeof blockedDates.$inferInsert;
+
+/**
+ * Tabela de logs de auditoria para bloqueios de datas
+ */
+export const auditLogs = mysqlTable("auditLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  action: mysqlEnum("action", ["block", "unblock"]).notNull(),
+  blockedDateId: int("blockedDateId").references(() => blockedDates.id, { onDelete: "set null" }),
+  roomId: int("roomId").notNull().references(() => rooms.id, { onDelete: "cascade" }),
+  startDate: timestamp("startDate"),
+  endDate: timestamp("endDate"),
+  reason: varchar("reason", { length: 255 }),
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  userAgent: text("userAgent"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = typeof auditLogs.$inferInsert;

@@ -9,6 +9,8 @@ import Booking from "./pages/Booking";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoomPhotos from "./pages/AdminRoomPhotos";
 import BlockedDates from "./pages/BlockedDates";
+import AuditLogs from "./pages/AuditLogs";
+import AccessControl from "./pages/AccessControl";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -19,6 +21,8 @@ function Router() {
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/fotos" component={AdminRoomPhotos} />
       <Route path="/admin/bloqueios" component={BlockedDates} />
+      <Route path="/admin/logs" component={AuditLogs} />
+      <Route path="/admin/acesso" component={AccessControl} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

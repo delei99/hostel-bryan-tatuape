@@ -1,6 +1,6 @@
 import { and, desc, eq, gt, lt, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate } from "../drizzle/schema";
+import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -357,4 +357,57 @@ export async function getAllBlockedDates(roomId: number) {
     .from(blockedDates)
     .where(eq(blockedDates.roomId, roomId))
     .orderBy(desc(blockedDates.startDate));
+}
+
+
+// Audit Log functions
+export async function createAuditLog(data: InsertAuditLog): Promise<AuditLog | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(auditLogs).values(data);
+  if (!result.insertId) return null;
+  
+  return db.select().from(auditLogs).where(eq(auditLogs.id, Number(result.insertId))).then(rows => rows[0] || null);
+}
+
+export async function getAuditLogs(filters?: { userId?: number; roomId?: number; action?: 'block' | 'unblock'; limit?: number; offset?: number }): Promise<AuditLog[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  let query = db.select().from(auditLogs);
+  const conditions: any[] = [];
+  
+  if (filters?.userId) {
+    conditions.push(eq(auditLogs.userId, filters.userId));
+  }
+  if (filters?.roomId) {
+    conditions.push(eq(auditLogs.roomId, filters.roomId));
+  }
+  if (filters?.action) {
+    conditions.push(eq(auditLogs.action, filters.action));
+  }
+  
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions));
+  }
+  
+  query = query.orderBy(desc(auditLogs.createdAt));
+  
+  if (filters?.limit) {
+    query = query.limit(filters.limit);
+  }
+  if (filters?.offset) {
+    query = query.offset(filters.offset);
+  }
+  
+  return query;
+}
+
+export async function getAuditLogsByRoom(roomId: number, limit: number = 50, offset: number = 0): Promise<AuditLog[]> {
+  return getAuditLogs({ roomId, limit, offset });
+}
+
+export async function getAuditLogsByUser(userId: number, limit: number = 50, offset: number = 0): Promise<AuditLog[]> {
+  return getAuditLogs({ userId, limit, offset });
 }

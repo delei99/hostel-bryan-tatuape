@@ -191,3 +191,11 @@
 - [x] Adicionar useEffect para sincronizar selectAll automaticamente
 - [x] Limpar seleção ao trocar de quarto
 - [x] Testar desbloquear múltiplas datas sem sair da página
+
+## Fase 27: Painel de Controle de Acesso e Logs de Auditoria
+- [x] Criar tabela auditLog no schema
+- [x] Criar função para registrar logs de auditoria
+- [x] Atualizar rotas tRPC para registrar ações
+- [x] Criar página de Painel de Controle de Acesso
+- [x] Criar página de Logs de Auditoria
+- [x] Testar fluxo completo

@@ -129,6 +129,27 @@ export const appRouter = router({
       }),
   }),
 
+  auditLogs: router({
+    list: protectedProcedure
+      .input(z.object({
+        roomId: z.number().optional(),
+        userId: z.number().optional(),
+        action: z.enum(["block", "unblock"]).optional(),
+        limit: z.number().default(50),
+        offset: z.number().default(0),
+      }))
+      .query(async ({ input }) => {
+        const { getAuditLogs } = await import("./db");
+        return getAuditLogs({
+          roomId: input.roomId,
+          userId: input.userId,
+          action: input.action,
+          limit: input.limit,
+          offset: input.offset,
+        });
+      }),
+  }),
+
   blockedDates: router({
     create: protectedProcedure
       .input(z.object({
@@ -148,13 +169,27 @@ export const appRouter = router({
           });
         }
 
-        const { createBlockedDate } = await import("./db");
+        const { createBlockedDate, createAuditLog } = await import("./db");
         const id = await createBlockedDate({
           roomId: input.roomId,
           startDate: input.startDate,
           endDate: input.endDate,
           reason: input.reason,
         });
+        
+        // Registrar no log de auditoria
+        await createAuditLog({
+          userId: ctx.user.id,
+          action: "block",
+          blockedDateId: id,
+          roomId: input.roomId,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          reason: input.reason,
+          ipAddress: ctx.req.headers['x-forwarded-for'] as string || ctx.req.socket.remoteAddress || undefined,
+          userAgent: ctx.req.headers['user-agent'] as string || undefined,
+        });
+        
         return { id, success: true };
       }),
 
@@ -180,7 +215,33 @@ export const appRouter = router({
           });
         }
 
-        const { deleteBlockedDate } = await import("./db");
+        const { deleteBlockedDate, createAuditLog, getDb } = await import("./db");
+        const { blockedDates } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        // Buscar dados do bloqueio antes de deletar
+        const db = await getDb();
+        let blockedDateData = null;
+        if (db) {
+          const result = await db.select().from(blockedDates).where(eq(blockedDates.id, input.blockedDateId));
+          blockedDateData = result[0];
+        }
+        
+        // Registrar no log de auditoria
+        if (blockedDateData) {
+          await createAuditLog({
+            userId: ctx.user.id,
+            action: "unblock",
+            blockedDateId: input.blockedDateId,
+            roomId: blockedDateData.roomId,
+            startDate: blockedDateData.startDate,
+            endDate: blockedDateData.endDate,
+            reason: blockedDateData.reason || undefined,
+            ipAddress: ctx.req.headers['x-forwarded-for'] as string || ctx.req.socket.remoteAddress || undefined,
+            userAgent: ctx.req.headers['user-agent'] as string || undefined,
+          });
+        }
+        
         await deleteBlockedDate(input.blockedDateId);
         return { success: true };
       }),
