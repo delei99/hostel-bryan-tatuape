@@ -365,10 +365,20 @@ export async function createAuditLog(data: InsertAuditLog): Promise<AuditLog | n
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(auditLogs).values(data);
-  if (!result.insertId) return null;
+  // Remover campos undefined para evitar erros de inserção
+  const cleanData = Object.fromEntries(
+    Object.entries(data).filter(([_, value]) => value !== undefined)
+  ) as InsertAuditLog;
   
-  return db.select().from(auditLogs).where(eq(auditLogs.id, Number(result.insertId))).then(rows => rows[0] || null);
+  try {
+    const result = await db.insert(auditLogs).values(cleanData);
+    if (!result.insertId) return null;
+    
+    return db.select().from(auditLogs).where(eq(auditLogs.id, Number(result.insertId))).then(rows => rows[0] || null);
+  } catch (error) {
+    console.error("[AuditLog] Error creating audit log:", error);
+    return null;
+  }
 }
 
 export async function getAuditLogs(filters?: { userId?: number; roomId?: number; action?: 'block' | 'unblock'; limit?: number; offset?: number }): Promise<AuditLog[]> {
