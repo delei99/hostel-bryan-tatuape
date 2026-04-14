@@ -71,6 +71,13 @@
       "when": 1776177259276,
       "tag": "0009_flimsy_starhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1776180476669,
+      "tag": "0010_messy_dreadnoughts",
+      "breakpoints": true
     }
   ]
 }

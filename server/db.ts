@@ -1,6 +1,6 @@
 import { and, desc, eq, gt, lt, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog, failedUnblockAttempts, InsertFailedUnblockAttempt, FailedUnblockAttempt } from "../drizzle/schema";
+import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog, failedUnblockAttempts, InsertFailedUnblockAttempt, FailedUnblockAttempt, blockingExceptions, InsertBlockingException, BlockingException } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -476,4 +476,59 @@ export async function cleanupOldFailedAttempts(hoursOld: number = 24): Promise<v
   const cutoffTime = new Date(Date.now() - hoursOld * 60 * 60 * 1000);
   
   await db.delete(failedUnblockAttempts).where(lt(failedUnblockAttempts.createdAt, cutoffTime));
+}
+
+
+// Blocking Exceptions functions
+export async function createBlockingException(data: InsertBlockingException): Promise<BlockingException | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    const result = await db.insert(blockingExceptions).values(data);
+    if (!result.insertId) return null;
+    
+    return db.select().from(blockingExceptions).where(eq(blockingExceptions.id, Number(result.insertId))).then(rows => rows[0] || null);
+  } catch (error) {
+    console.error("[BlockingException] Error creating exception:", error);
+    return null;
+  }
+}
+
+export async function deleteBlockingException(exceptionId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    await db.delete(blockingExceptions).where(eq(blockingExceptions.id, exceptionId));
+    return true;
+  } catch (error) {
+    console.error("[BlockingException] Error deleting exception:", error);
+    return false;
+  }
+}
+
+export async function getBlockingExceptionsByBlockedDate(blockedDateId: number): Promise<BlockingException[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(blockingExceptions).where(eq(blockingExceptions.blockedDateId, blockedDateId));
+}
+
+export async function isDateExcepted(blockedDateId: number, date: Date): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  
+  const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+  const dateStr = normalizedDate.toISOString().split('T')[0];
+  
+  const exceptions = await db
+    .select()
+    .from(blockingExceptions)
+    .where(and(
+      eq(blockingExceptions.blockedDateId, blockedDateId),
+      eq(blockingExceptions.exceptionDate, dateStr)
+    ));
+  
+  return exceptions.length > 0;
 }

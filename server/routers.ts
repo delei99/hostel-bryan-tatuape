@@ -293,6 +293,59 @@ export const appRouter = router({
         await deleteBlockedDate(input.blockedDateId);
         return { success: true };
       }),
+
+    addException: protectedProcedure
+      .input(z.object({
+        blockedDateId: z.number(),
+        exceptionDate: z.date(),
+        reason: z.string().optional(),
+        password: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Capacho@69";
+        if (input.password !== ADMIN_PASSWORD) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Senha incorreta"
+          });
+        }
+
+        const { createBlockingException } = await import("./db");
+        const result = await createBlockingException({
+          blockedDateId: input.blockedDateId,
+          exceptionDate: input.exceptionDate.toISOString().split('T')[0] as any,
+          reason: input.reason,
+          createdBy: ctx.user.id,
+        });
+        
+        return { success: !!result };
+      }),
+
+    removeException: protectedProcedure
+      .input(z.object({
+        exceptionId: z.number(),
+        password: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Capacho@69";
+        if (input.password !== ADMIN_PASSWORD) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Senha incorreta"
+          });
+        }
+
+        const { deleteBlockingException } = await import("./db");
+        const success = await deleteBlockingException(input.exceptionId);
+        return { success };
+      }),
+
+    getExceptions: publicProcedure
+      .input(z.object({ blockedDateId: z.number() }))
+      .query(async ({ input }) => {
+        const { getBlockingExceptionsByBlockedDate } = await import("./db");
+        return getBlockingExceptionsByBlockedDate(input.blockedDateId);
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;;

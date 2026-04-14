@@ -179,3 +179,18 @@ export const failedUnblockAttempts = mysqlTable("failedUnblockAttempts", {
 
 export type FailedUnblockAttempt = typeof failedUnblockAttempts.$inferSelect;
 export type InsertFailedUnblockAttempt = typeof failedUnblockAttempts.$inferInsert;
+
+/**
+ * Tabela de exceções de bloqueio (datas desbloqueadas dentro de um período bloqueado)
+ */
+export const blockingExceptions = mysqlTable("blockingExceptions", {
+  id: int("id").autoincrement().primaryKey(),
+  blockedDateId: int("blockedDateId").notNull().references(() => blockedDates.id, { onDelete: "cascade" }),
+  exceptionDate: date("exceptionDate").notNull(),
+  reason: varchar("reason", { length: 255 }),
+  createdBy: int("createdBy").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BlockingException = typeof blockingExceptions.$inferSelect;
+export type InsertBlockingException = typeof blockingExceptions.$inferInsert;

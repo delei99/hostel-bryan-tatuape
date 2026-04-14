@@ -220,3 +220,17 @@
 - [x] Corrigir conversão de datas entre frontend e backend
 - [x] Sincronizar horário local com horário do servidor
 - [x] Testar bloqueio em múltiplas datas
+
+## Fase 29: Calendário Visual e Bloqueio em Massa
+- [x] Instalar biblioteca react-calendar
+- [x] Criar componente de calendário visual com datas bloqueadas em vermelho
+- [x] Implementar seleção de intervalo de datas para bloqueio em massa
+- [x] Adicionar botão de "Bloquear Período" que bloqueia todas as datas do intervalo
+- [x] Testar bloqueio em massa com múltiplas datas
+
+## Fase 30: Exceções de Bloqueio
+- [x] Criar tabela blockingExceptions no schema
+- [x] Criar rota tRPC para adicionar/remover exceções
+- [ ] Implementar UI para gerenciar exceções
+- [ ] Permitir desbloquear datas específicas dentro de um período bloqueado
+- [ ] Testar fluxo completo de exceções

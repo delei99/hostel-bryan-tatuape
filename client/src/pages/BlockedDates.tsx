@@ -11,6 +11,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { ArrowLeft, Lock, Unlock, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Link } from "wouter";
+import BlockedDatesCalendar from "@/components/BlockedDatesCalendar";
 
 export default function BlockedDates() {
   const [roomIds, setRoomIds] = useState<string[]>(["1"]);
@@ -185,7 +186,29 @@ export default function BlockedDates() {
           Voltar
         </Link>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-4">
+          {/* Calendário de bloqueios */}
+          <div className="lg:col-span-1">
+            <BlockedDatesCalendar
+              blockedDates={blockedDates}
+              roomId={roomIds.length > 0 ? parseInt(roomIds[0]) : 1}
+              onBlockPeriod={async (startDate, endDate, reason) => {
+                const start = startDate.toISOString().split('T')[0];
+                const end = endDate.toISOString().split('T')[0];
+                for (const rid of roomIds) {
+                  await createBlockedDate.mutateAsync({
+                    roomId: parseInt(rid),
+                    startDate: new Date(start),
+                    endDate: new Date(end),
+                    reason,
+                    password,
+                  });
+                }
+                refetch();
+              }}
+            />
+          </div>
+
           {/* Formulário de bloqueio */}
           <Card className="p-6 lg:col-span-1">
             <h1 className="text-2xl font-bold text-foreground mb-6">Bloquear Datas</h1>
