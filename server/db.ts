@@ -175,11 +175,42 @@ export async function createOrUpdateGuest(guestData: InsertGuest) {
 /**
  * Query helpers para reservas
  */
-export async function createBooking(bookingData: InsertBooking) {
+export async function createBooking(bookingData: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(bookings).values(bookingData);
+  // Extrair dados do hospede
+  const guestName = bookingData.guestName || '';
+  const [firstName, ...lastNameParts] = guestName.split(' ');
+  const lastName = lastNameParts.join(' ') || '';
+  
+  // Criar hospede primeiro
+  const { guests } = await import("../drizzle/schema");
+  const guestResult = await db.insert(guests).values({
+    firstName: firstName || 'Guest',
+    lastName: lastName || '',
+    email: bookingData.guestEmail,
+    phone: bookingData.guestPhone,
+  });
+  
+  const guestId = guestResult[0].insertId;
+  
+  // Criar reserva com guestId
+  const bookingToInsert = {
+    guestId,
+    roomId: bookingData.roomId,
+    checkInDate: bookingData.checkInDate.toISOString().split('T')[0],
+    checkOutDate: bookingData.checkOutDate.toISOString().split('T')[0],
+    numberOfGuests: 1,
+    dailyType: 'couple',
+    subtotal: bookingData.totalPrice,
+    totalPrice: bookingData.totalPrice,
+    checkInTime: '14:00',
+    checkOutTime: '12:00',
+    specialRequests: bookingData.notes,
+  };
+  
+  const result = await db.insert(bookings).values(bookingToInsert);
   return result[0].insertId;
 }
 

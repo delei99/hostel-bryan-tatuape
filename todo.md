@@ -234,3 +234,9 @@
 - [ ] Implementar UI para gerenciar exceções
 - [ ] Permitir desbloquear datas específicas dentro de um período bloqueado
 - [ ] Testar fluxo completo de exceções
+
+## Bug: Erro ao Criar Reserva - "Tente Novamente"
+- [x] Investigar erro na rota de criacao de reserva
+- [x] Verificar validacao de campos do formulario
+- [x] Corrigir problema de serializacao de datas
+- [x] Testar fluxo completo de reserva
