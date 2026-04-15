@@ -260,6 +260,8 @@
 - [x] Corrigir schema para permitir userId nullable em failedUnblockAttempts
 - [x] Corrigir db.ts para usar null em vez de 0 para userId
 - [x] Gerar migração SQL com drizzle-kit
-- [ ] Executar migração SQL no banco de dados
-- [ ] Testar desbloqueio com senha correta
-- [ ] Testar desbloqueio com senha incorreta
+- [x] Executar migração SQL no banco de dados
+- [x] Corrigir senha hardcoded de 1234 para Capacho@69
+- [x] Adicionar console.log para debugar erros de tRPC
+- [x] Testar desbloqueio com senha correta
+- [x] Testar desbloqueio com senha incorreta

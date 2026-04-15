@@ -141,7 +141,7 @@ export const appRouter = router({
           throw new TRPCError({ code: "NOT_FOUND" });
         }
 
-        const correctPassword = "1234";
+        const correctPassword = "Capacho@69";
         if (input.password !== correctPassword) {
           const ipAddress = ctx.req.headers["x-forwarded-for"] as string || ctx.req.socket.remoteAddress || "";
           const userAgent = ctx.req.headers["user-agent"] as string || "";

@@ -112,7 +112,9 @@ export default function BlockedDates() {
       setSelectedBlockedIds(selectedBlockedIds.filter(id => id !== blockedDateId));
       refetch();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao desbloquear data");
+      console.error("Erro ao desbloquear:", error);
+      const errorMessage = error?.data?.zodError?.fieldErrors?.password?.[0] || error?.message || "Erro ao desbloquear data";
+      toast.error(errorMessage);
     }
   };
 
@@ -154,7 +156,9 @@ export default function BlockedDates() {
       setSelectAll(false);
       refetch();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao desbloquear datas");
+      console.error("Erro ao desbloquear múltiplas:", error);
+      const errorMessage = error?.data?.zodError?.fieldErrors?.password?.[0] || error?.message || "Erro ao desbloquear datas";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
