@@ -61,8 +61,12 @@ export default function BlockedDates() {
       return;
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    // Converter strings de data para datas locais (nao UTC)
+    const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
+    const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
+    
+    const start = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
+    const end = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
     
     if (start >= end) {
       toast.error("Data inicial deve ser anterior a data final!");
