@@ -265,3 +265,8 @@
 - [x] Adicionar console.log para debugar erros de tRPC
 - [x] Testar desbloqueio com senha correta
 - [x] Testar desbloqueio com senha incorreta
+
+## Fase 31: Bloqueio Automático de Datas ao Criar Reserva
+- [x] Implementar bloqueio automático ao criar reserva
+- [x] Adicionar motivo automático com nome do hóspede
+- [x] Testar fluxo completo de reserva com bloqueio automático

@@ -209,7 +209,22 @@ export async function createBooking(bookingData: any) {
   };
   
   const result = await db.insert(bookings).values(bookingToInsert);
-  return result[0].insertId;
+  const bookingId = result[0].insertId;
+  
+  // Bloquear automaticamente as datas da reserva
+  try {
+    await createBlockedDate({
+      roomId: bookingData.roomId,
+      startDate: bookingData.checkInDate,
+      endDate: bookingData.checkOutDate,
+      reason: `Reserva automática - Hóspede: ${bookingData.firstName} ${bookingData.lastName}`,
+    });
+  } catch (error) {
+    console.error("[Booking] Erro ao bloquear datas automaticamente:", error);
+    // Não falhar a reserva se o bloqueio automático falhar
+  }
+  
+  return bookingId;
 }
 
 export async function getAllBookings() {
