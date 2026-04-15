@@ -548,8 +548,10 @@ export async function isDateExcepted(blockedDateId: number, date: Date): Promise
   const db = await getDb();
   if (!db) return false;
   
-  const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
-  const dateStr = normalizedDate.toISOString().split('T')[0];
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const dateStr = `${year}-${month}-${day}`;
   
   const exceptions = await db
     .select()
@@ -560,4 +562,49 @@ export async function isDateExcepted(blockedDateId: number, date: Date): Promise
     ));
   
   return exceptions.length > 0;
+}
+
+
+// Missing functions for routers.ts
+export async function getBlockedDateById(blockedDateId: number): Promise<BlockedDate | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(blockedDates).where(eq(blockedDates.id, blockedDateId));
+  return result[0] || null;
+}
+
+export async function recordFailedAttempt(data: { ipAddress: string; userAgent: string; blockedDateId: number }): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  
+  try {
+    await db.insert(failedUnblockAttempts).values({
+      userId: 0, // Anonymous attempt
+      ipAddress: data.ipAddress,
+      userAgent: data.userAgent,
+      blockedDateId: data.blockedDateId,
+      reason: "Senha incorreta",
+      createdAt: new Date(),
+    });
+  } catch (error) {
+    console.error("[FailedAttempt] Error recording attempt:", error);
+  }
+}
+
+export async function checkSuspiciousActivity(ipAddress: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+  
+  const attempts = await db
+    .select()
+    .from(failedUnblockAttempts)
+    .where(and(
+      eq(failedUnblockAttempts.ipAddress, ipAddress),
+      gt(failedUnblockAttempts.createdAt, fiveMinutesAgo)
+    ));
+  
+  return attempts.length >= 3;
 }

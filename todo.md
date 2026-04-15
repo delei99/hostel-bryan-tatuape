@@ -247,3 +247,10 @@
 - [x] Debugar fluxo completo de criação de reserva
 - [x] Corrigir problema de serialização ou validação
 - [x] Testar em produção após correção
+
+
+## Bug: Datas Bloqueadas Não Aparecem Após Bloquear
+- [ ] Investigar por que datas bloqueadas não aparecem na listagem
+- [ ] Verificar se estão sendo salvass no banco de dados
+- [ ] Corrigir consulta de datas bloqueadas por quarto
+- [ ] Testar fluxo completo de bloqueio e visualização

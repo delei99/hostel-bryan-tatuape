@@ -77,7 +77,7 @@ export const appRouter = router({
       .input(z.object({ roomId: z.number().optional() }))
       .query(async ({ input }) => {
         const { getAllBookings } = await import("./db");
-        return getAllBookings(input.roomId);
+        return getAllBookings();
       }),
 
     getById: publicProcedure
@@ -92,8 +92,8 @@ export const appRouter = router({
     list: publicProcedure
       .input(z.object({ roomId: z.number() }))
       .query(async ({ input }) => {
-        const { getBlockedDates } = await import("./db");
-        return getBlockedDates(input.roomId);
+        const { getAllBlockedDates } = await import("./db");
+        return getAllBlockedDates(input.roomId);
       }),
 
     create: publicProcedure
@@ -114,7 +114,7 @@ export const appRouter = router({
         });
 
         await createAuditLog({
-          userId: ctx.user?.id,
+          userId: ctx.user?.id || 0,
           action: "block",
           blockedDateId: result,
           roomId: input.roomId,
@@ -167,10 +167,13 @@ export const appRouter = router({
         await deleteBlockedDate(input.id);
 
         await createAuditLog({
-          userId: ctx.user?.id,
+          userId: ctx.user?.id || 0,
           action: "unblock",
           blockedDateId: input.id,
           roomId: blockedDate.roomId,
+          startDate: blockedDate.startDate,
+          endDate: blockedDate.endDate,
+          reason: blockedDate.reason,
           ipAddress: ctx.req.headers["x-forwarded-for"] as string || ctx.req.socket.remoteAddress || "",
           userAgent: ctx.req.headers["user-agent"] as string || "",
         });
@@ -188,19 +191,19 @@ export const appRouter = router({
         offset: z.number().default(0),
       }))
       .query(async ({ input }) => {
-        const { getAuditLogs } = await import("./db");
-        return getAuditLogs(input.roomId, input.action, input.limit, input.offset);
+        const { getAuditLogsByRoom } = await import("./db");
+        return getAuditLogsByRoom(input.roomId, input.limit, input.offset);
       }),
   }),
 
   securityAlerts: router({
     getFailedAttempts: publicProcedure
       .input(z.object({
-        hoursBack: z.number().default(24),
+        minutesBack: z.number().default(5),
       }))
       .query(async ({ input }) => {
-        const { getFailedUnblockAttempts } = await import("./db");
-        return getFailedUnblockAttempts(input.hoursBack);
+        const { getRecentFailedAttempts } = await import("./db");
+        return getRecentFailedAttempts("", input.minutesBack);
       }),
   }),
 });
