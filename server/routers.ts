@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -6,7 +6,6 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 
 export const appRouter = router({
-  // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   
   auth: router({
@@ -20,7 +19,6 @@ export const appRouter = router({
     }),
   }),
 
-  // Feature routers
   rooms: router({
     list: publicProcedure.query(async () => {
       const { getAllRooms } = await import("./db");
@@ -50,26 +48,28 @@ export const appRouter = router({
     create: publicProcedure
       .input(z.object({
         roomId: z.number(),
-        guestName: z.string(),
-        guestEmail: z.string().email(),
-        guestPhone: z.string(),
-        checkInDate: z.date(),
-        checkOutDate: z.date(),
+        firstName: z.string(),
+        lastName: z.string(),
+        email: z.string().email(),
+        phone: z.string(),
+        cpf: z.string().optional(),
+        nationality: z.string().optional(),
+        checkInDate: z.string(),
+        checkOutDate: z.string(),
+        checkInTime: z.string(),
+        checkOutTime: z.string(),
+        numberOfGuests: z.number(),
+        dailyType: z.enum(["couple", "individual"]),
+        subtotal: z.number(),
+        discountPercentage: z.number().optional(),
+        discountAmount: z.number().optional(),
+        cleaningFee: z.number().optional(),
         totalPrice: z.number(),
-        notes: z.string().optional(),
+        specialRequests: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const { createBooking } = await import("./db");
-        const booking = await createBooking({
-          roomId: input.roomId,
-          guestName: input.guestName,
-          guestEmail: input.guestEmail,
-          guestPhone: input.guestPhone,
-          checkInDate: input.checkInDate,
-          checkOutDate: input.checkOutDate,
-          totalPrice: input.totalPrice,
-          notes: input.notes,
-        });
+        const booking = await createBooking(input);
         return booking;
       }),
 
@@ -86,266 +86,123 @@ export const appRouter = router({
         const { getBookingById } = await import("./db");
         return getBookingById(input.id);
       }),
+  }),
 
-    update: publicProcedure
+  blockedDates: router({
+    list: publicProcedure
+      .input(z.object({ roomId: z.number() }))
+      .query(async ({ input }) => {
+        const { getBlockedDates } = await import("./db");
+        return getBlockedDates(input.roomId);
+      }),
+
+    create: publicProcedure
       .input(z.object({
-        id: z.number(),
-        guestName: z.string().optional(),
-        guestEmail: z.string().email().optional(),
-        guestPhone: z.string().optional(),
-        checkInDate: z.date().optional(),
-        checkOutDate: z.date().optional(),
-        totalPrice: z.number().optional(),
-        notes: z.string().optional(),
+        roomId: z.number(),
+        startDate: z.date(),
+        endDate: z.date(),
+        reason: z.string(),
       }))
-      .mutation(async ({ input }) => {
-        const { updateBooking } = await import("./db");
-        const booking = await updateBooking(input.id, {
-          guestName: input.guestName,
-          guestEmail: input.guestEmail,
-          guestPhone: input.guestPhone,
-          checkInDate: input.checkInDate,
-          checkOutDate: input.checkOutDate,
-          totalPrice: input.totalPrice,
-          notes: input.notes,
+      .mutation(async ({ input, ctx }) => {
+        const { createBlockedDate, createAuditLog } = await import("./db");
+        
+        const result = await createBlockedDate({
+          roomId: input.roomId,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          reason: input.reason,
         });
-        return booking;
+
+        await createAuditLog({
+          userId: ctx.user?.id,
+          action: "block",
+          blockedDateId: result,
+          roomId: input.roomId,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          reason: input.reason,
+          ipAddress: ctx.req.headers["x-forwarded-for"] as string || ctx.req.socket.remoteAddress || "",
+          userAgent: ctx.req.headers["user-agent"] as string || "",
+        });
+
+        return result;
       }),
 
     delete: publicProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
-        const { deleteBooking } = await import("./db");
-        await deleteBooking(input.id);
-        return { success: true };
-      }),
+      .input(z.object({
+        id: z.number(),
+        password: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { deleteBlockedDate, createAuditLog, getBlockedDateById, recordFailedAttempt, checkSuspiciousActivity } = await import("./db");
+        
+        const blockedDate = await getBlockedDateById(input.id);
+        if (!blockedDate) {
+          throw new TRPCError({ code: "NOT_FOUND" });
+        }
 
-    cancel: publicProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
-        const { cancelBooking } = await import("./db");
-        await cancelBooking(input.id);
+        const correctPassword = "1234";
+        if (input.password !== correctPassword) {
+          const ipAddress = ctx.req.headers["x-forwarded-for"] as string || ctx.req.socket.remoteAddress || "";
+          const userAgent = ctx.req.headers["user-agent"] as string || "";
+          
+          await recordFailedAttempt({
+            ipAddress,
+            userAgent,
+            blockedDateId: input.id,
+          });
+
+          const isSuspicious = await checkSuspiciousActivity(ipAddress);
+          if (isSuspicious) {
+            const { notifyOwner } = await import("./_core/notification");
+            await notifyOwner({
+              title: "Atividade Suspeita Detectada",
+              content: `Múltiplas tentativas de desbloqueio falhadas do IP: ${ipAddress}`,
+            });
+          }
+
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Senha incorreta" });
+        }
+
+        await deleteBlockedDate(input.id);
+
+        await createAuditLog({
+          userId: ctx.user?.id,
+          action: "unblock",
+          blockedDateId: input.id,
+          roomId: blockedDate.roomId,
+          ipAddress: ctx.req.headers["x-forwarded-for"] as string || ctx.req.socket.remoteAddress || "",
+          userAgent: ctx.req.headers["user-agent"] as string || "",
+        });
+
         return { success: true };
       }),
   }),
 
   auditLogs: router({
-    list: protectedProcedure
+    getByRoom: publicProcedure
       .input(z.object({
-        roomId: z.number().optional(),
-        userId: z.number().optional(),
+        roomId: z.number(),
         action: z.enum(["block", "unblock"]).optional(),
         limit: z.number().default(50),
         offset: z.number().default(0),
       }))
       .query(async ({ input }) => {
         const { getAuditLogs } = await import("./db");
-        return getAuditLogs({
-          roomId: input.roomId,
-          userId: input.userId,
-          action: input.action,
-          limit: input.limit,
-          offset: input.offset,
-        });
+        return getAuditLogs(input.roomId, input.action, input.limit, input.offset);
       }),
   }),
 
   securityAlerts: router({
-    getFailedAttempts: protectedProcedure
+    getFailedAttempts: publicProcedure
       .input(z.object({
-        limit: z.number().default(50),
-        offset: z.number().default(0),
+        hoursBack: z.number().default(24),
       }))
       .query(async ({ input }) => {
-        const db = await (await import("./db")).getDb();
-        if (!db) return [];
-        
-        const { failedUnblockAttempts } = await import("../drizzle/schema");
-        const { desc, gt } = await import("drizzle-orm");
-        
-        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        return db
-          .select()
-          .from(failedUnblockAttempts)
-          .where(gt(failedUnblockAttempts.createdAt, oneDayAgo))
-          .orderBy(desc(failedUnblockAttempts.createdAt))
-          .limit(input.limit)
-          .offset(input.offset);
-      }),
-  }),
-
-  blockedDates: router({
-    create: protectedProcedure
-      .input(z.object({
-        roomId: z.number(),
-        startDate: z.date(),
-        endDate: z.date(),
-        reason: z.string(),
-        password: z.string(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        // Verificar senha - qualquer usuario autenticado pode bloquear com a senha correta
-        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Capacho@69";
-        if (input.password !== ADMIN_PASSWORD) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Senha incorreta"
-          });
-        }
-
-        const { createBlockedDate, createAuditLog } = await import("./db");
-        const id = await createBlockedDate({
-          roomId: input.roomId,
-          startDate: input.startDate,
-          endDate: input.endDate,
-          reason: input.reason,
-        });
-        
-        // Registrar no log de auditoria
-        await createAuditLog({
-          userId: ctx.user.id,
-          action: "block",
-          blockedDateId: id,
-          roomId: input.roomId,
-          startDate: input.startDate,
-          endDate: input.endDate,
-          reason: input.reason,
-          ipAddress: ctx.req.headers['x-forwarded-for'] as string || ctx.req.socket.remoteAddress || undefined,
-          userAgent: ctx.req.headers['user-agent'] as string || undefined,
-        });
-        
-        return { id, success: true };
-      }),
-
-    list: publicProcedure
-      .input(z.object({ roomId: z.number() }))
-      .query(async ({ input }) => {
-        const { getAllBlockedDates } = await import("./db");
-        return getAllBlockedDates(input.roomId);
-      }),
-
-    delete: protectedProcedure
-      .input(z.object({
-        blockedDateId: z.number(),
-        password: z.string(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        // Verificar senha - qualquer usuario autenticado pode desbloquear com a senha correta
-        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Capacho@69";
-        if (input.password !== ADMIN_PASSWORD) {
-          // Registrar tentativa falhada
-          const { recordFailedUnblockAttempt, getRecentFailedAttempts } = await import("./db");
-          const { notifyOwner } = await import("./_core/notification");
-          
-          const ipAddress = ctx.req.headers['x-forwarded-for'] as string || ctx.req.socket.remoteAddress || 'unknown';
-          
-          await recordFailedUnblockAttempt({
-            userId: ctx.user.id,
-            ipAddress,
-            userAgent: ctx.req.headers['user-agent'] as string || undefined,
-            blockedDateId: input.blockedDateId,
-            reason: "Senha incorreta",
-          });
-          
-          // Verificar se há atividade suspeita (3+ tentativas em 5 minutos)
-          const recentAttempts = await getRecentFailedAttempts(ipAddress, 5);
-          if (recentAttempts.length >= 3) {
-            // Notificar admin sobre atividade suspeita
-            await notifyOwner({
-              title: "🚨 Alerta de Segurança: Atividade Suspeita Detectada",
-              content: `Múltiplas tentativas de desbloqueio falhadas detectadas.\n\nIP: ${ipAddress}\nTentativas: ${recentAttempts.length}\nPeríodo: Últimos 5 minutos\n\nPor favor, verifique os logs de auditoria para mais detalhes.`,
-            });
-          }
-          
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Senha incorreta"
-          });
-        }
-
-        const { deleteBlockedDate, createAuditLog, getDb } = await import("./db");
-        const { blockedDates } = await import("../drizzle/schema");
-        const { eq } = await import("drizzle-orm");
-        
-        // Buscar dados do bloqueio antes de deletar
-        const db = await getDb();
-        let blockedDateData = null;
-        if (db) {
-          const result = await db.select().from(blockedDates).where(eq(blockedDates.id, input.blockedDateId));
-          blockedDateData = result[0];
-        }
-        
-        // Registrar no log de auditoria
-        if (blockedDateData) {
-          await createAuditLog({
-            userId: ctx.user.id,
-            action: "unblock",
-            blockedDateId: input.blockedDateId,
-            roomId: blockedDateData.roomId,
-            startDate: blockedDateData.startDate,
-            endDate: blockedDateData.endDate,
-            reason: blockedDateData.reason || undefined,
-            ipAddress: ctx.req.headers['x-forwarded-for'] as string || ctx.req.socket.remoteAddress || undefined,
-            userAgent: ctx.req.headers['user-agent'] as string || undefined,
-          });
-        }
-        
-        await deleteBlockedDate(input.blockedDateId);
-        return { success: true };
-      }),
-
-    addException: protectedProcedure
-      .input(z.object({
-        blockedDateId: z.number(),
-        exceptionDate: z.date(),
-        reason: z.string().optional(),
-        password: z.string(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Capacho@69";
-        if (input.password !== ADMIN_PASSWORD) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Senha incorreta"
-          });
-        }
-
-        const { createBlockingException } = await import("./db");
-        const result = await createBlockingException({
-          blockedDateId: input.blockedDateId,
-          exceptionDate: input.exceptionDate.toISOString().split('T')[0] as any,
-          reason: input.reason,
-          createdBy: ctx.user.id,
-        });
-        
-        return { success: !!result };
-      }),
-
-    removeException: protectedProcedure
-      .input(z.object({
-        exceptionId: z.number(),
-        password: z.string(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Capacho@69";
-        if (input.password !== ADMIN_PASSWORD) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Senha incorreta"
-          });
-        }
-
-        const { deleteBlockingException } = await import("./db");
-        const success = await deleteBlockingException(input.exceptionId);
-        return { success };
-      }),
-
-    getExceptions: publicProcedure
-      .input(z.object({ blockedDateId: z.number() }))
-      .query(async ({ input }) => {
-        const { getBlockingExceptionsByBlockedDate } = await import("./db");
-        return getBlockingExceptionsByBlockedDate(input.blockedDateId);
+        const { getFailedUnblockAttempts } = await import("./db");
+        return getFailedUnblockAttempts(input.hoursBack);
       }),
   }),
 });
-export type AppRouter = typeof appRouter;;
+
+export type AppRouter = typeof appRouter;

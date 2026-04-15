@@ -179,35 +179,33 @@ export async function createBooking(bookingData: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  // Extrair dados do hospede
-  const guestName = bookingData.guestName || '';
-  const [firstName, ...lastNameParts] = guestName.split(' ');
-  const lastName = lastNameParts.join(' ') || '';
-  
-  // Criar hospede primeiro
   const { guests } = await import("../drizzle/schema");
   const guestResult = await db.insert(guests).values({
-    firstName: firstName || 'Guest',
-    lastName: lastName || '',
-    email: bookingData.guestEmail,
-    phone: bookingData.guestPhone,
+    firstName: bookingData.firstName,
+    lastName: bookingData.lastName,
+    email: bookingData.email,
+    phone: bookingData.phone,
+    cpf: bookingData.cpf,
+    nationality: bookingData.nationality,
   });
   
   const guestId = guestResult[0].insertId;
   
-  // Criar reserva com guestId
   const bookingToInsert = {
     guestId,
     roomId: bookingData.roomId,
-    checkInDate: bookingData.checkInDate.toISOString().split('T')[0],
-    checkOutDate: bookingData.checkOutDate.toISOString().split('T')[0],
-    numberOfGuests: 1,
-    dailyType: 'couple',
-    subtotal: bookingData.totalPrice,
+    checkInDate: bookingData.checkInDate,
+    checkOutDate: bookingData.checkOutDate,
+    numberOfGuests: bookingData.numberOfGuests,
+    dailyType: bookingData.dailyType,
+    subtotal: bookingData.subtotal,
     totalPrice: bookingData.totalPrice,
-    checkInTime: '14:00',
-    checkOutTime: '12:00',
-    specialRequests: bookingData.notes,
+    checkInTime: bookingData.checkInTime,
+    checkOutTime: bookingData.checkOutTime,
+    discountPercentage: bookingData.discountPercentage || 0,
+    discountAmount: bookingData.discountAmount || 0,
+    cleaningFee: bookingData.cleaningFee || 700,
+    specialRequests: bookingData.specialRequests,
   };
   
   const result = await db.insert(bookings).values(bookingToInsert);

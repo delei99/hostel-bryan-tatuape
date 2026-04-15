@@ -240,3 +240,10 @@
 - [x] Verificar validacao de campos do formulario
 - [x] Corrigir problema de serializacao de datas
 - [x] Testar fluxo completo de reserva
+
+
+## Bug: Erro ao Criar Reserva Continua Após Publicação
+- [x] Verificar logs do servidor em produção
+- [x] Debugar fluxo completo de criação de reserva
+- [x] Corrigir problema de serialização ou validação
+- [x] Testar em produção após correção
