@@ -1,0 +1,1 @@
+ALTER TABLE `failedUnblockAttempts` MODIFY COLUMN `userId` int;

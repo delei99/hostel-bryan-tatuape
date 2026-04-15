@@ -580,7 +580,7 @@ export async function recordFailedAttempt(data: { ipAddress: string; userAgent: 
   
   try {
     await db.insert(failedUnblockAttempts).values({
-      userId: 0, // Anonymous attempt
+      userId: null, // Anonymous attempt
       ipAddress: data.ipAddress,
       userAgent: data.userAgent,
       blockedDateId: data.blockedDateId,

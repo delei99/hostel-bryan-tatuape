@@ -104,7 +104,7 @@ export default function BlockedDates() {
 
     try {
       await deleteBlockedDate.mutateAsync({
-        blockedDateId,
+        id: blockedDateId,
         password: pwd,
       });
 
@@ -143,7 +143,7 @@ export default function BlockedDates() {
       await Promise.all(
         validIds.map(id =>
           deleteBlockedDate.mutateAsync({
-            blockedDateId: id,
+            id: id,
             password: pwd,
           })
         )

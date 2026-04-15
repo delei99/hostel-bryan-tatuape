@@ -250,7 +250,16 @@
 
 
 ## Bug: Datas Bloqueadas Não Aparecem Após Bloquear
-- [ ] Investigar por que datas bloqueadas não aparecem na listagem
-- [ ] Verificar se estão sendo salvass no banco de dados
-- [ ] Corrigir consulta de datas bloqueadas por quarto
-- [ ] Testar fluxo completo de bloqueio e visualização
+- [x] Investigar por que datas bloqueadas não aparecem na listagem
+- [x] Verificar se estão sendo salvass no banco de dados
+- [x] Corrigir consulta de datas bloqueadas por quarto
+- [x] Testar fluxo completo de bloqueio e visualização
+
+## Bug: Erro "unknown error" ao Desbloquear Datas
+- [x] Corrigir nome do parâmetro blockedDateId para id em BlockedDates.tsx
+- [x] Corrigir schema para permitir userId nullable em failedUnblockAttempts
+- [x] Corrigir db.ts para usar null em vez de 0 para userId
+- [x] Gerar migração SQL com drizzle-kit
+- [ ] Executar migração SQL no banco de dados
+- [ ] Testar desbloqueio com senha correta
+- [ ] Testar desbloqueio com senha incorreta

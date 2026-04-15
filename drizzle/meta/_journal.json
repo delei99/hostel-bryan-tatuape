@@ -78,6 +78,13 @@
       "when": 1776180476669,
       "tag": "0010_messy_dreadnoughts",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1776226703707,
+      "tag": "0011_lame_thena",
+      "breakpoints": true
     }
   ]
 }

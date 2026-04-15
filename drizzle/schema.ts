@@ -169,7 +169,7 @@ export type InsertAuditLog = typeof auditLogs.$inferInsert;
  */
 export const failedUnblockAttempts = mysqlTable("failedUnblockAttempts", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: int("userId").references(() => users.id, { onDelete: "cascade" }),
   ipAddress: varchar("ipAddress", { length: 45 }).notNull(),
   userAgent: text("userAgent"),
   blockedDateId: int("blockedDateId").notNull().references(() => blockedDates.id, { onDelete: "cascade" }),
