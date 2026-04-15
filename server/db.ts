@@ -213,10 +213,17 @@ export async function createBooking(bookingData: any) {
   
   // Bloquear automaticamente as datas da reserva
   try {
+    // Converter strings de data (YYYY-MM-DD) para Date objects
+    const [checkInYear, checkInMonth, checkInDay] = bookingData.checkInDate.split('-').map(Number);
+    const [checkOutYear, checkOutMonth, checkOutDay] = bookingData.checkOutDate.split('-').map(Number);
+    
+    const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
+    const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
+    
     await createBlockedDate({
       roomId: bookingData.roomId,
-      startDate: bookingData.checkInDate,
-      endDate: bookingData.checkOutDate,
+      startDate,
+      endDate,
       reason: `Reserva automática - Hóspede: ${bookingData.firstName} ${bookingData.lastName}`,
     });
   } catch (error) {
