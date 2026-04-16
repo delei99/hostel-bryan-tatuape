@@ -290,3 +290,9 @@
 - [x] Adicionar ícone 🔒 ou 📅 nas datas bloqueadas do calendário
 - [x] Melhorar visualização das datas bloqueadas com ícone
 - [x] Testar calendário com ícones de bloqueio
+
+## Bug: Erro de JSON Parsing na API
+- [x] Investigar qual rota está retornando JSON inválido
+- [x] Identificar causa do erro de parsing (servidor não recarregou funções de db.ts)
+- [x] Corrigir a rota para retornar JSON válido (reiniciar servidor)
+- [x] Testar página inicial sem erro de JSON
