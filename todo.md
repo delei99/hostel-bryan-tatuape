@@ -301,3 +301,8 @@
 - [x] Adicionar imagem da fachada vermelha do Hostel
 - [x] Posicionar imagem corretamente no campo
 - [x] Testar visualização da imagem
+
+## Fase 35: Implementar Mapa Interativo do Google Maps
+- [x] Adicionar componente de mapa interativo na seção "Localização"
+- [x] Mostrar localização exata do Hostel Bryan Tatuapé
+- [x] Testar mapa interativo
