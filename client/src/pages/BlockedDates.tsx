@@ -25,6 +25,10 @@ export default function BlockedDates() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedBlockedIds, setSelectedBlockedIds] = useState<number[]>([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [unblockModalOpen, setUnblockModalOpen] = useState(false);
+  const [unblockPassword, setUnblockPassword] = useState("");
+  const [unblockShowPassword, setUnblockShowPassword] = useState(false);
+  const [selectedUnblockId, setSelectedUnblockId] = useState<number | null>(null);
 
   // Buscar quartos
   const { data: rooms = [] } = trpc.rooms.list.useQuery();
@@ -102,18 +106,30 @@ export default function BlockedDates() {
     }
   };
 
-  const handleUnblockDate = async (blockedDateId: number) => {
-    const pwd = prompt("Digite a senha para desbloquear:");
-    if (!pwd) return;
+  const handleUnblockDate = (blockedDateId: number) => {
+    setSelectedUnblockId(blockedDateId);
+    setUnblockPassword("");
+    setUnblockShowPassword(false);
+    setUnblockModalOpen(true);
+  };
+
+  const handleConfirmUnblock = async () => {
+    if (!selectedUnblockId || !unblockPassword) {
+      toast.error("Digite a senha para desbloquear!");
+      return;
+    }
 
     try {
       await deleteBlockedDate.mutateAsync({
-        id: blockedDateId,
-        password: pwd,
+        id: selectedUnblockId,
+        password: unblockPassword,
       });
 
       toast.success("Data desbloqueada com sucesso!");
-      setSelectedBlockedIds(selectedBlockedIds.filter(id => id !== blockedDateId));
+      setSelectedBlockedIds(selectedBlockedIds.filter(id => id !== selectedUnblockId));
+      setUnblockModalOpen(false);
+      setUnblockPassword("");
+      setSelectedUnblockId(null);
       refetch();
     } catch (error: any) {
       console.error("Erro ao desbloquear:", error);
@@ -393,6 +409,56 @@ export default function BlockedDates() {
           </Card>
         </div>
       </div>
+
+      {/* Modal de Desbloqueio */}
+      {unblockModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold text-foreground mb-4">Desbloquear Data</h2>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="unblockPassword">Senha</Label>
+                <div className="relative">
+                  <Input
+                    id="unblockPassword"
+                    type={unblockShowPassword ? "text" : "password"}
+                    value={unblockPassword}
+                    onChange={(e) => setUnblockPassword(e.target.value)}
+                    placeholder="Digite a senha"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setUnblockShowPassword(!unblockShowPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {unblockShowPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleConfirmUnblock}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Desbloquear
+                </Button>
+                <Button
+                  onClick={() => {
+                    setUnblockModalOpen(false);
+                    setUnblockPassword("");
+                    setSelectedUnblockId(null);
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

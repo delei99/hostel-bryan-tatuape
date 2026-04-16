@@ -274,8 +274,8 @@
 ## Fase 32: Corrigir Bloqueio de Datas com Suporte a Horas
 - [x] Corrigir lógica de bloqueio de data única (16/04 até 16/04 não deve virar 16/04 até 17/04)
 - [x] Adicionar seleção de horas ao bloquear datas
-- [x] Adicionar seleção de horas ao desbloquear datas (próximo passo)
+- [x] Adicionar seleção de horas ao desbloquear datas (UI modal com senha)
 - [x] Corrigir calendário para exibir apenas datas realmente bloqueadas
-- [ ] Testar bloqueio com data única
-- [ ] Testar bloqueio com horas específicas
-- [ ] Testar calendário com datas corretas
+- [x] Testar bloqueio com data única
+- [x] Testar bloqueio com horas específicas
+- [x] Testar calendário com datas corretas
