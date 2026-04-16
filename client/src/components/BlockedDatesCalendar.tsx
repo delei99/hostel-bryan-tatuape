@@ -55,9 +55,21 @@ export default function BlockedDatesCalendar({
   // Obter classe CSS para a data
   const getTileClassName = (date: Date) => {
     if (isDateBlocked(date)) {
-      return 'bg-red-500 text-white rounded-md';
+      return 'bg-red-500 text-white rounded-md relative';
     }
     return '';
+  };
+
+  // Renderizar conteúdo do tile com ícone
+  const getTileContent = (date: Date) => {
+    if (isDateBlocked(date)) {
+      return (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="text-xl">🔒</span>
+        </div>
+      );
+    }
+    return null;
   };
 
   // Lidar com seleção de intervalo
@@ -106,6 +118,7 @@ export default function BlockedDatesCalendar({
             value={selectedRange}
             onChange={handleDateChange}
             tileClassName={({ date }) => getTileClassName(date)}
+            tileContent={({ date }) => getTileContent(date)}
             minDate={new Date()}
           />
         </div>

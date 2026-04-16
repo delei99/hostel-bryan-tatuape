@@ -285,3 +285,8 @@
 - [x] Identificar causa do erro (insertId undefined no Drizzle)
 - [x] Corrigir o erro (extrair insertId corretamente)
 - [x] Testar criação de reserva
+
+## Fase 33: Adicionar Ícone de Bloqueio no Calendário
+- [x] Adicionar ícone 🔒 ou 📅 nas datas bloqueadas do calendário
+- [x] Melhorar visualização das datas bloqueadas com ícone
+- [x] Testar calendário com ícones de bloqueio
