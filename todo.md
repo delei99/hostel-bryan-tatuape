@@ -296,3 +296,8 @@
 - [x] Identificar causa do erro de parsing (servidor não recarregou funções de db.ts)
 - [x] Corrigir a rota para retornar JSON válido (reiniciar servidor)
 - [x] Testar página inicial sem erro de JSON
+
+## Fase 34: Adicionar Imagem do Hostel no Campo de Imagem
+- [x] Adicionar imagem da fachada vermelha do Hostel
+- [x] Posicionar imagem corretamente no campo
+- [x] Testar visualização da imagem

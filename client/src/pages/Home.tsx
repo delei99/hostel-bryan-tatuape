@@ -127,10 +127,12 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-accent/20 to-secondary/20 rounded-2xl p-8 h-96 flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-foreground/50">Imagem do hostel</p>
-              </div>
+            <div className="bg-gradient-to-br from-accent/20 to-secondary/20 rounded-2xl p-8 h-96 flex items-center justify-center overflow-hidden">
+              <img 
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663547970962/iAcfZDXDNVkXabyqU5LtFN/IMG_20260416_154525_d0eaf8de.jpg" 
+                alt="Fachada do Hostel Bryan Tatuapé"
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
         </div>
