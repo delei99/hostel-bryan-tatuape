@@ -46,7 +46,9 @@ export default function BlockedDatesCalendar({
       const blockedStart = normalizeDate(blocked.startDate);
       const blockedEnd = normalizeDate(blocked.endDate);
       
-      return normalizedDate >= blockedStart && normalizedDate < blockedEnd;
+      // Comparar apenas as datas (sem horas)
+      // Uma data está bloqueada se estiver entre startDate e endDate (inclusive)
+      return normalizedDate >= blockedStart && normalizedDate <= blockedEnd;
     });
   };
 

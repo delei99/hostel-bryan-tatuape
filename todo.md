@@ -270,3 +270,12 @@
 - [x] Implementar bloqueio automático ao criar reserva
 - [x] Adicionar motivo automático com nome do hóspede
 - [x] Testar fluxo completo de reserva com bloqueio automático
+
+## Fase 32: Corrigir Bloqueio de Datas com Suporte a Horas
+- [x] Corrigir lógica de bloqueio de data única (16/04 até 16/04 não deve virar 16/04 até 17/04)
+- [x] Adicionar seleção de horas ao bloquear datas
+- [x] Adicionar seleção de horas ao desbloquear datas (próximo passo)
+- [x] Corrigir calendário para exibir apenas datas realmente bloqueadas
+- [ ] Testar bloqueio com data única
+- [ ] Testar bloqueio com horas específicas
+- [ ] Testar calendário com datas corretas

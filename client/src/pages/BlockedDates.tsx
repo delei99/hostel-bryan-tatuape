@@ -17,6 +17,8 @@ export default function BlockedDates() {
   const [roomIds, setRoomIds] = useState<string[]>(["1"]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [startTime, setStartTime] = useState("00:00");
+  const [endTime, setEndTime] = useState("23:59");
   const [reason, setReason] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -64,12 +66,14 @@ export default function BlockedDates() {
     // Converter strings de data para datas locais (nao UTC)
     const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
     const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const [endHour, endMinute] = endTime.split(':').map(Number);
     
-    const start = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
-    const end = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
+    const start = new Date(startYear, startMonth - 1, startDay, startHour, startMinute, 0, 0);
+    const end = new Date(endYear, endMonth - 1, endDay, endHour, endMinute, 59, 999);
     
-    if (start >= end) {
-      toast.error("Data inicial deve ser anterior a data final!");
+    if (start > end) {
+      toast.error("Data/hora inicial deve ser anterior a data/hora final!");
       return;
     }
 
@@ -203,7 +207,7 @@ export default function BlockedDates() {
               onBlockPeriod={async (startDate, endDate, reason) => {
                 // Usar datas locais sem conversão UTC
                 const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0, 0);
-                const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() + 1, 0, 0, 0, 0);
+                const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
                 for (const rid of roomIds) {
                   await createBlockedDate.mutateAsync({
                     roomId: parseInt(rid),
@@ -256,6 +260,26 @@ export default function BlockedDates() {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="startTime">Hora Inicial</Label>
+                <Input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="endTime">Hora Final</Label>
+                <Input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
                   required
                 />
               </div>
