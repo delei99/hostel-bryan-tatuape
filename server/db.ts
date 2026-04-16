@@ -189,7 +189,9 @@ export async function createBooking(bookingData: any) {
     nationality: bookingData.nationality,
   });
   
-  const guestId = guestResult[0].insertId;
+  // Extrair guestId com suporte a diferentes formatos de retorno do Drizzle
+  const guestId = Number((guestResult as any).insertId ?? (guestResult as any)[0]?.insertId);
+  if (!guestId) throw new Error("Failed to create guest");
   
   const bookingToInsert = {
     guestId,
@@ -209,7 +211,10 @@ export async function createBooking(bookingData: any) {
   };
   
   const result = await db.insert(bookings).values(bookingToInsert);
-  const bookingId = result[0].insertId;
+  
+  // Extrair bookingId com suporte a diferentes formatos de retorno do Drizzle
+  const bookingId = Number((result as any).insertId ?? (result as any)[0]?.insertId);
+  if (!bookingId) throw new Error("Failed to create booking");
   
   // Bloquear automaticamente as datas da reserva
   try {

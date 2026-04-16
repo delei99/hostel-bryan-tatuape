@@ -279,3 +279,9 @@
 - [x] Testar bloqueio com data única
 - [x] Testar bloqueio com horas específicas
 - [x] Testar calendário com datas corretas
+
+## Bug: Erro ao Criar Reserva
+- [x] Investigar erro ao criar reserva
+- [x] Identificar causa do erro (insertId undefined no Drizzle)
+- [x] Corrigir o erro (extrair insertId corretamente)
+- [x] Testar criação de reserva
