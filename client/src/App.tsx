@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Booking from "./pages/Booking";
+import RoomGallery from "./pages/RoomGallery";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoomPhotos from "./pages/AdminRoomPhotos";
 import BlockedDates from "./pages/BlockedDates";
@@ -19,6 +20,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/reservar" component={Booking} />
+      <Route path="/galeria" component={RoomGallery} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/fotos" component={AdminRoomPhotos} />
       <Route path="/admin/bloqueios" component={BlockedDates} />

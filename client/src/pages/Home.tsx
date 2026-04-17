@@ -62,7 +62,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-8">
             <a href="#sobre" className="text-foreground hover:text-accent transition-colors">Sobre</a>
             <a href="#comodidades" className="text-foreground hover:text-accent transition-colors">Comodidades</a>
-            <a href="#galeria" className="text-foreground hover:text-accent transition-colors">Galeria</a>
+            <Link href="/galeria" className="text-foreground hover:text-accent transition-colors">Galeria</Link>
             <a href="#contato" className="text-foreground hover:text-accent transition-colors">Contato</a>
             <Link href="/reservar">
               <Button className="bg-accent hover:bg-opacity-90">Fazer Reserva</Button>

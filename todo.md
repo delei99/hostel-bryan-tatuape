@@ -311,3 +311,10 @@
 - [x] Verificar se código de reserva está sendo gerado
 - [x] Implementar envio do código pelo WhatsApp (já estava implementado)
 - [x] Testar fluxo completo de reserva com código e WhatsApp
+
+## Fase 37: Implementar Galeria de Quartos com Dropdown e Carrossel
+- [x] Criar página de galeria com dropdown de quartos 01-07
+- [x] Implementar carrossel de fotos com navegação lateral (setas)
+- [x] Integrar com banco de dados de fotos de quartos
+- [x] Adicionar miniaturas de preview no dropdown
+- [x] Testar galeria completa
