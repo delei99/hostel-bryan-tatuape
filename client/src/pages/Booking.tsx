@@ -7,9 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { ArrowLeft, MessageCircle, CheckCircle, Copy } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import React from "react";
 
 export default function Booking() {
+  // Obter roomId da URL se fornecido
+  const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const roomIdFromUrl = urlParams.get('roomId');
+  
   // Funcao para obter data local sem timezone
   const getLocalDateString = (date: Date) => {
     const year = date.getFullYear();
@@ -29,7 +34,7 @@ export default function Booking() {
     phone: "",
     cpf: "",
     nationality: "",
-    roomId: "1",
+    roomId: roomIdFromUrl || "1",
     checkInDate: getLocalDateString(today),
     checkOutDate: getLocalDateString(tomorrow),
     checkInTime: "14:00",
@@ -40,6 +45,13 @@ export default function Booking() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<any>(null);
+  
+  // Atualizar roomId se vier da URL
+  React.useEffect(() => {
+    if (roomIdFromUrl && roomIdFromUrl !== formData.roomId) {
+      setFormData(prev => ({ ...prev, roomId: roomIdFromUrl }));
+    }
+  }, [roomIdFromUrl]);
 
   // Buscar quartos
   const { data: rooms = [] } = trpc.rooms.list.useQuery();

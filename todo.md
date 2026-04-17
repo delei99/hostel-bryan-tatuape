@@ -318,3 +318,8 @@
 - [x] Integrar com banco de dados de fotos de quartos
 - [x] Adicionar miniaturas de preview no dropdown
 - [x] Testar galeria completa
+
+## Fase 38: Adicionar Botão de Solicitar Reserva na Galeria
+- [x] Adicionar botão "Solicitar Reserva" na página de quarto
+- [x] Pré-selecionar quarto ao ir para reserva
+- [x] Testar fluxo de reserva a partir da galeria

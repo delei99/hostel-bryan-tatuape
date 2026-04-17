@@ -180,9 +180,9 @@ export default function RoomGallery() {
               </div>
 
               <div className="flex items-end">
-                <Link href="/reservar" className="w-full">
+                <Link href={`/reservar?roomId=${selectedRoomId}`} className="w-full">
                   <Button className="w-full bg-accent hover:bg-opacity-90 text-white py-6 text-lg">
-                    Reservar Este Quarto
+                    Solicitar Reserva
                   </Button>
                 </Link>
               </div>
