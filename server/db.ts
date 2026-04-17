@@ -236,7 +236,34 @@ export async function createBooking(bookingData: any) {
     // Não falhar a reserva se o bloqueio automático falhar
   }
   
-  return bookingId;
+  // Gerar código de confirmação único (formato: YYYYMMDD-XXXXX)
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
+  const confirmationCode = `${dateStr}-${randomStr}`;
+  
+  // Atualizar booking com o código de confirmação
+  await db.update(bookings).set({ confirmationCode }).where(eq(bookings.id, bookingId));
+  
+  // Retornar dados completos da reserva com confirmationCode
+  return {
+    id: bookingId,
+    guestId,
+    confirmationCode,
+    roomId: bookingData.roomId,
+    checkInDate: bookingData.checkInDate,
+    checkOutDate: bookingData.checkOutDate,
+    numberOfGuests: bookingData.numberOfGuests,
+    dailyType: bookingData.dailyType,
+    subtotal: bookingData.subtotal,
+    totalPrice: bookingData.totalPrice,
+    checkInTime: bookingData.checkInTime,
+    checkOutTime: bookingData.checkOutTime,
+    discountPercentage: bookingData.discountPercentage || 0,
+    discountAmount: bookingData.discountAmount || 0,
+    cleaningFee: bookingData.cleaningFee || 700,
+    specialRequests: bookingData.specialRequests,
+  };
 }
 
 export async function getAllBookings() {

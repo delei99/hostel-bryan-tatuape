@@ -306,3 +306,8 @@
 - [x] Adicionar componente de mapa interativo na seção "Localização"
 - [x] Mostrar localização exata do Hostel Bryan Tatuapé
 - [x] Testar mapa interativo
+
+## Fase 36: Restaurar Código de Reserva e Envio WhatsApp
+- [x] Verificar se código de reserva está sendo gerado
+- [x] Implementar envio do código pelo WhatsApp (já estava implementado)
+- [x] Testar fluxo completo de reserva com código e WhatsApp
