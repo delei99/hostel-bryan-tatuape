@@ -92,9 +92,11 @@ export default function Home() {
                   Reservar Agora
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10">
-                Saiba Mais
-              </Button>
+              <Link href="/galeria">
+                <Button size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10">
+                  Ver Galeria
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -196,31 +198,34 @@ export default function Home() {
       {/* Galeria */}
       <section id="galeria" className="py-24 md:py-40 bg-accent/5">
         <div className="container">
-          <h3 className="text-4xl font-bold text-foreground mb-12 text-center">Galeria</h3>
+          <div className="flex items-center justify-between mb-12">
+            <h3 className="text-4xl font-bold text-foreground">Galeria</h3>
+            <Link href="/galeria">
+              <Button className="bg-accent hover:bg-opacity-90 text-white">Ver Galeria Completa</Button>
+            </Link>
+          </div>
           <div className="grid md:grid-cols-3 gap-6">
             {galleryImages.map((image) => (
-              <div
-                key={image.id}
-                onClick={() => setSelectedImage(image.id)}
-                className="bg-gradient-to-br from-accent/20 to-secondary/20 rounded-xl overflow-hidden h-64 cursor-pointer hover:shadow-lg transition-all hover:scale-105"
-              >
-                {image.imageUrl ? (
-                  <img
-                    src={image.imageUrl}
-                    alt={image.alt}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <p className="text-foreground font-semibold">{image.title}</p>
+              <Link key={image.id} href="/galeria" className="block">
+                <div className="bg-gradient-to-br from-accent/20 to-secondary/20 rounded-xl overflow-hidden h-64 cursor-pointer hover:shadow-lg transition-all hover:scale-105">
+                  {image.imageUrl ? (
+                    <img
+                      src={image.imageUrl}
+                      alt={image.alt}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <p className="text-foreground font-semibold">{image.title}</p>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              </Link>
             ))}
           </div>
         </div>
