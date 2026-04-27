@@ -28,26 +28,27 @@ export default function BlockedDatesCalendar({
   const [reason, setReason] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Normalizar data para comparação (usar UTC para evitar timezone issues)
+  // Normalizar data para comparação (usar timezone local)
   const normalizeDate = (date: Date | string): Date => {
     if (typeof date === 'string') {
-      // Se for ISO string (ex: "2026-05-01T00:00:00.000Z"), criar Date e extrair componentes UTC
+      // Se for ISO string (ex: "2026-05-01T00:00:00.000Z"), extrair apenas a data
       if (date.includes('T')) {
-        const d = new Date(date);
-        return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+        const dateOnly = date.split('T')[0];
+        const [year, month, day] = dateOnly.split('-').map(Number);
+        return new Date(year, month - 1, day, 0, 0, 0, 0);
       }
       // Se for YYYY-MM-DD, fazer parse direto
       const [year, month, day] = date.split('-').map(Number);
-      return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+      return new Date(year, month - 1, day, 0, 0, 0, 0);
     }
     const d = new Date(date);
-    // Converter para UTC usando getUTC* methods
-    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+    // Usar timezone local
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
   };
 
   // Verificar se uma data está bloqueada
   const isDateBlocked = (date: Date): boolean => {
-    const normalizedDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
+    const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
     
     return blockedDates.some(blocked => {
       const blockedStart = normalizeDate(blocked.startDate);
