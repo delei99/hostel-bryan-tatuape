@@ -206,6 +206,15 @@ export const appRouter = router({
         return getRecentFailedAttempts("", input.minutesBack);
       }),
   }),
+
+  roomPhotos: router({
+    getByRoom: publicProcedure
+      .input(z.object({ roomId: z.number() }))
+      .query(async ({ input }) => {
+        const { getRoomPhotos } = await import("./db");
+        return getRoomPhotos(input.roomId);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
