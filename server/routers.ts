@@ -73,9 +73,13 @@ export const appRouter = router({
         return booking;
       }),
 
-    list: publicProcedure
+    list: protectedProcedure
       .input(z.object({ roomId: z.number().optional() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
+        // Apenas admins podem listar todas as reservas
+        if (ctx.user?.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Apenas administradores podem listar reservas' });
+        }
         const { getAllBookings } = await import("./db");
         return getAllBookings();
       }),

@@ -162,6 +162,13 @@ export default function BlockedDates() {
       saveObservation(editingId, editObservation);
       toast.success("Observação atualizada com sucesso!");
       setEditModalOpen(false);
+      setEditPassword("");
+      setEditObservation("");
+      setEditingId(null);
+    } catch (error: any) {
+      console.error("Erro ao salvar observação:", error);
+      const errorMessage = error?.message || "Erro ao salvar observação";
+      toast.error(errorMessage);
     } finally {
       setIsEditingSubmitting(false);
     }

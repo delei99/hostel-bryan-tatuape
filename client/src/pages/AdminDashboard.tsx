@@ -21,9 +21,24 @@ export default function AdminDashboard() {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
 
   // Buscar todas as reservas
-  const { data: bookings, isLoading, refetch } = trpc.bookings.list.useQuery({ roomId: undefined }, {
+  const { data: bookings, isLoading, error, refetch } = trpc.bookings.list.useQuery({ roomId: undefined }, {
     enabled: isAuthenticated && user?.role === "admin",
   });
+
+  // Mostrar erro se houver
+  if (error) {
+    return (
+      <DashboardLayout>
+        <Card className="p-8 text-center border-red-200 bg-red-50">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Erro ao Carregar Reservas</h2>
+          <p className="text-red-600 mb-4">{error.message || 'Erro desconhecido'}</p>
+          <Button onClick={() => refetch()} className="bg-red-600 hover:bg-red-700">
+            Tentar Novamente
+          </Button>
+        </Card>
+      </DashboardLayout>
+    );
+  }
 
   // Nota: Atualização de status de reserva em desenvolvimento
   const handleUpdateStatus = () => {
