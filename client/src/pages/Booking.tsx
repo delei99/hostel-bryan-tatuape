@@ -94,32 +94,26 @@ export default function Booking() {
   };
 
   // Verificar se a data está bloqueada
-  // Funcao para normalizar data com UTC (evitar timezone issues)
+  // Funcao para normalizar data sem timezone (apenas YYYY-MM-DD)
   const normalizeDate = (dateStr: string | Date): Date => {
     if (typeof dateStr === 'string') {
-      // Se for ISO string (ex: "2026-05-01T00:00:00.000Z"), criar Date e extrair componentes UTC
-      if (dateStr.includes('T')) {
-        const d = new Date(dateStr);
-        return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
-      }
-      // Se for YYYY-MM-DD, fazer parse direto com UTC
       const [year, month, day] = dateStr.split('-').map(Number);
-      return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+      return new Date(year, month - 1, day, 0, 0, 0, 0);
     }
     const d = new Date(dateStr);
-    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
   };
 
   const isDateBlocked = (checkInStr: string, checkOutStr: string) => {
     const checkIn = normalizeDate(checkInStr);
     const checkOut = normalizeDate(checkOutStr);
     
-    return blockedDates.some((blocked: any) => {
+    return blockedDates.some(blocked => {
       const blockedStart = normalizeDate(blocked.startDate);
       const blockedEnd = normalizeDate(blocked.endDate);
       
-      // Verificar conflito de datas (inclusive nas bordas)
-      return checkIn <= blockedEnd && checkOut >= blockedStart;
+      // Verificar conflito de datas
+      return checkIn < blockedEnd && checkOut > blockedStart;
     });
   };
 
