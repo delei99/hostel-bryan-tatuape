@@ -249,13 +249,13 @@ export async function createBooking(bookingData: any) {
   
   // Bloquear automaticamente as datas da reserva
   try {
-    // Usar UTC para evitar problemas de timezone
+    // Usar timezone local para evitar problemas de conversão
     const [checkInYear, checkInMonth, checkInDay] = bookingData.checkInDate.split('-').map(Number);
     const [checkOutYear, checkOutMonth, checkOutDay] = bookingData.checkOutDate.split('-').map(Number);
     
-    // Criar timestamps UTC para o banco de dados
-    const startDate = new Date(Date.UTC(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0));
-    const endDate = new Date(Date.UTC(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999));
+    // Criar timestamps em timezone local (sem UTC)
+    const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
+    const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
     
     await createBlockedDate({
       roomId: bookingData.roomId,
