@@ -31,6 +31,12 @@ export default function BlockedDatesCalendar({
   // Normalizar data para comparação (usar UTC para evitar timezone issues)
   const normalizeDate = (date: Date | string): Date => {
     if (typeof date === 'string') {
+      // Se for ISO string (ex: "2026-05-01T00:00:00.000Z"), criar Date e extrair componentes UTC
+      if (date.includes('T')) {
+        const d = new Date(date);
+        return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+      }
+      // Se for YYYY-MM-DD, fazer parse direto
       const [year, month, day] = date.split('-').map(Number);
       return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
     }
