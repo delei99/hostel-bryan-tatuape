@@ -25,14 +25,15 @@ export default function PhotoUpload() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const maxFiles = 10 - (uploadedPhotos.length + (roomPhotos?.length || 0));
+    const maxFiles = 10 - (roomPhotos?.length || 0);
     
     if (files.length > maxFiles) {
       alert(`Máximo de ${maxFiles} foto(s) permitida(s) para este quarto`);
       return;
     }
 
-    setUploadedPhotos([...uploadedPhotos, ...files]);
+    setUploadedPhotos(files);
+    e.target.value = '';
   };
 
   const removePhoto = (index: number) => {
