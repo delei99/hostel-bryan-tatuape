@@ -9,6 +9,7 @@ import Booking from "./pages/Booking";
 import RoomGallery from "./pages/RoomGallery";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoomPhotos from "./pages/AdminRoomPhotos";
+import PhotoUpload from "./pages/admin/PhotoUpload";
 import BlockedDates from "./pages/BlockedDates";
 import AuditLogs from "./pages/AuditLogs";
 import AccessControl from "./pages/AccessControl";
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/galeria" component={RoomGallery} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/fotos" component={AdminRoomPhotos} />
+      <Route path="/admin/fotos/upload" component={PhotoUpload} />
       <Route path="/admin/bloqueios" component={BlockedDates} />
       <Route path="/admin/logs" component={AuditLogs} />
       <Route path="/admin/acesso" component={AccessControl} />

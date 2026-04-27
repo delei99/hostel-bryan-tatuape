@@ -323,3 +323,11 @@
 - [x] Adicionar botão "Solicitar Reserva" na página de quarto
 - [x] Pré-selecionar quarto ao ir para reserva
 - [x] Testar fluxo de reserva a partir da galeria
+
+## Fase 39: Implementar Sistema de Upload de Fotos dos Quartos
+- [ ] Criar página de admin para upload de fotos
+- [ ] Permitir seleção de quarto (01-07)
+- [ ] Suportar upload de até 10 fotos por quarto
+- [ ] Otimizar fotos automaticamente (redimensionar e comprimir)
+- [ ] Armazenar fotos em S3
+- [ ] Testar upload e visualização na galeria
