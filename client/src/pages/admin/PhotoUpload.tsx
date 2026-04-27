@@ -26,13 +26,14 @@ export default function PhotoUpload() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const maxFiles = 10 - (roomPhotos?.length || 0);
+    const currentCount = uploadedPhotos.length;
     
-    if (files.length > maxFiles) {
-      alert(`Máximo de ${maxFiles} foto(s) permitida(s) para este quarto`);
+    if (currentCount + files.length > maxFiles) {
+      alert(`Máximo de ${maxFiles} foto(s) permitida(s). Você já selecionou ${currentCount}.`);
       return;
     }
 
-    setUploadedPhotos(files);
+    setUploadedPhotos([...uploadedPhotos, ...files]);
     e.target.value = '';
   };
 
