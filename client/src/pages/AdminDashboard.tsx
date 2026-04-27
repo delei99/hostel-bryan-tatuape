@@ -54,9 +54,49 @@ export default function AdminDashboard() {
   }
 
   // Mutation para editar reserva
+  const generateEditedBookingMessage = (booking: any, guest: any, room: any) => {
+    return `*Reserva Editada - Hostel Bryan Tatuape*\n\n` +
+      `*Codigo: ${booking.confirmationCode}*\n\n` +
+      `*Hospede:* ${guest.firstName} ${guest.lastName}\n` +
+      `*Email:* ${guest.email}\n` +
+      `*Telefone:* ${guest.phone}\n\n` +
+      `*Quarto:* ${room.name}\n` +
+      `*Check-in:* ${new Date(booking.checkInDate).toLocaleDateString('pt-BR')} as ${booking.checkInTime}\n` +
+      `*Check-out:* ${new Date(booking.checkOutDate).toLocaleDateString('pt-BR')} as ${booking.checkOutTime}\n` +
+      `*Hospedes:* ${booking.numberOfGuests} pessoa${booking.numberOfGuests > 1 ? 's' : ''}\n\n` +
+      `*Valores:*\n` +
+      `Subtotal: R$ ${(booking.subtotal / 100).toFixed(2)}\n` +
+      (booking.discountPercentage > 0 ? `Desconto (${booking.discountPercentage}%): -R$ ${(booking.discountAmount / 100).toFixed(2)}\n` : '') +
+      `Limpeza: R$ ${(booking.cleaningFee / 100).toFixed(2)}\n` +
+      `*Total: R$ ${(booking.totalPrice / 100).toFixed(2)}*\n\n` +
+      `${booking.specialRequests ? `Observacoes: ${booking.specialRequests}\n\n` : ''}` +
+      `*Editado em:* ${booking.editedAt ? new Date(booking.editedAt).toLocaleString('pt-BR') : 'Agora'}\n` +
+      `*Editado por:* ${booking.editedBy}\n\n` +
+      `Obrigado!`;
+  };
+
   const updateBooking = trpc.bookings.update.useMutation({
-    onSuccess: () => {
+    onSuccess: async (result) => {
       toast.success("Reserva atualizada com sucesso!");
+      
+      if (result && result.booking && result.guest && result.room) {
+        const message = generateEditedBookingMessage(result.booking, result.guest, result.room);
+        const phoneNumber = result.guest.phone ? result.guest.phone.replace(/\D/g, '') : '';
+        
+        if (phoneNumber && phoneNumber.length >= 11) {
+          const encodedMessage = encodeURIComponent(message);
+          const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+          
+          setTimeout(() => {
+            window.open(whatsappUrl, '_blank');
+          }, 500);
+          
+          toast.success('Notificacao WhatsApp enviada!');
+        } else {
+          toast.warning('Telefone do hospede nao disponivel para WhatsApp');
+        }
+      }
+      
       setEditingBooking(null);
       setEditPassword("");
       refetch();
