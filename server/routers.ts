@@ -90,6 +90,39 @@ export const appRouter = router({
         const { getBookingById } = await import("./db");
         return getBookingById(input.id);
       }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        checkInDate: z.string().optional(),
+        checkOutDate: z.string().optional(),
+        checkInTime: z.string().optional(),
+        checkOutTime: z.string().optional(),
+        roomId: z.number().optional(),
+        numberOfGuests: z.number().optional(),
+        dailyType: z.enum(["couple", "individual"]).optional(),
+        firstName: z.string().optional(),
+        lastName: z.string().optional(),
+        email: z.string().optional(),
+        phone: z.string().optional(),
+        specialRequests: z.string().optional(),
+        password: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user?.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Apenas administradores podem editar reservas' });
+        }
+
+        const correctPassword = "Capacho@69";
+        if (input.password !== correctPassword) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Senha incorreta' });
+        }
+
+        const { updateBooking } = await import("./db");
+        const editedBy = ctx.user?.name || 'Admin';
+        
+        return updateBooking(input.id, input, editedBy);
+      }),
   }),
 
   blockedDates: router({

@@ -703,3 +703,47 @@ export async function checkSuspiciousActivity(ipAddress: string): Promise<boolea
   
   return attempts.length >= 3;
 }
+
+
+export async function updateBooking(bookingId: number, updateData: any, editedBy: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Atualizar dados da reserva
+  const updateSet: any = {
+    editedAt: new Date(),
+    editedBy,
+  };
+  
+  // Adicionar campos opcionais se fornecidos
+  if (updateData.checkInDate !== undefined) updateSet.checkInDate = updateData.checkInDate;
+  if (updateData.checkOutDate !== undefined) updateSet.checkOutDate = updateData.checkOutDate;
+  if (updateData.checkInTime !== undefined) updateSet.checkInTime = updateData.checkInTime;
+  if (updateData.checkOutTime !== undefined) updateSet.checkOutTime = updateData.checkOutTime;
+  if (updateData.roomId !== undefined) updateSet.roomId = updateData.roomId;
+  if (updateData.numberOfGuests !== undefined) updateSet.numberOfGuests = updateData.numberOfGuests;
+  if (updateData.dailyType !== undefined) updateSet.dailyType = updateData.dailyType;
+  if (updateData.specialRequests !== undefined) updateSet.specialRequests = updateData.specialRequests;
+  
+  // Atualizar dados do hóspede se fornecidos
+  if (updateData.firstName || updateData.lastName || updateData.email || updateData.phone) {
+    const booking = await getBookingById(bookingId);
+    if (booking) {
+      const guestUpdateSet: any = {};
+      if (updateData.firstName !== undefined) guestUpdateSet.firstName = updateData.firstName;
+      if (updateData.lastName !== undefined) guestUpdateSet.lastName = updateData.lastName;
+      if (updateData.email !== undefined) guestUpdateSet.email = updateData.email;
+      if (updateData.phone !== undefined) guestUpdateSet.phone = updateData.phone;
+      
+      if (Object.keys(guestUpdateSet).length > 0) {
+        await db.update(guests).set(guestUpdateSet).where(eq(guests.id, booking.booking.guestId));
+      }
+    }
+  }
+  
+  // Atualizar reserva
+  await db.update(bookings).set(updateSet).where(eq(bookings.id, bookingId));
+  
+  // Retornar dados atualizados
+  return getBookingById(bookingId);
+}

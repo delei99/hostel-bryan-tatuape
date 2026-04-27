@@ -19,6 +19,9 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [editingBooking, setEditingBooking] = useState<any>(null);
+  const [editPassword, setEditPassword] = useState("");
+  const [isEditingSubmitting, setIsEditingSubmitting] = useState(false);
 
   // Buscar todas as reservas
   const { data: bookings, isLoading, error, refetch } = trpc.bookings.list.useQuery({ roomId: undefined }, {
@@ -49,6 +52,19 @@ export default function AdminDashboard() {
     mutate: handleUpdateStatus,
     isPending: false,
   }
+
+  // Mutation para editar reserva
+  const updateBooking = trpc.bookings.update.useMutation({
+    onSuccess: () => {
+      toast.success("Reserva atualizada com sucesso!");
+      setEditingBooking(null);
+      setEditPassword("");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao atualizar reserva");
+    },
+  });
 
   // Verificar se é admin
   if (!isAuthenticated || user?.role !== "admin") {
@@ -286,7 +302,7 @@ export default function AdminDashboard() {
                             {getStatusLabel(booking.status)}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 flex gap-2">
                           <Button
                             size="sm"
                             variant="outline"
@@ -295,6 +311,13 @@ export default function AdminDashboard() {
                           >
                             <Eye className="w-4 h-4" />
                             Detalhes
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-accent hover:bg-accent/90 gap-2"
+                            onClick={() => setEditingBooking(booking)}
+                          >
+                            Editar
                           </Button>
                         </td>
                       </tr>
@@ -430,6 +453,119 @@ export default function AdminDashboard() {
                     variant="outline"
                   >
                     Fechar
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Modal de Edicao */}
+        {editingBooking && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold text-foreground">Editar Reserva</h3>
+                  <button
+                    onClick={() => setEditingBooking(null)}
+                    className="text-foreground/70 hover:text-foreground"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Check-in</Label>
+                      <Input type="date" defaultValue={editingBooking.checkInDate} />
+                    </div>
+                    <div>
+                      <Label>Check-out</Label>
+                      <Input type="date" defaultValue={editingBooking.checkOutDate} />
+                    </div>
+                    <div>
+                      <Label>Horario Check-in</Label>
+                      <Input type="time" defaultValue={editingBooking.checkInTime} />
+                    </div>
+                    <div>
+                      <Label>Horario Check-out</Label>
+                      <Input type="time" defaultValue={editingBooking.checkOutTime} />
+                    </div>
+                    <div>
+                      <Label>Quarto</Label>
+                      <Input type="number" defaultValue={editingBooking.roomId} />
+                    </div>
+                    <div>
+                      <Label>Hospedes</Label>
+                      <Input type="number" defaultValue={editingBooking.numberOfGuests} />
+                    </div>
+                  </div>
+
+                  <div className="border-t border-border pt-4">
+                    <h4 className="font-semibold text-foreground mb-3">Informacoes do Hospede</h4>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Nome</Label>
+                        <Input type="text" placeholder="Nome" />
+                      </div>
+                      <div>
+                        <Label>Sobrenome</Label>
+                        <Input type="text" placeholder="Sobrenome" />
+                      </div>
+                      <div>
+                        <Label>Email</Label>
+                        <Input type="email" placeholder="Email" />
+                      </div>
+                      <div>
+                        <Label>Telefone</Label>
+                        <Input type="tel" placeholder="Telefone" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-border pt-4">
+                    <Label>Senha para Confirmar</Label>
+                    <Input 
+                      type="password" 
+                      placeholder="Digite a senha" 
+                      value={editPassword}
+                      onChange={(e) => setEditPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t border-border pt-6 flex gap-3">
+                  <Button
+                    onClick={() => {
+                      if (!editPassword) {
+                        toast.error("Digite a senha para confirmar!");
+                        return;
+                      }
+                      updateBooking.mutate({
+                        id: editingBooking.id,
+                        password: editPassword,
+                      });
+                    }}
+                    disabled={isEditingSubmitting || updateBooking.isPending}
+                    className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                  >
+                    {isEditingSubmitting || updateBooking.isPending ? (
+                      <>
+                        <Clock className="w-4 h-4 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      "Salvar Alteracoes"
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => setEditingBooking(null)}
+                    variant="outline"
+                    disabled={isEditingSubmitting || updateBooking.isPending}
+                  >
+                    Cancelar
                   </Button>
                 </div>
               </div>
