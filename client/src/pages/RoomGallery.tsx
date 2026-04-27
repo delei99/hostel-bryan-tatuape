@@ -169,9 +169,12 @@ export default function RoomGallery() {
                 <p className="text-foreground/70 mb-6">
                   {selectedRoom.description || "Quarto confortável e bem equipado no Hostel Bryan Tatuapé."}
                 </p>
-                <div className="space-y-2">
+                <div className="space-y-3 mb-6">
+                  <p className="text-foreground text-lg font-semibold text-accent">
+                    Quarto para 1 ou 2 pessoas
+                  </p>
                   <p className="text-foreground">
-                    <span className="font-semibold">Capacidade:</span> {selectedRoom.capacity} pessoa(s)
+                    <span className="font-semibold">Capacidade:</span> 2 pessoa(s)
                   </p>
                   <p className="text-foreground">
                     <span className="font-semibold">Preço:</span> R$ 80,00 por noite
