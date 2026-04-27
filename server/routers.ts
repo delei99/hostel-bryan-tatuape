@@ -128,6 +128,29 @@ export const appRouter = router({
         return result;
       }),
 
+    updateObservation: publicProcedure
+      .input(z.object({
+        id: z.number(),
+        observation: z.string(),
+        password: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { updateBlockedDateObservation, getBlockedDateById } = await import("./db");
+        
+        const blockedDate = await getBlockedDateById(input.id);
+        if (!blockedDate) {
+          throw new TRPCError({ code: "NOT_FOUND" });
+        }
+
+        const correctPassword = "Capacho@69";
+        if (input.password !== correctPassword) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Senha incorreta" });
+        }
+
+        await updateBlockedDateObservation(input.id, input.observation);
+        return { success: true };
+      }),
+
     delete: publicProcedure
       .input(z.object({
         id: z.number(),

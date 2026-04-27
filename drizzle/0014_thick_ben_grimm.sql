@@ -1,0 +1,1 @@
+ALTER TABLE `blockedDates` ADD `observationUpdatedAt` timestamp;

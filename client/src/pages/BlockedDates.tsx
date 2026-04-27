@@ -29,6 +29,12 @@ export default function BlockedDates() {
   const [unblockPassword, setUnblockPassword] = useState("");
   const [unblockShowPassword, setUnblockShowPassword] = useState(false);
   const [selectedUnblockId, setSelectedUnblockId] = useState<number | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editObservation, setEditObservation] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [editShowPassword, setEditShowPassword] = useState(false);
+  const [isEditingSubmitting, setIsEditingSubmitting] = useState(false);
 
   // Buscar quartos
   const { data: rooms = [] } = trpc.rooms.list.useQuery();
@@ -41,6 +47,7 @@ export default function BlockedDates() {
 
   const createBlockedDate = trpc.blockedDates.create.useMutation();
   const deleteBlockedDate = trpc.blockedDates.delete.useMutation();
+  const updateObservation = trpc.blockedDates.updateObservation.useMutation();
 
   // Sincronizar selectAll quando selectedBlockedIds ou blockedDates muda
   useEffect(() => {
@@ -110,6 +117,37 @@ export default function BlockedDates() {
     setUnblockPassword("");
     setUnblockShowPassword(false);
     setUnblockModalOpen(true);
+  };
+
+  const handleEditObservation = (blockedDateId: number, currentObservation?: string) => {
+    setEditingId(blockedDateId);
+    setEditObservation(currentObservation || "");
+    setEditPassword("");
+    setEditShowPassword(false);
+    setEditModalOpen(true);
+  };
+
+  const handleConfirmEditObservation = async () => {
+    if (!editingId || !editPassword) {
+      toast.error("Digite a senha para editar!");
+      return;
+    }
+
+    try {
+      setIsEditingSubmitting(true);
+      await updateObservation.mutateAsync({
+        id: editingId,
+        observation: editObservation,
+        password: editPassword,
+      });
+      toast.success("Observação atualizada com sucesso!");
+      setEditModalOpen(false);
+      refetch();
+    } catch (error: any) {
+      toast.error(error?.message || "Erro ao atualizar observação");
+    } finally {
+      setIsEditingSubmitting(false);
+    }
   };
 
   const handleConfirmUnblock = async () => {
@@ -398,18 +436,31 @@ export default function BlockedDates() {
                         </p>
                       )}
                       {(blocked as any).observation && (
-                        <p className="text-xs text-gray-600 mt-1">
-                          Obs: {(blocked as any).observation}
-                        </p>
+                        <div className="text-xs text-gray-600 mt-1">
+                          <p>Obs: {(blocked as any).observation}</p>
+                          {(blocked as any).observationUpdatedAt && (
+                            <p className="text-gray-500 mt-0.5">
+                              Editada: {new Date((blocked as any).observationUpdatedAt).toLocaleString('pt-BR')}
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
-                    <Button
-                      onClick={() => handleUnblockDate(blocked.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-                    >
-                      <Unlock className="w-4 h-4" />
-                      Desbloquear
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleEditObservation(blocked.id, (blocked as any).observation)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        onClick={() => handleUnblockDate(blocked.id)}
+                        className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                      >
+                        <Unlock className="w-4 h-4" />
+                        Desbloquear
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -456,6 +507,67 @@ export default function BlockedDates() {
                     setUnblockModalOpen(false);
                     setUnblockPassword("");
                     setSelectedUnblockId(null);
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Modal de Edição */}
+      {editModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold text-foreground mb-4">Editar Observação</h2>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editObservation">Observação</Label>
+                <textarea
+                  id="editObservation"
+                  value={editObservation}
+                  onChange={(e) => setEditObservation(e.target.value)}
+                  placeholder="Digite a observação"
+                  className="w-full px-3 py-2 border rounded-md min-h-24"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editPassword">Senha</Label>
+                <div className="relative">
+                  <Input
+                    id="editPassword"
+                    type={editShowPassword ? "text" : "password"}
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    placeholder="Digite a senha"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEditShowPassword(!editShowPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {editShowPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleConfirmEditObservation}
+                  disabled={isEditingSubmitting}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isEditingSubmitting ? "Salvando..." : "Salvar"}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setEditModalOpen(false);
+                    setEditPassword("");
+                    setEditingId(null);
                   }}
                   variant="outline"
                   className="flex-1"
