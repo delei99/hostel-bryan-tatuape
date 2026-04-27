@@ -69,19 +69,37 @@ export default function Booking() {
   const CLEANING_FEE = 700;
   const DISCOUNT_PERCENTAGE = 12;
 
-  // Calcular preço
+  // Calcular preço com desconto por duração
   const priceCalculation = useMemo(() => {
     const checkIn = new Date(formData.checkInDate);
     const checkOut = new Date(formData.checkOutDate);
     const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (nights <= 0) return { nights: 0, subtotal: 0, discount: 0, cleaning: CLEANING_FEE, total: 0 };
+    if (nights <= 0) return { nights: 0, subtotal: 0, discount: 0, durationDiscount: 0, durationDiscountPercent: 0, cleaning: CLEANING_FEE, total: 0 };
 
     const subtotal = nights * PRICE_PER_NIGHT;
-    const discount = formData.numberOfGuests === "1" ? Math.floor(subtotal * DISCOUNT_PERCENTAGE / 100) : 0;
-    const total = subtotal - discount + CLEANING_FEE;
+    
+    // Desconto por número de hóspedes (12%)
+    const guestDiscount = formData.numberOfGuests === "1" ? Math.floor(subtotal * DISCOUNT_PERCENTAGE / 100) : 0;
+    
+    // Desconto por duração da reserva
+    let durationDiscountPercent = 0;
+    if (nights >= 28) {
+      durationDiscountPercent = 35; // 35% para 28+ dias
+    } else if (nights >= 14) {
+      durationDiscountPercent = 20; // 20% para 14+ dias
+    } else if (nights >= 7) {
+      durationDiscountPercent = 11; // 11% para 7+ dias
+    }
+    
+    // Aplicar desconto de duração sobre o subtótal
+    const durationDiscount = durationDiscountPercent > 0 ? Math.floor(subtotal * durationDiscountPercent / 100) : 0;
+    
+    // Usar o maior desconto entre hóspede e duração
+    const totalDiscount = Math.max(guestDiscount, durationDiscount);
+    const total = subtotal - totalDiscount + CLEANING_FEE;
 
-    return { nights, subtotal, discount, cleaning: CLEANING_FEE, total };
+    return { nights, subtotal, discount: totalDiscount, durationDiscount, durationDiscountPercent, cleaning: CLEANING_FEE, total };
   }, [formData.checkInDate, formData.checkOutDate, formData.numberOfGuests]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -212,6 +230,7 @@ export default function Booking() {
       `*Hóspedes:* ${numberOfGuests} pessoa${numberOfGuests > 1 ? 's' : ''}\n\n` +
       `*Valores:*\n` +
       `Subtotal: R$ ${(priceCalculation.subtotal / 100).toFixed(2)}\n` +
+      (priceCalculation.durationDiscountPercent > 0 ? `Desconto por Duração (${priceCalculation.durationDiscountPercent}%): -R$ ${(priceCalculation.durationDiscount / 100).toFixed(2)}\n` : '') +
       `${priceCalculation.discount > 0 ? `Desconto (12%): -R$ ${(priceCalculation.discount / 100).toFixed(2)}\n` : ''}` +
       `Limpeza: R$ ${(priceCalculation.cleaning / 100).toFixed(2)}\n` +
       `*Total: R$ ${(priceCalculation.total / 100).toFixed(2)}*\n\n` +
@@ -493,7 +512,13 @@ export default function Booking() {
                 <span>Subtotal ({priceCalculation.nights} noites):</span>
                 <span>R$ {(priceCalculation.subtotal / 100).toFixed(2)}</span>
               </div>
-              {priceCalculation.discount > 0 && (
+              {priceCalculation.durationDiscountPercent > 0 && (
+                <div className="flex justify-between mb-2 text-green-600">
+                  <span>Desconto por Duração ({priceCalculation.durationDiscountPercent}%):</span>
+                  <span>-R$ {(priceCalculation.durationDiscount / 100).toFixed(2)}</span>
+                </div>
+              )}
+              {priceCalculation.discount > 0 && priceCalculation.durationDiscountPercent === 0 && (
                 <div className="flex justify-between mb-2 text-green-600">
                   <span>Desconto (12%):</span>
                   <span>-R$ {(priceCalculation.discount / 100).toFixed(2)}</span>

@@ -345,3 +345,11 @@
 - [x] Corrigir exibição de datas no calendário (normalização com UTC)
 - [x] Corrigir isDateExcepted para usar UTC
 - [x] Testar fluxo completo de reserva e bloqueio
+
+## Fase 34: Sistema de Descontos por Duração e Edição de Datas Bloqueadas
+- [x] Implementar cálculo de desconto por duração (7 dias: 11%, 14 dias: 20%, 28 dias: 35%)
+- [x] Exibir desconto claramente na página de finalização
+- [x] Enviar desconto no WhatsApp (já implementado)
+- [x] Adicionar coluna observation em datas bloqueadas
+- [x] Implementar rota tRPC para editar datas bloqueadas
+- [x] Exibir horário de criação das datas bloqueadas no calendário

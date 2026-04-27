@@ -392,6 +392,16 @@ export default function BlockedDates() {
                       <p className="text-sm text-muted-foreground">
                         Motivo: {blocked.reason}
                       </p>
+                      {(blocked as any).createdAt && (
+                        <p className="text-xs text-gray-500">
+                          Criado: {new Date((blocked as any).createdAt).toLocaleString('pt-BR')}
+                        </p>
+                      )}
+                      {(blocked as any).observation && (
+                        <p className="text-xs text-gray-600 mt-1">
+                          Obs: {(blocked as any).observation}
+                        </p>
+                      )}
                     </div>
                     <Button
                       onClick={() => handleUnblockDate(blocked.id)}

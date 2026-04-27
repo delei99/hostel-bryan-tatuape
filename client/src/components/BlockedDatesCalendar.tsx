@@ -11,6 +11,8 @@ interface BlockedDate {
   endDate: Date | string;
   roomId: number;
   reason: string;
+  createdAt?: Date | string;
+  observation?: string;
 }
 
 interface BlockedDatesCalendarProps {
@@ -175,6 +177,32 @@ export default function BlockedDatesCalendar({
         <div className="text-sm text-gray-600">
           <p>Datas em <span className="inline-block w-3 h-3 bg-red-500 rounded"></span> estão bloqueadas</p>
         </div>
+
+        {blockedDates.length > 0 && (
+          <div className="border-t pt-4 space-y-2">
+            <h4 className="font-medium text-sm">Datas Bloqueadas</h4>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {blockedDates.map((blocked) => {
+                const startDate = normalizeDate(blocked.startDate);
+                const endDate = normalizeDate(blocked.endDate);
+                const createdAt = blocked.createdAt ? new Date(blocked.createdAt) : null;
+                
+                return (
+                  <div key={blocked.id} className="text-xs bg-gray-50 p-2 rounded border border-gray-200">
+                    <p className="font-medium">{startDate.toLocaleDateString('pt-BR')} até {endDate.toLocaleDateString('pt-BR')}</p>
+                    <p className="text-gray-600">Motivo: {blocked.reason}</p>
+                    {createdAt && (
+                      <p className="text-gray-500">Criado: {createdAt.toLocaleString('pt-BR')}</p>
+                    )}
+                    {blocked.observation && (
+                      <p className="text-gray-600 mt-1">Obs: {blocked.observation}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </Card>
   );

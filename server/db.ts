@@ -456,6 +456,15 @@ export async function getBlockedDates(roomId: number, startDate: Date, endDate: 
     );
 }
 
+export async function updateBlockedDate(blockedDateId: number, data: { observation?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(blockedDates)
+    .set(data)
+    .where(eq(blockedDates.id, blockedDateId));
+}
+
 export async function deleteBlockedDate(blockedDateId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
