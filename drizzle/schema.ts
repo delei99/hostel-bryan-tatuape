@@ -137,7 +137,6 @@ export const blockedDates = mysqlTable("blockedDates", {
   startDate: timestamp("startDate").notNull(),
   endDate: timestamp("endDate").notNull(),
   reason: varchar("reason", { length: 255 }), // "booking" ou "manual"
-  observation: text("observation"), // Observação editável
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
