@@ -338,3 +338,10 @@
 - [ ] Otimizar fotos automaticamente (redimensionar e comprimir)
 - [ ] Armazenar fotos em S3
 - [ ] Testar upload e visualização na galeria
+
+## Bug: Check-in Bloqueado Aparece um Dia Anterior
+- [x] Investigar por que check-in bloqueado aparece um dia anterior no calendário
+- [x] Corrigir lógica de bloqueio de datas ao criar reserva (usar Date.UTC)
+- [x] Corrigir exibição de datas no calendário (normalização com UTC)
+- [x] Corrigir isDateExcepted para usar UTC
+- [x] Testar fluxo completo de reserva e bloqueio

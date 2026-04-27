@@ -229,12 +229,13 @@ export async function createBooking(bookingData: any) {
   
   // Bloquear automaticamente as datas da reserva
   try {
-    // Converter strings de data (YYYY-MM-DD) para Date objects
+    // Usar UTC para evitar problemas de timezone
     const [checkInYear, checkInMonth, checkInDay] = bookingData.checkInDate.split('-').map(Number);
     const [checkOutYear, checkOutMonth, checkOutDay] = bookingData.checkOutDate.split('-').map(Number);
     
-    const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
-    const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
+    // Criar timestamps UTC para o banco de dados
+    const startDate = new Date(Date.UTC(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0));
+    const endDate = new Date(Date.UTC(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999));
     
     await createBlockedDate({
       roomId: bookingData.roomId,
@@ -618,19 +619,21 @@ export async function isDateExcepted(blockedDateId: number, date: Date): Promise
   const db = await getDb();
   if (!db) return false;
   
-  // Converter Date para formato YYYY-MM-DD para comparação
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  // Converter Date para formato YYYY-MM-DD para comparação (usar UTC)
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
   const dateStr = `${year}-${month}-${day}`;
   
-  // Usar comparação direta sem casting
+  // Criar Date UTC para comparação
+  const exceptionDate = new Date(Date.UTC(year, parseInt(month) - 1, parseInt(day), 0, 0, 0, 0));
+  
   const exceptions = await db
     .select()
     .from(blockingExceptions)
     .where(and(
       eq(blockingExceptions.blockedDateId, blockedDateId),
-      eq(blockingExceptions.exceptionDate, new Date(dateStr))
+      eq(blockingExceptions.exceptionDate, exceptionDate)
     ));
   
   return exceptions.length > 0;
