@@ -185,8 +185,9 @@ export default function Booking() {
       });
 
     } catch (error) {
-      console.error("Erro:", error);
-      toast.error("Erro ao criar reserva. Tente novamente.");
+      console.error("Erro ao criar reserva:", error);
+      const errorMessage = (error as any)?.message || (error as any)?.data?.zodError?.fieldErrors || "Erro ao criar reserva. Tente novamente.";
+      toast.error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
     } finally {
       setIsSubmitting(false);
     }

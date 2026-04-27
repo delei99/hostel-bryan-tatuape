@@ -201,8 +201,18 @@ export async function createBooking(bookingData: any) {
   });
   
   // Extrair guestId com suporte a diferentes formatos de retorno do Drizzle
-  const guestId = Number((guestResult as any).insertId ?? (guestResult as any)[0]?.insertId);
-  if (!guestId) throw new Error("Failed to create guest");
+  let guestId: number;
+  if ((guestResult as any).insertId) {
+    guestId = Number((guestResult as any).insertId);
+  } else if (Array.isArray(guestResult) && (guestResult[0] as any)?.insertId) {
+    guestId = Number((guestResult[0] as any).insertId);
+  } else if ((guestResult as any)[0]?.insertId) {
+    guestId = Number((guestResult as any)[0].insertId);
+  } else {
+    console.error('[createBooking] guestResult:', guestResult);
+    throw new Error("Failed to create guest: could not extract insertId");
+  }
+  if (!guestId || isNaN(guestId)) throw new Error("Failed to create guest: invalid guestId");
   
   const bookingToInsert = {
     guestId,
@@ -224,8 +234,18 @@ export async function createBooking(bookingData: any) {
   const result = await db.insert(bookings).values(bookingToInsert);
   
   // Extrair bookingId com suporte a diferentes formatos de retorno do Drizzle
-  const bookingId = Number((result as any).insertId ?? (result as any)[0]?.insertId);
-  if (!bookingId) throw new Error("Failed to create booking");
+  let bookingId: number;
+  if ((result as any).insertId) {
+    bookingId = Number((result as any).insertId);
+  } else if (Array.isArray(result) && (result[0] as any)?.insertId) {
+    bookingId = Number((result[0] as any).insertId);
+  } else if ((result as any)[0]?.insertId) {
+    bookingId = Number((result as any)[0].insertId);
+  } else {
+    console.error('[createBooking] bookingResult:', result);
+    throw new Error("Failed to create booking: could not extract insertId");
+  }
+  if (!bookingId || isNaN(bookingId)) throw new Error("Failed to create booking: invalid bookingId");
   
   // Bloquear automaticamente as datas da reserva
   try {
