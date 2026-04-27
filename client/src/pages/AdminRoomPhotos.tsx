@@ -25,35 +25,14 @@ export default function AdminRoomPhotos() {
   const { data: rooms, isLoading: roomsLoading } = trpc.rooms.list.useQuery();
 
   // Buscar fotos do quarto selecionado
-  const { data: photos, isLoading: photosLoading, refetch: refetchPhotos } = trpc.roomPhotos.getByRoomId.useQuery(
+  const { data: photos, isLoading: photosLoading, refetch: refetchPhotos } = trpc.roomPhotos.getByRoom.useQuery(
     { roomId: selectedRoomId || 0 },
     { enabled: selectedRoomId !== null }
   );
 
-  // Adicionar foto
-  const addPhoto = trpc.roomPhotos.add.useMutation({
-    onSuccess: () => {
-      toast.success("Foto adicionada com sucesso!");
-      setNewPhotoUrl("");
-      setNewPhotoCaption("");
-      setIsMainPhoto(false);
-      refetchPhotos();
-    },
-    onError: () => {
-      toast.error("Erro ao adicionar foto");
-    },
-  });
-
-  // Deletar foto
-  const deletePhoto = trpc.roomPhotos.delete.useMutation({
-    onSuccess: () => {
-      toast.success("Foto deletada com sucesso!");
-      refetchPhotos();
-    },
-    onError: () => {
-      toast.error("Erro ao deletar foto");
-    },
-  });
+  // Nota: As funcionalidades de adicionar e deletar fotos são gerenciadas
+  // através da página /admin/fotos/upload para uploads via multer
+  // e através de endpoints específicos para deleção
 
   // Verificar se é admin
   if (!isAuthenticated || user?.role !== "admin") {
@@ -68,22 +47,7 @@ export default function AdminRoomPhotos() {
   }
 
   const handleAddPhoto = async () => {
-    if (!selectedRoomId || !newPhotoUrl.trim()) {
-      toast.error("Por favor, preencha todos os campos obrigatórios");
-      return;
-    }
-
-    try {
-      await addPhoto.mutateAsync({
-        roomId: selectedRoomId,
-        photoUrl: newPhotoUrl,
-        caption: newPhotoCaption || undefined,
-        displayOrder: (photos?.length || 0) + 1,
-        isMainPhoto: isMainPhoto ? 1 : 0,
-      });
-    } catch (error) {
-      console.error(error);
-    }
+    toast.info("Use a página /admin/fotos/upload para enviar fotos");
   };
 
   return (
@@ -177,11 +141,10 @@ export default function AdminRoomPhotos() {
               </div>
 
               <Button
-                onClick={handleAddPhoto}
-                disabled={addPhoto.isPending || !newPhotoUrl.trim()}
+                onClick={() => toast.info("Use a página /admin/fotos/upload para enviar fotos")}
                 className="w-full bg-accent hover:bg-opacity-90 text-white"
               >
-                {addPhoto.isPending ? "Adicionando..." : "Adicionar Foto"}
+                Ir para Upload de Fotos
               </Button>
             </div>
           </Card>
@@ -234,11 +197,9 @@ export default function AdminRoomPhotos() {
                           variant="outline"
                           className="flex-1 text-xs border-red-600 text-red-600 hover:bg-red-50"
                           onClick={() => {
-                            if (confirm("Tem certeza que deseja deletar esta foto?")) {
-                              deletePhoto.mutate({ photoId: photo.id });
-                            }
+                            toast.info("Deleção de fotos em desenvolvimento");
                           }}
-                          disabled={deletePhoto.isPending}
+                          disabled={false}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

@@ -163,7 +163,7 @@ export default function PhotoUpload() {
               {roomPhotos.map((photo) => (
                 <div key={photo.id} className="relative group">
                   <img
-                    src={photo.url}
+                    src={photo.photoUrl}
                     alt={`Foto ${photo.id}`}
                     className="w-full h-40 object-cover rounded-lg"
                   />

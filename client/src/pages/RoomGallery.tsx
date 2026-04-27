@@ -25,7 +25,7 @@ export default function RoomGallery() {
   const carouselImages = roomPhotos.length > 0
     ? roomPhotos.map(photo => ({
         id: photo.id,
-        url: photo.imageUrl,
+        url: photo.photoUrl,
         title: photo.caption || selectedRoom?.name || "Quarto",
       }))
     : [

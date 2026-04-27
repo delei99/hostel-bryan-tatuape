@@ -89,7 +89,6 @@ export default function BlockedDates() {
           startDate: start,
           endDate: end,
           reason,
-          password,
         });
       }
 
@@ -218,7 +217,7 @@ export default function BlockedDates() {
           {/* Calendário de bloqueios */}
           <div className="lg:col-span-1">
             <BlockedDatesCalendar
-              blockedDates={blockedDates}
+              blockedDates={blockedDates as any}
               roomId={roomIds.length > 0 ? parseInt(roomIds[0]) : 1}
               onBlockPeriod={async (startDate, endDate, reason) => {
                 // Usar datas locais sem conversão UTC
@@ -229,8 +228,7 @@ export default function BlockedDates() {
                     roomId: parseInt(rid),
                     startDate: start,
                     endDate: end,
-                    reason,
-                    password,
+                    reason: reason || "",
                   });
                 }
                 refetch();

@@ -73,10 +73,10 @@ export default function BlockedDatesCalendar({
   };
 
   // Lidar com seleção de intervalo
-  const handleDateChange = (value: Date | [Date, Date]) => {
+  const handleDateChange = (value: any) => {
     if (Array.isArray(value)) {
       setSelectedRange([value[0], value[1]]);
-    } else {
+    } else if (value) {
       setSelectedRange([value, value]);
     }
   };

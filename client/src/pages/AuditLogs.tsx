@@ -18,10 +18,10 @@ export default function AuditLogs() {
   const { data: rooms = [] } = trpc.rooms.list.useQuery();
 
   // Buscar logs de auditoria
-  const { data: logs = [], isLoading } = trpc.auditLogs.list.useQuery(
+  const { data: logs = [], isLoading } = trpc.auditLogs.getByRoom.useQuery(
     {
-      roomId: roomId && roomId !== "0" ? parseInt(roomId) : undefined,
-      action: action ? action : undefined,
+      roomId: roomId && roomId !== "0" ? parseInt(roomId) : 1,
+      action: action ? (action as 'block' | 'unblock') : undefined,
       limit,
       offset,
     },

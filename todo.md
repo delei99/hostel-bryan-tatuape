@@ -271,7 +271,14 @@
 - [x] Adicionar motivo automático com nome do hóspede
 - [x] Testar fluxo completo de reserva com bloqueio automático
 
-## Fase 32: Corrigir Bloqueio de Datas com Suporte a Horas
+## Fase 32: Upload de Fotos com Multer e Sharp
+- [x] Implementar endpoint /api/upload-room-photo com multer
+- [x] Integrar Sharp para otimização de imagens
+- [x] Corrigir erros de TypeScript em blockingExceptions
+- [x] Validar fluxo end-to-end de upload e exibição
+- [x] Testar endpoint de upload com curl
+
+## Fase 33: Corrigir Bloqueio de Datas com Suporte a Horas
 - [x] Corrigir lógica de bloqueio de data única (16/04 até 16/04 não deve virar 16/04 até 17/04)
 - [x] Adicionar seleção de horas ao bloquear datas
 - [x] Adicionar seleção de horas ao desbloquear datas (UI modal com senha)

@@ -116,6 +116,17 @@ export async function getRoomAvailability(roomId: number, checkInDate: Date, che
   const db = await getDb();
   if (!db) return { available: false, bookedDates: [] };
   
+  // Converter datas para formato YYYY-MM-DD para comparação
+  const formatDate = (d: Date) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const checkInStr = formatDate(checkInDate);
+  const checkOutStr = formatDate(checkOutDate);
+  
   // Buscar reservas confirmadas que conflitem com as datas
   const conflictingBookings = await db
     .select()
@@ -127,10 +138,10 @@ export async function getRoomAvailability(roomId: number, checkInDate: Date, che
           eq(bookings.status, "confirmed"),
           eq(bookings.status, "checked_in")
         ),
-        // Verificar conflito de datas
+        // Verificar conflito de datas (comparar como strings)
         and(
-          lt(bookings.checkInDate, checkOutDate),
-          gt(bookings.checkOutDate, checkInDate)
+          lt(bookings.checkInDate, checkOutStr),
+          gt(bookings.checkOutDate, checkInStr)
         )
       )
     );
@@ -455,9 +466,11 @@ export async function createAuditLog(data: InsertAuditLog): Promise<AuditLog | n
   
   try {
     const result = await db.insert(auditLogs).values(cleanData);
-    if (!result.insertId) return null;
+    const insertId = (result as any).insertId;
+    if (!insertId) return null;
     
-    return db.select().from(auditLogs).where(eq(auditLogs.id, Number(result.insertId))).then(rows => rows[0] || null);
+    const rows = await db.select().from(auditLogs).where(eq(auditLogs.id, Number(insertId)));
+    return rows[0] || null;
   } catch (error) {
     console.error("[AuditLog] Error creating audit log:", error);
     return null;
@@ -468,7 +481,6 @@ export async function getAuditLogs(filters?: { userId?: number; roomId?: number;
   const db = await getDb();
   if (!db) return [];
   
-  let query = db.select().from(auditLogs);
   const conditions: any[] = [];
   
   if (filters?.userId) {
@@ -480,6 +492,8 @@ export async function getAuditLogs(filters?: { userId?: number; roomId?: number;
   if (filters?.action) {
     conditions.push(eq(auditLogs.action, filters.action));
   }
+  
+  let query: any = db.select().from(auditLogs);
   
   if (conditions.length > 0) {
     query = query.where(and(...conditions));
@@ -494,7 +508,7 @@ export async function getAuditLogs(filters?: { userId?: number; roomId?: number;
     query = query.offset(filters.offset);
   }
   
-  return query;
+  return await query;
 }
 
 export async function getAuditLogsByRoom(roomId: number, limit: number = 50, offset: number = 0): Promise<AuditLog[]> {
@@ -569,9 +583,11 @@ export async function createBlockingException(data: InsertBlockingException): Pr
   
   try {
     const result = await db.insert(blockingExceptions).values(data);
-    if (!result.insertId) return null;
+    const insertId = (result as any).insertId;
+    if (!insertId) return null;
     
-    return db.select().from(blockingExceptions).where(eq(blockingExceptions.id, Number(result.insertId))).then(rows => rows[0] || null);
+    const rows = await db.select().from(blockingExceptions).where(eq(blockingExceptions.id, Number(insertId)));
+    return rows[0] || null;
   } catch (error) {
     console.error("[BlockingException] Error creating exception:", error);
     return null;
@@ -602,17 +618,19 @@ export async function isDateExcepted(blockedDateId: number, date: Date): Promise
   const db = await getDb();
   if (!db) return false;
   
+  // Converter Date para formato YYYY-MM-DD para comparação
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   const dateStr = `${year}-${month}-${day}`;
   
+  // Usar comparação direta sem casting
   const exceptions = await db
     .select()
     .from(blockingExceptions)
     .where(and(
       eq(blockingExceptions.blockedDateId, blockedDateId),
-      eq(blockingExceptions.exceptionDate, dateStr)
+      eq(blockingExceptions.exceptionDate, new Date(dateStr))
     ));
   
   return exceptions.length > 0;

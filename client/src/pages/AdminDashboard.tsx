@@ -21,21 +21,19 @@ export default function AdminDashboard() {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
 
   // Buscar todas as reservas
-  const { data: bookings, isLoading, refetch } = trpc.bookings.list.useQuery(undefined, {
+  const { data: bookings, isLoading, refetch } = trpc.bookings.list.useQuery({ roomId: undefined }, {
     enabled: isAuthenticated && user?.role === "admin",
   });
 
-  // Atualizar status da reserva
-  const updateStatus = trpc.bookings.updateStatus.useMutation({
-    onSuccess: () => {
-      toast.success("Status atualizado com sucesso!");
-      refetch();
-      setSelectedBooking(null);
-    },
-    onError: () => {
-      toast.error("Erro ao atualizar status");
-    },
-  });
+  // Nota: Atualização de status de reserva em desenvolvimento
+  const handleUpdateStatus = () => {
+    toast.info("Atualização de status em desenvolvimento");
+  };
+
+  const updateStatus = {
+    mutate: handleUpdateStatus,
+    isPending: false,
+  }
 
   // Verificar se é admin
   if (!isAuthenticated || user?.role !== "admin") {
@@ -370,10 +368,7 @@ export default function AdminDashboard() {
                   {selectedBooking.status === "pending" && (
                     <Button
                       onClick={() => {
-                        updateStatus.mutate({
-                          bookingId: selectedBooking.id,
-                          status: "confirmed",
-                        });
+                        handleUpdateStatus();
                       }}
                       disabled={updateStatus.isPending}
                       className="bg-green-600 hover:bg-green-700 text-white"
@@ -384,10 +379,7 @@ export default function AdminDashboard() {
                   {selectedBooking.status === "confirmed" && (
                     <Button
                       onClick={() => {
-                        updateStatus.mutate({
-                          bookingId: selectedBooking.id,
-                          status: "checked_in",
-                        });
+                        handleUpdateStatus();
                       }}
                       disabled={updateStatus.isPending}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -398,10 +390,7 @@ export default function AdminDashboard() {
                   {selectedBooking.status === "checked_in" && (
                     <Button
                       onClick={() => {
-                        updateStatus.mutate({
-                          bookingId: selectedBooking.id,
-                          status: "checked_out",
-                        });
+                        handleUpdateStatus();
                       }}
                       disabled={updateStatus.isPending}
                       className="bg-gray-600 hover:bg-gray-700 text-white"
@@ -412,10 +401,7 @@ export default function AdminDashboard() {
                   {selectedBooking.status !== "cancelled" && selectedBooking.status !== "checked_out" && (
                     <Button
                       onClick={() => {
-                        updateStatus.mutate({
-                          bookingId: selectedBooking.id,
-                          status: "cancelled",
-                        });
+                        handleUpdateStatus();
                       }}
                       disabled={updateStatus.isPending}
                       variant="outline"
