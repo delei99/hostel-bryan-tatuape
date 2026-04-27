@@ -29,6 +29,38 @@ export default function BlockedDates() {
   const [unblockPassword, setUnblockPassword] = useState("");
   const [unblockShowPassword, setUnblockShowPassword] = useState(false);
   const [selectedUnblockId, setSelectedUnblockId] = useState<number | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editObservation, setEditObservation] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [editShowPassword, setEditShowPassword] = useState(false);
+  const [isEditingSubmitting, setIsEditingSubmitting] = useState(false);
+  const [observations, setObservations] = useState<Record<number, { text: string; editedAt: string }>>({});
+
+  // Carregar observações do localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('blockedDateObservations');
+    if (saved) {
+      try {
+        setObservations(JSON.parse(saved));
+      } catch (e) {
+        console.error('Erro ao carregar observações:', e);
+      }
+    }
+  }, []);
+
+  // Salvar observações no localStorage
+  const saveObservation = (id: number, text: string) => {
+    const updated = {
+      ...observations,
+      [id]: {
+        text,
+        editedAt: new Date().toLocaleString('pt-BR'),
+      },
+    };
+    setObservations(updated);
+    localStorage.setItem('blockedDateObservations', JSON.stringify(updated));
+  };
 
   // Buscar quartos
   const { data: rooms = [] } = trpc.rooms.list.useQuery();
@@ -102,6 +134,36 @@ export default function BlockedDates() {
       toast.error(error.message || "Erro ao bloquear data");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleEditObservation = (blockedDateId: number) => {
+    setEditingId(blockedDateId);
+    setEditObservation(observations[blockedDateId]?.text || "");
+    setEditPassword("");
+    setEditShowPassword(false);
+    setEditModalOpen(true);
+  };
+
+  const handleConfirmEditObservation = async () => {
+    if (!editingId || !editPassword) {
+      toast.error("Digite a senha para editar!");
+      return;
+    }
+
+    const correctPassword = "Capacho@69";
+    if (editPassword !== correctPassword) {
+      toast.error("Senha incorreta!");
+      return;
+    }
+
+    try {
+      setIsEditingSubmitting(true);
+      saveObservation(editingId, editObservation);
+      toast.success("Observação atualizada com sucesso!");
+      setEditModalOpen(false);
+    } finally {
+      setIsEditingSubmitting(false);
     }
   };
 
@@ -396,15 +458,30 @@ export default function BlockedDates() {
                           Criado: {new Date((blocked as any).createdAt).toLocaleString('pt-BR')}
                         </p>
                       )}
+                      {observations[blocked.id] && (
+                        <div className="text-xs text-gray-600 mt-2 bg-blue-50 p-2 rounded">
+                          <p className="font-semibold">Observação:</p>
+                          <p>{observations[blocked.id].text}</p>
+                          <p className="text-gray-500 mt-1">Editada: {observations[blocked.id].editedAt}</p>
+                        </div>
+                      )}
 
                     </div>
-                    <Button
-                      onClick={() => handleUnblockDate(blocked.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-                    >
-                      <Unlock className="w-4 h-4" />
-                      Desbloquear
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleEditObservation(blocked.id)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        onClick={() => handleUnblockDate(blocked.id)}
+                        className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                      >
+                        <Unlock className="w-4 h-4" />
+                        Desbloquear
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -461,9 +538,68 @@ export default function BlockedDates() {
             </div>
           </Card>
         </div>
+        )}
+
+      {/* Modal de Edição */}
+      {editModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold text-foreground mb-4">Editar Observação</h2>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editObservation">Observação</Label>
+                <textarea
+                  id="editObservation"
+                  value={editObservation}
+                  onChange={(e) => setEditObservation(e.target.value)}
+                  placeholder="Digite a observação"
+                  className="w-full px-3 py-2 border rounded-md min-h-24 text-foreground"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editPassword">Senha</Label>
+                <div className="relative">
+                  <Input
+                    id="editPassword"
+                    type={editShowPassword ? "text" : "password"}
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    placeholder="Digite a senha"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEditShowPassword(!editShowPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {editShowPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleConfirmEditObservation}
+                  disabled={isEditingSubmitting}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isEditingSubmitting ? "Salvando..." : "Salvar"}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setEditModalOpen(false);
+                    setEditPassword("");
+                    setEditingId(null);
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
       )}
-
-
     </div>
   );
 }
