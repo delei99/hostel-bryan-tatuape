@@ -202,15 +202,13 @@ export default function PhotoUpload() {
               className="hidden"
               id="photo-input"
             />
-            <label htmlFor="photo-input">
-              <Button
-                as="span"
-                className="bg-accent hover:bg-opacity-90 text-white cursor-pointer"
-                disabled={isUploading || (uploadedPhotos.length + (roomPhotos?.length || 0)) >= 10}
-              >
-                Selecionar Fotos
-              </Button>
-            </label>
+            <Button
+              onClick={() => document.getElementById('photo-input')?.click()}
+              className="bg-accent hover:bg-opacity-90 text-white cursor-pointer"
+              disabled={isUploading || (uploadedPhotos.length + (roomPhotos?.length || 0)) >= 10}
+            >
+              Selecionar Fotos
+            </Button>
           </div>
 
           {/* Preview das Fotos Selecionadas */}
