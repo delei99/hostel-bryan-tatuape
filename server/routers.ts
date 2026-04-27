@@ -50,7 +50,7 @@ export const appRouter = router({
         roomId: z.number(),
         firstName: z.string(),
         lastName: z.string(),
-        email: z.string().email(),
+        email: z.string().min(1, "Email é obrigatório").regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Email inválido"),
         phone: z.string(),
         cpf: z.string().optional(),
         nationality: z.string().optional(),
