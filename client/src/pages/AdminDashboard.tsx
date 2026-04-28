@@ -516,9 +516,9 @@ export default function AdminDashboard() {
 
         {/* Modal de Edicao */}
         {editingBooking && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-8">
+          <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 md:items-center p-0 md:p-4">
+            <Card className="w-full md:max-w-2xl md:max-h-[90vh] md:overflow-y-auto rounded-t-lg md:rounded-lg max-h-[95vh] overflow-y-auto">
+              <div className="p-6 md:p-8">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-2xl font-bold text-foreground">Editar Reserva</h3>
                   <button
@@ -530,7 +530,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-4 mb-6">
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label>Check-in</Label>
                       <Input 
@@ -583,7 +583,7 @@ export default function AdminDashboard() {
 
                   <div className="border-t border-border pt-4">
                     <h4 className="font-semibold text-foreground mb-3">Informacoes do Hospede</h4>
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label>Nome</Label>
                         <Input 
