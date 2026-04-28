@@ -369,7 +369,7 @@ export default function AdminDashboard() {
                           <Button
                             size="sm"
                             className="bg-accent hover:bg-accent/90 gap-2"
-                            onClick={() => setEditingBooking(booking)}
+                            onClick={() => handleOpenEditModal(booking)}
                           >
                             Editar
                           </Button>

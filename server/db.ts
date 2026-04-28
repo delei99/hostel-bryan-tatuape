@@ -744,6 +744,13 @@ export async function updateBooking(bookingId: number, updateData: any, editedBy
   // Atualizar reserva
   await db.update(bookings).set(updateSet).where(eq(bookings.id, bookingId));
   
-  // Retornar dados atualizados
-  return getBookingById(bookingId);
+  // Retornar dados atualizados com guest e room para WhatsApp
+  const updatedBooking = await getBookingById(bookingId);
+  if (!updatedBooking) throw new Error("Booking not found after update");
+  
+  return {
+    booking: updatedBooking.booking,
+    guest: updatedBooking.guest,
+    room: updatedBooking.room,
+  };
 }
