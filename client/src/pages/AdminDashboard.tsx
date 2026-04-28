@@ -20,8 +20,22 @@ export default function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [editingBooking, setEditingBooking] = useState<any>(null);
+  const [editFormData, setEditFormData] = useState<any>(null);
   const [editPassword, setEditPassword] = useState("");
   const [isEditingSubmitting, setIsEditingSubmitting] = useState(false);
+
+  const updateEditFormData = (field: string, value: any) => {
+    setEditFormData((prev: any) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleOpenEditModal = (booking: any) => {
+    setEditingBooking(booking);
+    setEditFormData({ ...booking });
+    setEditPassword("");
+  };
 
   // Buscar todas as reservas
   const { data: bookings, isLoading, error, refetch } = trpc.bookings.list.useQuery({ roomId: undefined }, {
@@ -519,27 +533,51 @@ export default function AdminDashboard() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <Label>Check-in</Label>
-                      <Input type="date" defaultValue={editingBooking.checkInDate} />
+                      <Input 
+                        type="date" 
+                        value={editFormData?.checkInDate || ''}
+                        onChange={(e) => updateEditFormData('checkInDate', e.target.value)}
+                      />
                     </div>
                     <div>
                       <Label>Check-out</Label>
-                      <Input type="date" defaultValue={editingBooking.checkOutDate} />
+                      <Input 
+                        type="date" 
+                        value={editFormData?.checkOutDate || ''}
+                        onChange={(e) => updateEditFormData('checkOutDate', e.target.value)}
+                      />
                     </div>
                     <div>
                       <Label>Horario Check-in</Label>
-                      <Input type="time" defaultValue={editingBooking.checkInTime} />
+                      <Input 
+                        type="time" 
+                        value={editFormData?.checkInTime || ''}
+                        onChange={(e) => updateEditFormData('checkInTime', e.target.value)}
+                      />
                     </div>
                     <div>
                       <Label>Horario Check-out</Label>
-                      <Input type="time" defaultValue={editingBooking.checkOutTime} />
+                      <Input 
+                        type="time" 
+                        value={editFormData?.checkOutTime || ''}
+                        onChange={(e) => updateEditFormData('checkOutTime', e.target.value)}
+                      />
                     </div>
                     <div>
                       <Label>Quarto</Label>
-                      <Input type="number" defaultValue={editingBooking.roomId} />
+                      <Input 
+                        type="number" 
+                        value={editFormData?.roomId || ''}
+                        onChange={(e) => updateEditFormData('roomId', parseInt(e.target.value))}
+                      />
                     </div>
                     <div>
                       <Label>Hospedes</Label>
-                      <Input type="number" defaultValue={editingBooking.numberOfGuests} />
+                      <Input 
+                        type="number" 
+                        value={editFormData?.numberOfGuests || ''}
+                        onChange={(e) => updateEditFormData('numberOfGuests', parseInt(e.target.value))}
+                      />
                     </div>
                   </div>
 
@@ -548,19 +586,35 @@ export default function AdminDashboard() {
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
                         <Label>Nome</Label>
-                        <Input type="text" placeholder="Nome" />
+                        <Input 
+                          type="text" 
+                          value={editFormData?.firstName || ''}
+                          onChange={(e) => updateEditFormData('firstName', e.target.value)}
+                        />
                       </div>
                       <div>
                         <Label>Sobrenome</Label>
-                        <Input type="text" placeholder="Sobrenome" />
+                        <Input 
+                          type="text" 
+                          value={editFormData?.lastName || ''}
+                          onChange={(e) => updateEditFormData('lastName', e.target.value)}
+                        />
                       </div>
                       <div>
                         <Label>Email</Label>
-                        <Input type="email" placeholder="Email" />
+                        <Input 
+                          type="email" 
+                          value={editFormData?.email || ''}
+                          onChange={(e) => updateEditFormData('email', e.target.value)}
+                        />
                       </div>
                       <div>
                         <Label>Telefone</Label>
-                        <Input type="tel" placeholder="Telefone" />
+                        <Input 
+                          type="tel" 
+                          value={editFormData?.phone || ''}
+                          onChange={(e) => updateEditFormData('phone', e.target.value)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -586,6 +640,16 @@ export default function AdminDashboard() {
                       updateBooking.mutate({
                         id: editingBooking.id,
                         password: editPassword,
+                        checkInDate: editFormData.checkInDate,
+                        checkOutDate: editFormData.checkOutDate,
+                        checkInTime: editFormData.checkInTime,
+                        checkOutTime: editFormData.checkOutTime,
+                        roomId: editFormData.roomId,
+                        numberOfGuests: editFormData.numberOfGuests,
+                        firstName: editFormData.firstName,
+                        lastName: editFormData.lastName,
+                        email: editFormData.email,
+                        phone: editFormData.phone,
                       });
                     }}
                     disabled={isEditingSubmitting || updateBooking.isPending}
