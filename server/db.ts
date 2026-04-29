@@ -214,6 +214,12 @@ export async function createBooking(bookingData: any) {
   }
   if (!guestId || isNaN(guestId)) throw new Error("Failed to create guest: invalid guestId");
   
+  // Garantir que totalPrice sempre tem um valor válido
+  let finalTotalPrice = bookingData.totalPrice;
+  if (!Number.isFinite(finalTotalPrice) || finalTotalPrice <= 0) {
+    finalTotalPrice = bookingData.subtotal - (bookingData.discountAmount || 0) + (bookingData.cleaningFee || 700);
+  }
+  
   const bookingToInsert = {
     guestId,
     roomId: bookingData.roomId,
@@ -222,7 +228,7 @@ export async function createBooking(bookingData: any) {
     numberOfGuests: bookingData.numberOfGuests,
     dailyType: bookingData.dailyType,
     subtotal: bookingData.subtotal,
-    totalPrice: bookingData.totalPrice,
+    totalPrice: finalTotalPrice,
     checkInTime: bookingData.checkInTime,
     checkOutTime: bookingData.checkOutTime,
     discountPercentage: bookingData.discountPercentage || 0,
