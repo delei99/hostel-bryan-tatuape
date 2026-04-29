@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Calendar, Users, DollarSign, CheckCircle, Clock, X, Eye } from "lucide-react";
@@ -548,20 +549,46 @@ export default function AdminDashboard() {
                       />
                     </div>
                     <div>
-                      <Label>Horario Check-in</Label>
-                      <Input 
-                        type="time" 
-                        value={editFormData?.checkInTime || ''}
-                        onChange={(e) => updateEditFormData('checkInTime', e.target.value)}
-                      />
+                      <Label>Horario Check-in *</Label>
+                      <Select value={editFormData?.checkInTime || ''} onValueChange={(value) => updateEditFormData('checkInTime', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o horário" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 20 }, (_, i) => {
+                            const hour = 14 + Math.floor(i / 2);
+                            const minute = i % 2 === 0 ? '00' : '30';
+                            if (hour > 23) return null;
+                            const time = `${String(hour).padStart(2, '0')}:${minute}`;
+                            return (
+                              <SelectItem key={time} value={time}>
+                                {time}
+                              </SelectItem>
+                            );
+                          }).filter(Boolean)}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
-                      <Label>Horario Check-out</Label>
-                      <Input 
-                        type="time" 
-                        value={editFormData?.checkOutTime || ''}
-                        onChange={(e) => updateEditFormData('checkOutTime', e.target.value)}
-                      />
+                      <Label>Horario Check-out *</Label>
+                      <Select value={editFormData?.checkOutTime || ''} onValueChange={(value) => updateEditFormData('checkOutTime', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o horário" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 25 }, (_, i) => {
+                            const hour = Math.floor(i / 2);
+                            const minute = i % 2 === 0 ? '00' : '30';
+                            if (hour > 12) return null;
+                            const time = `${String(hour).padStart(2, '0')}:${minute}`;
+                            return (
+                              <SelectItem key={time} value={time}>
+                                {time}
+                              </SelectItem>
+                            );
+                          }).filter(Boolean)}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label>Quarto</Label>
@@ -635,6 +662,14 @@ export default function AdminDashboard() {
                     onClick={() => {
                       if (!editPassword) {
                         toast.error("Digite a senha para confirmar!");
+                        return;
+                      }
+                      if (!editFormData.checkInTime) {
+                        toast.error("Selecione o horário de check-in!");
+                        return;
+                      }
+                      if (!editFormData.checkOutTime) {
+                        toast.error("Selecione o horário de check-out!");
                         return;
                       }
                       updateBooking.mutate({
