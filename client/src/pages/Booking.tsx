@@ -79,10 +79,7 @@ export default function Booking() {
 
     const subtotal = nights * PRICE_PER_NIGHT;
     
-    // Desconto por número de hóspedes (12%)
-    const guestDiscount = formData.numberOfGuests === "1" ? Math.floor(subtotal * DISCOUNT_PERCENTAGE / 100) : 0;
-    
-    // Desconto por duração da reserva
+    // Desconto por duração da reserva (tem prioridade)
     let durationDiscountPercent = 0;
     if (nights >= 28) {
       durationDiscountPercent = 35; // 35% para 28+ dias
@@ -94,6 +91,9 @@ export default function Booking() {
     
     // Aplicar desconto de duração sobre o subtótal
     const durationDiscount = durationDiscountPercent > 0 ? Math.floor(subtotal * durationDiscountPercent / 100) : 0;
+    
+    // Desconto por número de hóspedes (12%) - só aplica se não houver desconto por duração
+    const guestDiscount = (formData.numberOfGuests === "1" && durationDiscountPercent === 0) ? Math.floor(subtotal * DISCOUNT_PERCENTAGE / 100) : 0;
     
     // Usar o maior desconto entre hóspede e duração
     const totalDiscount = Math.max(guestDiscount, durationDiscount);
@@ -173,6 +173,13 @@ export default function Booking() {
       const checkInDate = formData.checkInDate;
       const checkOutDate = formData.checkOutDate;
       
+      console.log('Price Calculation:', priceCalculation);
+      console.log('Total Price:', priceCalculation.total);
+      
+      if (!priceCalculation.total || priceCalculation.total <= 0) {
+        throw new Error(`Erro no calculo de preco. Total: ${priceCalculation.total}`);
+      }
+
       const result = await createBooking.mutateAsync({
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
