@@ -180,6 +180,8 @@ export default function Booking() {
         throw new Error(`Erro no calculo de preco. Total: ${priceCalculation.total}`);
       }
 
+      const finalTotal = priceCalculation.total || (priceCalculation.subtotal - priceCalculation.discount + CLEANING_FEE);
+      
       const result = await createBooking.mutateAsync({
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
@@ -198,7 +200,7 @@ export default function Booking() {
         discountPercentage: numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : 0,
         discountAmount: priceCalculation.discount,
         cleaningFee: CLEANING_FEE,
-        totalPrice: priceCalculation.total,
+        totalPrice: finalTotal,
         specialRequests: formData.specialRequests.trim(),
       });
 
