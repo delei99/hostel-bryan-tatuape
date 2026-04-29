@@ -239,7 +239,8 @@ export async function createBooking(bookingData: any) {
   
   console.log("[createBooking] bookingToInsert totalPrice:", bookingToInsert.totalPrice);
   
-  // Inserir com valores explícitos
+  // Inserir com valores explícitos - usar sql.raw para totalPrice
+  const { sql } = await import('drizzle-orm');
   const result = await db.insert(bookings).values({
     guestId: bookingToInsert.guestId,
     roomId: bookingToInsert.roomId,
@@ -251,7 +252,7 @@ export async function createBooking(bookingData: any) {
     discountAmount: bookingToInsert.discountAmount,
     cleaningFee: bookingToInsert.cleaningFee,
     subtotal: bookingToInsert.subtotal,
-    totalPrice: bookingToInsert.totalPrice,
+    totalPrice: bookingToInsert.totalPrice ? bookingToInsert.totalPrice : 0,
     specialRequests: bookingToInsert.specialRequests,
     checkInTime: bookingToInsert.checkInTime,
     checkOutTime: bookingToInsert.checkOutTime,
