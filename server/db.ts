@@ -238,7 +238,24 @@ export async function createBooking(bookingData: any) {
   };
   
   console.log("[createBooking] bookingToInsert totalPrice:", bookingToInsert.totalPrice);
-  const result = await db.insert(bookings).values(bookingToInsert);
+  
+  // Inserir com valores explícitos
+  const result = await db.insert(bookings).values({
+    guestId: bookingToInsert.guestId,
+    roomId: bookingToInsert.roomId,
+    checkInDate: bookingToInsert.checkInDate,
+    checkOutDate: bookingToInsert.checkOutDate,
+    numberOfGuests: bookingToInsert.numberOfGuests,
+    dailyType: bookingToInsert.dailyType,
+    discountPercentage: bookingToInsert.discountPercentage,
+    discountAmount: bookingToInsert.discountAmount,
+    cleaningFee: bookingToInsert.cleaningFee,
+    subtotal: bookingToInsert.subtotal,
+    totalPrice: bookingToInsert.totalPrice,
+    specialRequests: bookingToInsert.specialRequests,
+    checkInTime: bookingToInsert.checkInTime,
+    checkOutTime: bookingToInsert.checkOutTime,
+  });
   
   // Extrair bookingId com suporte a diferentes formatos de retorno do Drizzle
   let bookingId: number;
