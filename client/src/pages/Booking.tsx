@@ -239,6 +239,9 @@ export default function Booking() {
     
     const room = rooms.find(r => r.id === bookingSuccess.roomId);
     const numberOfGuests = bookingSuccess.numberOfGuests;
+    const checkInDate = new Date(formData.checkInDate);
+    const checkOutDate = new Date(formData.checkOutDate);
+    const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
     
     return `*Reserva Confirmada - Hostel Bryan Tatuapé*\n\n` +
       `*Código: ${bookingSuccess.confirmationCode}*\n\n` +
@@ -248,6 +251,7 @@ export default function Booking() {
       `*CPF:* ${formData.cpf}\n` +
       `*Nacionalidade:* ${formData.nationality}\n\n` +
       `*Quarto:* ${room?.name}\n` +
+      `*Período:* ${checkInDate.toLocaleDateString('pt-BR')} a ${checkOutDate.toLocaleDateString('pt-BR')} (${nights} dias)\n` +
       `*Check-in:* ${new Date(new Date(formData.checkInDate).getTime() + 86400000).toLocaleDateString('pt-BR')} às ${formData.checkInTime}\n` +
       `*Check-out:* ${new Date(new Date(formData.checkOutDate).getTime() + 86400000).toLocaleDateString('pt-BR')} às ${formData.checkOutTime}\n` +
       `*Hóspedes:* ${numberOfGuests} pessoa${numberOfGuests > 1 ? 's' : ''}\n\n` +
@@ -293,6 +297,11 @@ export default function Booking() {
             </div>
 
             <div className="bg-accent/5 p-4 rounded-lg mb-6">
+              <div className="mb-4 space-y-2">
+                <p className="text-foreground font-semibold">Detalhes da Reserva:</p>
+                <p className="text-sm text-muted-foreground">Período: {new Date(bookingSuccess.checkInDate).toLocaleDateString('pt-BR')} a {new Date(bookingSuccess.checkOutDate).toLocaleDateString('pt-BR')}</p>
+                <p className="text-sm text-muted-foreground">Dias: <span className="font-bold text-accent">{bookingSuccess.numberOfGuests === 1 ? Math.ceil((new Date(bookingSuccess.checkOutDate).getTime() - new Date(bookingSuccess.checkInDate).getTime()) / (1000 * 60 * 60 * 24)) : 'N/A'}</span></p>
+              </div>
               <p className="text-foreground mb-4">
                 Clique no botão abaixo para enviar a confirmação para o WhatsApp
               </p>
