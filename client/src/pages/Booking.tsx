@@ -179,14 +179,15 @@ export default function Booking() {
       console.log('Price Calculation:', priceCalculation);
       console.log('Total Price:', priceCalculation.total);
       
-      if (!priceCalculation.total || priceCalculation.total <= 0) {
-        throw new Error(`Erro no calculo de preco. Total: ${priceCalculation.total}`);
-      }
-
       // Garantir que finalTotal sempre é um número válido
       let finalTotal = priceCalculation.total;
       if (!Number.isFinite(finalTotal) || finalTotal <= 0) {
         finalTotal = priceCalculation.subtotal - priceCalculation.discount + CLEANING_FEE;
+      }
+      
+      // Validação final do total
+      if (!Number.isFinite(finalTotal) || finalTotal <= 0) {
+        throw new Error(`Erro no calculo de preco. Total: ${finalTotal}, Subtotal: ${priceCalculation.subtotal}, Discount: ${priceCalculation.discount}`);
       }
       
       console.log('Final Total Calculation:', {
