@@ -227,14 +227,14 @@ export async function createBooking(bookingData: any) {
     checkOutDate: bookingData.checkOutDate,
     numberOfGuests: bookingData.numberOfGuests,
     dailyType: bookingData.dailyType,
-    subtotal: bookingData.subtotal,
-    totalPrice: finalTotalPrice,
-    checkInTime: bookingData.checkInTime,
-    checkOutTime: bookingData.checkOutTime,
     discountPercentage: bookingData.discountPercentage || 0,
     discountAmount: bookingData.discountAmount || 0,
     cleaningFee: bookingData.cleaningFee || 700,
+    subtotal: bookingData.subtotal,
+    totalPrice: finalTotalPrice || 0,
     specialRequests: bookingData.specialRequests,
+    checkInTime: bookingData.checkInTime,
+    checkOutTime: bookingData.checkOutTime,
   };
   
   console.log("[createBooking] bookingToInsert totalPrice:", bookingToInsert.totalPrice);
