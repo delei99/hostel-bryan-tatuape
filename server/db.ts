@@ -239,24 +239,30 @@ export async function createBooking(bookingData: any) {
   
   console.log("[createBooking] bookingToInsert totalPrice:", bookingToInsert.totalPrice);
   
-  // Inserir com valores explícitos - usar sql.raw para totalPrice
+  // Usar query SQL raw para ter controle total dos parâmetros
   const { sql } = await import('drizzle-orm');
-  const result = await db.insert(bookings).values({
-    guestId: bookingToInsert.guestId,
-    roomId: bookingToInsert.roomId,
-    checkInDate: bookingToInsert.checkInDate,
-    checkOutDate: bookingToInsert.checkOutDate,
-    numberOfGuests: bookingToInsert.numberOfGuests,
-    dailyType: bookingToInsert.dailyType,
-    discountPercentage: bookingToInsert.discountPercentage,
-    discountAmount: bookingToInsert.discountAmount,
-    cleaningFee: bookingToInsert.cleaningFee,
-    subtotal: bookingToInsert.subtotal,
-    totalPrice: bookingToInsert.totalPrice ? bookingToInsert.totalPrice : 0,
-    specialRequests: bookingToInsert.specialRequests,
-    checkInTime: bookingToInsert.checkInTime,
-    checkOutTime: bookingToInsert.checkOutTime,
-  });
+  const result = await db.execute(sql`
+    INSERT INTO bookings (
+      guestId, roomId, checkInDate, checkOutDate, numberOfGuests, dailyType,
+      discountPercentage, discountAmount, cleaningFee, subtotal, totalPrice,
+      specialRequests, checkInTime, checkOutTime
+    ) VALUES (
+      ${bookingToInsert.guestId},
+      ${bookingToInsert.roomId},
+      ${bookingToInsert.checkInDate},
+      ${bookingToInsert.checkOutDate},
+      ${bookingToInsert.numberOfGuests},
+      ${bookingToInsert.dailyType},
+      ${bookingToInsert.discountPercentage},
+      ${bookingToInsert.discountAmount},
+      ${bookingToInsert.cleaningFee},
+      ${bookingToInsert.subtotal},
+      ${bookingToInsert.totalPrice || 0},
+      ${bookingToInsert.specialRequests},
+      ${bookingToInsert.checkInTime},
+      ${bookingToInsert.checkOutTime}
+    )
+  `);
   
   // Extrair bookingId com suporte a diferentes formatos de retorno do Drizzle
   let bookingId: number;
