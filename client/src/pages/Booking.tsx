@@ -71,8 +71,11 @@ export default function Booking() {
 
   // Calcular preço com desconto por duração
   const priceCalculation = useMemo(() => {
-    const checkIn = new Date(formData.checkInDate);
-    const checkOut = new Date(formData.checkOutDate);
+    // Parse datas sem timezone issues
+    const [inYear, inMonth, inDay] = formData.checkInDate.split('-').map(Number);
+    const [outYear, outMonth, outDay] = formData.checkOutDate.split('-').map(Number);
+    const checkIn = new Date(inYear, inMonth - 1, inDay);
+    const checkOut = new Date(outYear, outMonth - 1, outDay);
     const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
     
     if (nights <= 0) return { nights: 0, subtotal: 0, discount: 0, durationDiscount: 0, durationDiscountPercent: 0, cleaning: CLEANING_FEE, total: 0 };
@@ -180,7 +183,17 @@ export default function Booking() {
         throw new Error(`Erro no calculo de preco. Total: ${priceCalculation.total}`);
       }
 
-      const finalTotal = priceCalculation.total || (priceCalculation.subtotal - priceCalculation.discount + CLEANING_FEE);
+      // Garantir que finalTotal sempre é um número válido
+      let finalTotal = priceCalculation.total;
+      if (!Number.isFinite(finalTotal) || finalTotal <= 0) {
+        finalTotal = priceCalculation.subtotal - priceCalculation.discount + CLEANING_FEE;
+      }
+      
+      console.log('Final Total Calculation:', {
+        priceCalculation,
+        finalTotal,
+        isFinite: Number.isFinite(finalTotal)
+      });
       
       const result = await createBooking.mutateAsync({
         firstName: formData.firstName.trim(),

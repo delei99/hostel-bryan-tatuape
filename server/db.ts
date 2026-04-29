@@ -231,6 +231,7 @@ export async function createBooking(bookingData: any) {
     specialRequests: bookingData.specialRequests,
   };
   
+  console.log("[createBooking] bookingToInsert totalPrice:", bookingToInsert.totalPrice);
   const result = await db.insert(bookings).values(bookingToInsert);
   
   // Extrair bookingId com suporte a diferentes formatos de retorno do Drizzle

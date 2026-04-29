@@ -68,6 +68,13 @@ export const appRouter = router({
         specialRequests: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
+        console.log('[bookings.create] Input recebido:', {
+          totalPrice: input.totalPrice,
+          typeof: typeof input.totalPrice,
+          subtotal: input.subtotal,
+          discountAmount: input.discountAmount,
+          cleaningFee: input.cleaningFee
+        });
         const { createBooking } = await import("./db");
         const booking = await createBooking(input);
         return booking;
