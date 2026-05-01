@@ -224,6 +224,48 @@ export const appRouter = router({
 
         return { success: true };
       }),
+
+    update: publicProcedure
+      .input(z.object({
+        id: z.number(),
+        startDate: z.date(),
+        endDate: z.date(),
+        reason: z.string(),
+        password: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getBlockedDateById, updateBlockedDate, createAuditLog } = await import("./db");
+        
+        const blockedDate = await getBlockedDateById(input.id);
+        if (!blockedDate) {
+          throw new TRPCError({ code: "NOT_FOUND" });
+        }
+
+        const correctPassword = "Capacho@69";
+        if (input.password !== correctPassword) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Senha incorreta" });
+        }
+
+        await updateBlockedDate(input.id, {
+          startDate: input.startDate,
+          endDate: input.endDate,
+          reason: input.reason,
+        });
+
+        await createAuditLog({
+          userId: ctx.user?.id || 0,
+          action: "update",
+          blockedDateId: input.id,
+          roomId: blockedDate.roomId,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          reason: input.reason,
+          ipAddress: ctx.req.headers["x-forwarded-for"] as string || ctx.req.socket.remoteAddress || "",
+          userAgent: ctx.req.headers["user-agent"] as string || "",
+        });
+
+        return { success: true };
+      }),
   }),
 
   auditLogs: router({

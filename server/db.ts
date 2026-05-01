@@ -494,6 +494,20 @@ export async function deleteBlockedDate(blockedDateId: number) {
   await db.delete(blockedDates).where(eq(blockedDates.id, blockedDateId));
 }
 
+export async function updateBlockedDate(blockedDateId: number, data: { startDate: Date; endDate: Date; reason: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(blockedDates)
+    .set({
+      startDate: data.startDate,
+      endDate: data.endDate,
+      reason: data.reason,
+      updatedAt: new Date(),
+    })
+    .where(eq(blockedDates.id, blockedDateId));
+}
+
 export async function getAllBlockedDates(roomId: number) {
   const db = await getDb();
   if (!db) return [];

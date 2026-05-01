@@ -36,6 +36,10 @@ export default function BlockedDates() {
   const [editShowPassword, setEditShowPassword] = useState(false);
   const [isEditingSubmitting, setIsEditingSubmitting] = useState(false);
   const [observations, setObservations] = useState<Record<number, { text: string; editedAt: string }>>({});
+  const [editStartDate, setEditStartDate] = useState("");
+  const [editEndDate, setEditEndDate] = useState("");
+  const [editReason, setEditReason] = useState("");
+  const [editMode, setEditMode] = useState<'observation' | 'dates'>('observation');
 
   // Carregar observações do localStorage
   useEffect(() => {
@@ -73,6 +77,7 @@ export default function BlockedDates() {
 
   const createBlockedDate = trpc.blockedDates.create.useMutation();
   const deleteBlockedDate = trpc.blockedDates.delete.useMutation();
+  const updateBlockedDate = trpc.blockedDates.update.useMutation();
 
   // Sincronizar selectAll quando selectedBlockedIds ou blockedDates muda
   useEffect(() => {
@@ -138,10 +143,17 @@ export default function BlockedDates() {
   };
 
   const handleEditObservation = (blockedDateId: number) => {
+    const blocked = blockedDates.find(b => b.id === blockedDateId);
+    if (!blocked) return;
+    
     setEditingId(blockedDateId);
     setEditObservation(observations[blockedDateId]?.text || "");
+    setEditStartDate(new Date(blocked.startDate).toISOString().split('T')[0]);
+    setEditEndDate(new Date(blocked.endDate).toISOString().split('T')[0]);
+    setEditReason(blocked.reason || "");
     setEditPassword("");
     setEditShowPassword(false);
+    setEditMode('observation');
     setEditModalOpen(true);
   };
 
@@ -159,15 +171,44 @@ export default function BlockedDates() {
 
     try {
       setIsEditingSubmitting(true);
-      saveObservation(editingId, editObservation);
-      toast.success("Observação atualizada com sucesso!");
+      
+      if (editMode === 'observation') {
+        saveObservation(editingId, editObservation);
+        toast.success("Observação atualizada com sucesso!");
+      } else if (editMode === 'dates') {
+        const [startYear, startMonth, startDay] = editStartDate.split('-').map(Number);
+        const [endYear, endMonth, endDay] = editEndDate.split('-').map(Number);
+        const start = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
+        const end = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
+        
+        if (start > end) {
+          toast.error("Data inicial deve ser anterior a data final!");
+          setIsEditingSubmitting(false);
+          return;
+        }
+        
+        await updateBlockedDate.mutateAsync({
+          id: editingId,
+          startDate: start,
+          endDate: end,
+          reason: editReason,
+          password: editPassword,
+        });
+        
+        toast.success("Datas bloqueadas atualizadas com sucesso!");
+        refetch();
+      }
+      
       setEditModalOpen(false);
       setEditPassword("");
       setEditObservation("");
       setEditingId(null);
+      setEditStartDate("");
+      setEditEndDate("");
+      setEditReason("");
     } catch (error: any) {
-      console.error("Erro ao salvar observação:", error);
-      const errorMessage = error?.message || "Erro ao salvar observação";
+      console.error("Erro ao editar:", error);
+      const errorMessage = error?.message || "Erro ao editar";
       toast.error(errorMessage);
     } finally {
       setIsEditingSubmitting(false);
@@ -549,20 +590,86 @@ export default function BlockedDates() {
 
       {/* Modal de Edição */}
       {editModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-foreground mb-4">Editar Observação</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold text-foreground mb-4">Editar Data Bloqueada</h2>
+            
+            {/* Tabs para alternar entre edição de observação e datas */}
+            <div className="flex gap-2 mb-6 border-b">
+              <button
+                onClick={() => setEditMode('observation')}
+                className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+                  editMode === 'observation'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Observação
+              </button>
+              <button
+                onClick={() => setEditMode('dates')}
+                className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+                  editMode === 'dates'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Datas
+              </button>
+            </div>
+            
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="editObservation">Observação</Label>
-                <textarea
-                  id="editObservation"
-                  value={editObservation}
-                  onChange={(e) => setEditObservation(e.target.value)}
-                  placeholder="Digite a observação"
-                  className="w-full px-3 py-2 border rounded-md min-h-24 text-foreground"
-                />
-              </div>
+              {editMode === 'observation' ? (
+                <>
+                  <div>
+                    <Label htmlFor="editObservation">Observação</Label>
+                    <textarea
+                      id="editObservation"
+                      value={editObservation}
+                      onChange={(e) => setEditObservation(e.target.value)}
+                      placeholder="Digite a observação"
+                      className="w-full px-3 py-2 border rounded-md min-h-24 text-foreground"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="editStartDate">Data Inicial</Label>
+                      <Input
+                        id="editStartDate"
+                        type="date"
+                        value={editStartDate}
+                        onChange={(e) => setEditStartDate(e.target.value)}
+                        className="text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="editEndDate">Data Final</Label>
+                      <Input
+                        id="editEndDate"
+                        type="date"
+                        value={editEndDate}
+                        onChange={(e) => setEditEndDate(e.target.value)}
+                        className="text-foreground"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="editReason">Motivo</Label>
+                    <Input
+                      id="editReason"
+                      type="text"
+                      value={editReason}
+                      onChange={(e) => setEditReason(e.target.value)}
+                      placeholder="Ex: Manutenção, Reforma, etc"
+                      className="text-foreground"
+                    />
+                  </div>
+                </>
+              )}
+              
               <div>
                 <Label htmlFor="editPassword">Senha</Label>
                 <div className="relative">
@@ -583,19 +690,21 @@ export default function BlockedDates() {
                   </button>
                 </div>
               </div>
+              
               <div className="flex gap-2">
                 <Button
                   onClick={handleConfirmEditObservation}
                   disabled={isEditingSubmitting}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  {isEditingSubmitting ? "Salvando..." : "Salvar"}
+                  {isEditingSubmitting ? "Salvando..." : "Editar"}
                 </Button>
                 <Button
                   onClick={() => {
                     setEditModalOpen(false);
                     setEditPassword("");
                     setEditingId(null);
+                    setEditMode('observation');
                   }}
                   variant="outline"
                   className="flex-1"

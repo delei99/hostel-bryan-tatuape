@@ -152,7 +152,7 @@ export type InsertBlockedDate = typeof blockedDates.$inferInsert;
 export const auditLogs = mysqlTable("auditLogs", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
-  action: mysqlEnum("action", ["block", "unblock"]).notNull(),
+  action: mysqlEnum("action", ["block", "unblock", "update"]).notNull(),
   blockedDateId: int("blockedDateId").references(() => blockedDates.id, { onDelete: "set null" }),
   roomId: int("roomId").notNull().references(() => rooms.id, { onDelete: "cascade" }),
   startDate: timestamp("startDate"),

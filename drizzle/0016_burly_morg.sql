@@ -1,0 +1,1 @@
+ALTER TABLE `auditLogs` MODIFY COLUMN `action` enum('block','unblock','update') NOT NULL;
