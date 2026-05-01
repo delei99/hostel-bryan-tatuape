@@ -376,3 +376,10 @@
 - [x] Integrar query de exceções no Booking.tsx
 - [x] Testar fluxo completo de reserva com datas excepcionadas
 - [x] Validar que datas excepcionadas ficam disponíveis
+
+
+## Fase 42: Correção do Erro ao Fazer Reserva
+- [x] Corrigir mismatch de contrato tRPC (checkInDate/checkOutDate como strings)
+- [x] Adicionar campos opcionais ao input do bookings.create
+- [x] Converter numberOfGuests para string ao enviar
+- [x] Testar fluxo de reserva completo

@@ -35,12 +35,12 @@ export const appRouter = router({
     checkAvailability: publicProcedure
       .input(z.object({
         roomId: z.number(),
-        checkInDate: z.date(),
-        checkOutDate: z.date(),
+        checkInDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        checkOutDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       }))
       .query(async ({ input }) => {
         const { getRoomAvailability } = await import("./db");
-        return getRoomAvailability(input.roomId, input.checkInDate, input.checkOutDate);
+        return getRoomAvailability(input.roomId, new Date(input.checkInDate), new Date(input.checkOutDate));
       }),
   }),
 
@@ -53,12 +53,19 @@ export const appRouter = router({
         email: z.string().email(),
         phone: z.string(),
         cpf: z.string(),
-        checkInDate: z.date(),
-        checkOutDate: z.date(),
-        numberOfGuests: z.number(),
+        checkInDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        checkOutDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        numberOfGuests: z.string(),
         checkInTime: z.string(),
         checkOutTime: z.string(),
         specialRequests: z.string().optional(),
+        nationality: z.string().optional(),
+        dailyType: z.string().optional(),
+        subtotal: z.number().optional(),
+        discountPercentage: z.number().optional(),
+        discountAmount: z.number().optional(),
+        cleaningFee: z.number().optional(),
+        totalPrice: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const { createBooking } = await import("./db");

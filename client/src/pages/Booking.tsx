@@ -267,7 +267,7 @@ export default function Booking() {
         checkOutDate,
         checkInTime: formData.checkInTime,
         checkOutTime: formData.checkOutTime,
-        numberOfGuests,
+        numberOfGuests: numberOfGuests.toString(),
         dailyType: numberOfGuests === 1 ? "individual" : "couple",
         subtotal: priceCalculation.subtotal,
         discountPercentage: numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : 0,
@@ -281,7 +281,7 @@ export default function Booking() {
       setBookingSuccess({
         ...result,
         roomId,
-        numberOfGuests,
+        numberOfGuests: numberOfGuests.toString(),
       });
 
     } catch (error) {
