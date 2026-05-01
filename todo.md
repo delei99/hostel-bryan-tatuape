@@ -389,3 +389,9 @@
 - [x] Simplificar lógica de bloqueio para usar apenas bloqueios diretos
 - [x] Validar que console está limpo em produção
 - [x] Testar fluxo completo
+
+
+## Fase 44: Correção de Validação de Email
+- [x] Corrigir regex muito restritivo de validação de email
+- [x] Usar validação mais flexível com .email().or(regex simples)
+- [x] Testar com diferentes formatos de email

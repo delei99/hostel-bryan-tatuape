@@ -50,7 +50,7 @@ export const appRouter = router({
         roomId: z.number(),
         firstName: z.string(),
         lastName: z.string(),
-        email: z.string().email(),
+        email: z.string().email().or(z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)),
         phone: z.string(),
         cpf: z.string(),
         checkInDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
