@@ -332,12 +332,12 @@
 - [x] Testar fluxo de reserva a partir da galeria
 
 ## Fase 39: Implementar Sistema de Upload de Fotos dos Quartos
-- [ ] Criar página de admin para upload de fotos
-- [ ] Permitir seleção de quarto (01-07)
-- [ ] Suportar upload de até 10 fotos por quarto
-- [ ] Otimizar fotos automaticamente (redimensionar e comprimir)
-- [ ] Armazenar fotos em S3
-- [ ] Testar upload e visualização na galeria
+- [x] Criar página de admin para upload de fotos
+- [x] Permitir seleção de quarto (01-07)
+- [x] Suportar upload de até 10 fotos por quarto
+- [x] Otimizar fotos automaticamente (redimensionar e comprimir)
+- [x] Armazenar fotos em S3
+- [x] Testar upload e visualização na galeria
 
 ## Bug: Check-in Bloqueado Aparece um Dia Anterior
 - [x] Investigar por que check-in bloqueado aparece um dia anterior no calendário
@@ -360,3 +360,12 @@
 - [x] Corrigir função normalizeDate em BlockedDatesCalendar.tsx
 - [x] Testar página de datas bloqueadas sem erro
 - [x] Todos os 35 testes passando
+
+
+## Fase 40: Implementação Completa de Upload com Sharp e S3
+- [x] Criar rota tRPC `uploadAndOptimize` com Sharp para redimensionar/comprimir
+- [x] Integrar `storagePut` para salvar em S3
+- [x] Atualizar página RoomPhotosUpload.tsx com upload real de arquivos
+- [x] Suportar múltiplos arquivos (até 10 por quarto)
+- [x] Converter arquivos para base64 no frontend
+- [x] Validar e testar fluxo completo

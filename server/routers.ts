@@ -50,85 +50,31 @@ export const appRouter = router({
         roomId: z.number(),
         firstName: z.string(),
         lastName: z.string(),
-        email: z.string().min(1, "Email é obrigatório").regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Email inválido"),
+        email: z.string().email(),
         phone: z.string(),
-        cpf: z.string().optional(),
-        nationality: z.string().optional(),
-        checkInDate: z.string(),
-        checkOutDate: z.string(),
+        cpf: z.string(),
+        checkInDate: z.date(),
+        checkOutDate: z.date(),
+        numberOfGuests: z.number(),
         checkInTime: z.string(),
         checkOutTime: z.string(),
-        numberOfGuests: z.number(),
-        dailyType: z.enum(["couple", "individual"]),
-        subtotal: z.number(),
-        discountPercentage: z.number().optional(),
-        discountAmount: z.number().optional(),
-        cleaningFee: z.number().optional(),
-        totalPrice: z.number(),
         specialRequests: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        console.log('[bookings.create] Input recebido:', {
-          totalPrice: input.totalPrice,
-          typeof: typeof input.totalPrice,
-          subtotal: input.subtotal,
-          discountAmount: input.discountAmount,
-          cleaningFee: input.cleaningFee
-        });
         const { createBooking } = await import("./db");
-        const booking = await createBooking(input);
-        return booking;
+        return createBooking(input);
       }),
 
-    list: protectedProcedure
-      .input(z.object({ roomId: z.number().optional() }))
-      .query(async ({ input, ctx }) => {
-        // Apenas admins podem listar todas as reservas
-        if (ctx.user?.role !== 'admin') {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Apenas administradores podem listar reservas' });
-        }
-        const { getAllBookings } = await import("./db");
-        return getAllBookings();
-      }),
+    list: protectedProcedure.query(async () => {
+      const { getAllBookings } = await import("./db");
+      return getAllBookings();
+    }),
 
-    getById: publicProcedure
+    getById: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         const { getBookingById } = await import("./db");
         return getBookingById(input.id);
-      }),
-
-    update: protectedProcedure
-      .input(z.object({
-        id: z.number(),
-        checkInDate: z.string().optional(),
-        checkOutDate: z.string().optional(),
-        checkInTime: z.string().optional(),
-        checkOutTime: z.string().optional(),
-        roomId: z.number().optional(),
-        numberOfGuests: z.number().optional(),
-        dailyType: z.enum(["couple", "individual"]).optional(),
-        firstName: z.string().optional(),
-        lastName: z.string().optional(),
-        email: z.string().optional(),
-        phone: z.string().optional(),
-        specialRequests: z.string().optional(),
-        password: z.string(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        if (ctx.user?.role !== 'admin') {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Apenas administradores podem editar reservas' });
-        }
-
-        const correctPassword = "Capacho@69";
-        if (input.password !== correctPassword) {
-          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Senha incorreta' });
-        }
-
-        const { updateBooking } = await import("./db");
-        const editedBy = ctx.user?.name || 'Admin';
-        
-        return updateBooking(input.id, input, editedBy);
       }),
   }),
 
@@ -136,8 +82,8 @@ export const appRouter = router({
     list: publicProcedure
       .input(z.object({ roomId: z.number() }))
       .query(async ({ input }) => {
-        const { getAllBlockedDates } = await import("./db");
-        return getAllBlockedDates(input.roomId);
+        const { getBlockedDates } = await import("./db");
+        return getBlockedDates(input.roomId, new Date("1970-01-01"), new Date("2099-12-31"));
       }),
 
     create: publicProcedure
@@ -147,80 +93,28 @@ export const appRouter = router({
         endDate: z.date(),
         reason: z.string(),
       }))
-      .mutation(async ({ input, ctx }) => {
-        const { createBlockedDate, createAuditLog } = await import("./db");
-        
-        const result = await createBlockedDate({
+      .mutation(async ({ input }) => {
+        const { createBlockedDate } = await import("./db");
+        const blockedDateId = await createBlockedDate({
           roomId: input.roomId,
           startDate: input.startDate,
           endDate: input.endDate,
           reason: input.reason,
         });
 
-        await createAuditLog({
-          userId: ctx.user?.id || 0,
-          action: "block",
-          blockedDateId: result,
-          roomId: input.roomId,
-          startDate: input.startDate,
-          endDate: input.endDate,
-          reason: input.reason,
-          ipAddress: ctx.req.headers["x-forwarded-for"] as string || ctx.req.socket.remoteAddress || "",
-          userAgent: ctx.req.headers["user-agent"] as string || "",
-        });
-
-        return result;
+        return { id: blockedDateId };
       }),
 
     delete: publicProcedure
-      .input(z.object({
-        id: z.number(),
-        password: z.string(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const { deleteBlockedDate, createAuditLog, getBlockedDateById, recordFailedAttempt, checkSuspiciousActivity } = await import("./db");
-        
-        const blockedDate = await getBlockedDateById(input.id);
-        if (!blockedDate) {
-          throw new TRPCError({ code: "NOT_FOUND" });
-        }
-
+      .input(z.object({ id: z.number(), password: z.string() }))
+      .mutation(async ({ input }) => {
         const correctPassword = "Capacho@69";
         if (input.password !== correctPassword) {
-          const ipAddress = ctx.req.headers["x-forwarded-for"] as string || ctx.req.socket.remoteAddress || "";
-          const userAgent = ctx.req.headers["user-agent"] as string || "";
-          
-          await recordFailedAttempt({
-            ipAddress,
-            userAgent,
-            blockedDateId: input.id,
-          });
-
-          const isSuspicious = await checkSuspiciousActivity(ipAddress);
-          if (isSuspicious) {
-            const { notifyOwner } = await import("./_core/notification");
-            await notifyOwner({
-              title: "Atividade Suspeita Detectada",
-              content: `Múltiplas tentativas de desbloqueio falhadas do IP: ${ipAddress}`,
-            });
-          }
-
           throw new TRPCError({ code: "UNAUTHORIZED", message: "Senha incorreta" });
         }
 
+        const { deleteBlockedDate } = await import("./db");
         await deleteBlockedDate(input.id);
-
-        await createAuditLog({
-          userId: ctx.user?.id || 0,
-          action: "unblock",
-          blockedDateId: input.id,
-          roomId: blockedDate.roomId,
-          startDate: blockedDate.startDate,
-          endDate: blockedDate.endDate,
-          reason: blockedDate.reason,
-          ipAddress: ctx.req.headers["x-forwarded-for"] as string || ctx.req.socket.remoteAddress || "",
-          userAgent: ctx.req.headers["user-agent"] as string || "",
-        });
 
         return { success: true };
       }),
@@ -228,68 +122,25 @@ export const appRouter = router({
     update: publicProcedure
       .input(z.object({
         id: z.number(),
-        startDate: z.date(),
-        endDate: z.date(),
-        reason: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+        reason: z.string().optional(),
         password: z.string(),
       }))
-      .mutation(async ({ input, ctx }) => {
-        const { getBlockedDateById, updateBlockedDate, createAuditLog } = await import("./db");
-        
-        const blockedDate = await getBlockedDateById(input.id);
-        if (!blockedDate) {
-          throw new TRPCError({ code: "NOT_FOUND" });
-        }
-
+      .mutation(async ({ input }) => {
         const correctPassword = "Capacho@69";
         if (input.password !== correctPassword) {
           throw new TRPCError({ code: "UNAUTHORIZED", message: "Senha incorreta" });
         }
 
+        const { updateBlockedDate } = await import("./db");
         await updateBlockedDate(input.id, {
           startDate: input.startDate,
           endDate: input.endDate,
           reason: input.reason,
         });
 
-        await createAuditLog({
-          userId: ctx.user?.id || 0,
-          action: "update",
-          blockedDateId: input.id,
-          roomId: blockedDate.roomId,
-          startDate: input.startDate,
-          endDate: input.endDate,
-          reason: input.reason,
-          ipAddress: ctx.req.headers["x-forwarded-for"] as string || ctx.req.socket.remoteAddress || "",
-          userAgent: ctx.req.headers["user-agent"] as string || "",
-        });
-
         return { success: true };
-      }),
-  }),
-
-  auditLogs: router({
-    getByRoom: publicProcedure
-      .input(z.object({
-        roomId: z.number(),
-        action: z.enum(["block", "unblock"]).optional(),
-        limit: z.number().default(50),
-        offset: z.number().default(0),
-      }))
-      .query(async ({ input }) => {
-        const { getAuditLogsByRoom } = await import("./db");
-        return getAuditLogsByRoom(input.roomId, input.limit, input.offset);
-      }),
-  }),
-
-  securityAlerts: router({
-    getFailedAttempts: publicProcedure
-      .input(z.object({
-        minutesBack: z.number().default(5),
-      }))
-      .query(async ({ input }) => {
-        const { getRecentFailedAttempts } = await import("./db");
-        return getRecentFailedAttempts("", input.minutesBack);
       }),
   }),
 
@@ -299,6 +150,97 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const { getRoomPhotos } = await import("./db");
         return getRoomPhotos(input.roomId);
+      }),
+    
+    create: protectedProcedure
+      .input(z.object({
+        roomId: z.number(),
+        photoUrl: z.string(),
+        caption: z.string().optional(),
+        displayOrder: z.number().optional(),
+        isMainPhoto: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { createRoomPhoto } = await import("./db");
+        return createRoomPhoto({
+          roomId: input.roomId,
+          photoUrl: input.photoUrl,
+          caption: input.caption,
+          displayOrder: input.displayOrder || 0,
+          isMainPhoto: input.isMainPhoto || 0,
+        });
+      }),
+    
+    delete: protectedProcedure
+      .input(z.object({ photoId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteRoomPhoto } = await import("./db");
+        return deleteRoomPhoto(input.photoId);
+      }),
+    
+    update: protectedProcedure
+      .input(z.object({
+        photoId: z.number(),
+        caption: z.string().optional(),
+        displayOrder: z.number().optional(),
+        isMainPhoto: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { updateRoomPhoto } = await import("./db");
+        return updateRoomPhoto(input.photoId, {
+          caption: input.caption,
+          displayOrder: input.displayOrder,
+          isMainPhoto: input.isMainPhoto,
+        });
+      }),
+    
+    uploadAndOptimize: protectedProcedure
+      .input(z.object({
+        roomId: z.number(),
+        fileBase64: z.string(),
+        fileName: z.string(),
+        caption: z.string().optional(),
+        isMainPhoto: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const sharp = require('sharp');
+          const { storagePut } = await import("./storage");
+          const { createRoomPhoto } = await import("./db");
+          
+          // Decodificar base64
+          const buffer = Buffer.from(input.fileBase64, 'base64');
+          
+          // Otimizar com Sharp: redimensionar e comprimir
+          const optimized = await sharp(buffer)
+            .resize(1200, 800, {
+              fit: 'inside',
+              withoutEnlargement: true,
+            })
+            .jpeg({ quality: 80, progressive: true })
+            .toBuffer();
+          
+          // Salvar em S3
+          const fileKey = `room-photos/${input.roomId}/${Date.now()}-${input.fileName}`;
+          const { url } = await storagePut(fileKey, optimized, 'image/jpeg');
+          
+          // Salvar no banco
+          const photoId = await createRoomPhoto({
+            roomId: input.roomId,
+            photoUrl: url,
+            caption: input.caption,
+            isMainPhoto: input.isMainPhoto || 0,
+            displayOrder: 0,
+          });
+          
+          return { success: true, photoId, url };
+        } catch (error: any) {
+          console.error('[Upload] Error:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: error.message || 'Erro ao fazer upload da foto',
+          });
+        }
       }),
   }),
 });

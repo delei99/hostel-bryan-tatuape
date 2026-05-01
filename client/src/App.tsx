@@ -14,6 +14,7 @@ import BlockedDates from "./pages/BlockedDates";
 import AuditLogs from "./pages/AuditLogs";
 import AccessControl from "./pages/AccessControl";
 import SecurityAlerts from "./pages/SecurityAlerts";
+import RoomPhotosUpload from "./pages/RoomPhotosUpload";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/admin/fotos" component={AdminRoomPhotos} />
       <Route path="/admin/fotos/upload" component={PhotoUpload} />
       <Route path="/admin/bloqueios" component={BlockedDates} />
+      <Route path="/admin/fotos-upload" component={RoomPhotosUpload} />
       <Route path="/admin/logs" component={AuditLogs} />
       <Route path="/admin/acesso" component={AccessControl} />
       <Route path="/admin/alertas" component={SecurityAlerts} />

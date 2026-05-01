@@ -408,6 +408,22 @@ export async function addRoomPhoto(photo: InsertRoomPhoto) {
   }
 }
 
+export async function createRoomPhoto(photoData: InsertRoomPhoto) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create room photo: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.insert(roomPhotos).values(photoData);
+    return result[0].insertId;
+  } catch (error) {
+    console.error("[Database] Failed to create room photo:", error);
+    throw error;
+  }
+}
+
 export async function getRoomPhotos(roomId: number): Promise<RoomPhoto[]> {
   const db = await getDb();
   if (!db) return [];
@@ -494,17 +510,17 @@ export async function deleteBlockedDate(blockedDateId: number) {
   await db.delete(blockedDates).where(eq(blockedDates.id, blockedDateId));
 }
 
-export async function updateBlockedDate(blockedDateId: number, data: { startDate: Date; endDate: Date; reason: string }) {
+export async function updateBlockedDate(blockedDateId: number, data: { startDate?: Date; endDate?: Date; reason?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
+  const updates: any = { updatedAt: new Date() };
+  if (data.startDate) updates.startDate = data.startDate;
+  if (data.endDate) updates.endDate = data.endDate;
+  if (data.reason) updates.reason = data.reason;
+  
   await db.update(blockedDates)
-    .set({
-      startDate: data.startDate,
-      endDate: data.endDate,
-      reason: data.reason,
-      updatedAt: new Date(),
-    })
+    .set(updates)
     .where(eq(blockedDates.id, blockedDateId));
 }
 
