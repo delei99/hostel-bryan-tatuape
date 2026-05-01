@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -44,7 +43,7 @@ export default function BlockedDatesCalendar({
       return new Date(year, month - 1, day, 0, 0, 0, 0);
     }
     const d = new Date(date);
-    // Usar timezone local
+    // Usar timezone local - getMonth() ja retorna 0-11, nao precisa subtrair
     return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
   };
 

@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -146,10 +144,19 @@ export default function BlockedDates() {
     const blocked = blockedDates.find(b => b.id === blockedDateId);
     if (!blocked) return;
     
+    // Converter data para formato local (não UTC)
+    const formatDateLocal = (dateStr: string | Date) => {
+      const date = new Date(dateStr);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
     setEditingId(blockedDateId);
     setEditObservation(observations[blockedDateId]?.text || "");
-    setEditStartDate(new Date(blocked.startDate).toISOString().split('T')[0]);
-    setEditEndDate(new Date(blocked.endDate).toISOString().split('T')[0]);
+    setEditStartDate(formatDateLocal(blocked.startDate));
+    setEditEndDate(formatDateLocal(blocked.endDate));
     setEditReason(blocked.reason || "");
     setEditPassword("");
     setEditShowPassword(false);

@@ -353,3 +353,10 @@
 - [x] Adicionar coluna observation em datas bloqueadas
 - [x] Implementar rota tRPC para editar datas bloqueadas
 - [x] Exibir horário de criação das datas bloqueadas no calendário
+
+## Bug: Erro "unknown error" ao Acessar Página de Datas Bloqueadas
+- [x] Remover diretiva 'use client' do BlockedDates.tsx (não é Next.js)
+- [x] Mover import de CSS react-calendar para index.css (evita problema de bundling)
+- [x] Corrigir função normalizeDate em BlockedDatesCalendar.tsx
+- [x] Testar página de datas bloqueadas sem erro
+- [x] Todos os 35 testes passando
