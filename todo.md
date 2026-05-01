@@ -230,10 +230,10 @@
 
 ## Fase 30: Exceções de Bloqueio
 - [x] Criar tabela blockingExceptions no schema
-- [x] Criar rota tRPC para adicionar/remover exceções
-- [ ] Implementar UI para gerenciar exceções
-- [ ] Permitir desbloquear datas específicas dentro de um período bloqueado
-- [ ] Testar fluxo completo de exceções
+- [x] Cri## Fase 30: Implementar Exceções de Bloqueio
+- [x] Implementar UI para gerenciar exceções
+- [x] Permitir desbloquear datas específicas dentro de um período bloqueado
+- [x] Testar fluxo completo de exceções
 
 ## Bug: Erro ao Criar Reserva - "Tente Novamente"
 - [x] Investigar erro na rota de criacao de reserva

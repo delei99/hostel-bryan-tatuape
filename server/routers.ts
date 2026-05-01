@@ -144,6 +144,38 @@ export const appRouter = router({
       }),
   }),
 
+  blockingExceptions: router({
+    getByBlockedDate: publicProcedure
+      .input(z.object({ blockedDateId: z.number() }))
+      .query(async ({ input }) => {
+        const { getBlockingExceptionsByBlockedDate } = await import("./db");
+        return getBlockingExceptionsByBlockedDate(input.blockedDateId);
+      }),
+
+    create: protectedProcedure
+      .input(z.object({
+        blockedDateId: z.number(),
+        exceptionDate: z.date(),
+        reason: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { createBlockingException } = await import("./db");
+        return createBlockingException({
+          blockedDateId: input.blockedDateId,
+          exceptionDate: input.exceptionDate,
+          reason: input.reason,
+          createdBy: ctx.user?.id || 1,
+        });
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ exceptionId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteBlockingException } = await import("./db");
+        return deleteBlockingException(input.exceptionId);
+      }),
+  }),
+
   roomPhotos: router({
     getByRoom: publicProcedure
       .input(z.object({ roomId: z.number() }))
