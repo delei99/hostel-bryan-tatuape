@@ -61,6 +61,36 @@ export default function Booking() {
     { roomId: parseInt(formData.roomId) },
     { enabled: !!formData.roomId }
   );
+
+  // Estado para armazenar exceções
+  const [allExceptions, setAllExceptions] = React.useState<Array<{ exceptionDate: Date; blockedDateId: number }>>([]);
+
+  // Buscar exceções para cada bloqueio
+  React.useEffect(() => {
+    const fetchExceptions = async () => {
+      const exceptions: Array<{ exceptionDate: Date; blockedDateId: number }> = [];
+      for (const blockedDate of blockedDates) {
+        try {
+          const result = await (trpc.blockingExceptions.getByBlockedDate as any).query({ blockedDateId: blockedDate.id });
+          result.forEach((ex: any) => {
+            exceptions.push({
+              exceptionDate: new Date(ex.exceptionDate),
+              blockedDateId: blockedDate.id
+            });
+          });
+        } catch (error) {
+          console.error('Erro ao buscar exceções:', error);
+        }
+      }
+      setAllExceptions(exceptions);
+    };
+
+    if (blockedDates.length > 0) {
+      fetchExceptions();
+    } else {
+      setAllExceptions([]);
+    }
+  }, [blockedDates]);
   
   const createBooking = trpc.bookings.create.useMutation();
 
@@ -129,13 +159,42 @@ export default function Booking() {
     const checkIn = normalizeDate(checkInStr);
     const checkOut = normalizeDate(checkOutStr);
     
-    return blockedDates.some(blocked => {
+    // Verificar cada período bloqueado
+    for (const blocked of blockedDates) {
       const blockedStart = normalizeDate(blocked.startDate);
       const blockedEnd = normalizeDate(blocked.endDate);
       
-      // Verificar conflito de datas
-      return checkIn < blockedEnd && checkOut > blockedStart;
-    });
+      // Verificar se há conflito de datas
+      if (!(checkIn < blockedEnd && checkOut > blockedStart)) {
+        continue; // Sem conflito neste período
+      }
+
+      // Há conflito - verificar se há exceções que desbloqueiam
+      let allDatesHaveExceptions = true;
+      const currentDate = new Date(checkIn);
+      
+      while (currentDate < checkOut) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const hasException = allExceptions.some(ex => {
+          const exceptionDate = new Date(ex.exceptionDate).toISOString().split('T')[0];
+          return exceptionDate === dateStr && ex.blockedDateId === blocked.id;
+        });
+
+        if (!hasException) {
+          allDatesHaveExceptions = false;
+          break; // Encontrou uma data sem exceção
+        }
+
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      // Se nem todas as datas têm exceções, está bloqueado
+      if (!allDatesHaveExceptions) {
+        return true;
+      }
+    }
+
+    return false; // Nenhum período bloqueado ou todas as datas têm exceções
   };
 
   // Validação simples

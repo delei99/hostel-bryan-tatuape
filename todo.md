@@ -369,3 +369,10 @@
 - [x] Suportar múltiplos arquivos (até 10 por quarto)
 - [x] Converter arquivos para base64 no frontend
 - [x] Validar e testar fluxo completo
+
+
+## Fase 41: Integração de Exceções na Lógica de Reserva
+- [x] Atualizar função isDateBlocked para consultar exceções
+- [x] Integrar query de exceções no Booking.tsx
+- [x] Testar fluxo completo de reserva com datas excepcionadas
+- [x] Validar que datas excepcionadas ficam disponíveis
