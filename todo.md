@@ -404,6 +404,8 @@
 
 
 ## Fase 46: Corrigir Problemas de Calendário e WhatsApp
-- [x] Corrigir bloqueio de data um dia antes no calendário
-- [x] Adicionar número da reserva na mensagem WhatsApp
+- [x] Corrigir bloqueio de data um dia antes no calendário (normalizar datas com timezone local)
+- [x] Adicionar número da reserva na mensagem WhatsApp (com fallback)
+- [x] Adicionar logging para debug de bookingSuccess
+- [x] Corrigir exibição de datas bloqueadas para usar normalizeDate
 - [x] Testar ambas as correções

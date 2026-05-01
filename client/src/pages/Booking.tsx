@@ -257,12 +257,21 @@ export default function Booking() {
     
     const room = rooms.find(r => r.id === bookingSuccess.roomId);
     const numberOfGuests = bookingSuccess.numberOfGuests;
-    const checkInDate = new Date(formData.checkInDate);
-    const checkOutDate = new Date(formData.checkOutDate);
+    
+    // Usar strings YYYY-MM-DD para evitar problemas de timezone
+    const [checkInYear, checkInMonth, checkInDay] = formData.checkInDate.split('-').map(Number);
+    const [checkOutYear, checkOutMonth, checkOutDay] = formData.checkOutDate.split('-').map(Number);
+    const checkInDate = new Date(checkInYear, checkInMonth - 1, checkInDay);
+    const checkOutDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay);
     const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
     
+    // Garantir que bookingSuccess.id existe
+    const bookingNumber = bookingSuccess?.id ?? bookingSuccess?.bookingId ?? '(não informado)';
+    console.log('DEBUG: bookingSuccess =', bookingSuccess);
+    console.log('DEBUG: bookingNumber =', bookingNumber);
+    
     return `*Reserva Confirmada - Hostel Bryan Tatuapé*\n\n` +
-      `*Número da Reserva: ${bookingSuccess.id}*\n` +
+      `*Número da Reserva: ${bookingNumber}*\n` +
       `*Código: ${bookingSuccess.confirmationCode}*\n\n` +
       `*Hóspede:* ${formData.firstName} ${formData.lastName}\n` +
       `*Email:* ${formData.email}\n` +
@@ -287,9 +296,12 @@ export default function Booking() {
   const handleSendWhatsApp = () => {
     if (!bookingSuccess) return;
 
+    console.log('DEBUG: handleSendWhatsApp - bookingSuccess =', bookingSuccess);
     const message = generateMessage();
+    console.log('DEBUG: handleSendWhatsApp - message =', message);
     const phoneNumber = '5511952197283';
     const encodedMessage = encodeURIComponent(message);
+    console.log('DEBUG: handleSendWhatsApp - encodedMessage =', encodedMessage);
     
     // Usar wa.me que funciona melhor em mobile
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
@@ -376,8 +388,11 @@ export default function Booking() {
                   <p className="text-sm text-yellow-800 font-semibold">📅 Datas bloqueadas neste quarto:</p>
                   <ul className="text-sm text-yellow-700 mt-2 space-y-1">
                     {blockedDates.map((blocked, idx) => {
-                      const startDate = new Date(blocked.startDate).toLocaleDateString('pt-BR');
-                      const endDate = new Date(blocked.endDate).toLocaleDateString('pt-BR');
+                      // Usar normalizeDate para garantir consistência
+                      const startDateObj = normalizeDate(blocked.startDate);
+                      const endDateObj = normalizeDate(blocked.endDate);
+                      const startDate = startDateObj.toLocaleDateString('pt-BR');
+                      const endDate = endDateObj.toLocaleDateString('pt-BR');
                       return (
                         <li key={idx}>• {startDate} até {endDate}</li>
                       );
