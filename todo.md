@@ -383,3 +383,9 @@
 - [x] Adicionar campos opcionais ao input do bookings.create
 - [x] Converter numberOfGuests para string ao enviar
 - [x] Testar fluxo de reserva completo
+
+## Fase 43: Correção de Erros de JavaScript em Produção
+- [x] Remover useEffect que tentava chamar .query() em proxy de hooks
+- [x] Simplificar lógica de bloqueio para usar apenas bloqueios diretos
+- [x] Validar que console está limpo em produção
+- [x] Testar fluxo completo
