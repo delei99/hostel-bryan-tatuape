@@ -401,3 +401,9 @@
 - [x] Calcular quantidade de dias entre check-in e check-out
 - [x] Exibir quantidade de dias no resumo da reserva
 - [x] Testar cálculo com diferentes períodos\u00edodos
+
+
+## Fase 46: Corrigir Problemas de Calendário e WhatsApp
+- [x] Corrigir bloqueio de data um dia antes no calendário
+- [x] Adicionar número da reserva na mensagem WhatsApp
+- [x] Testar ambas as correções

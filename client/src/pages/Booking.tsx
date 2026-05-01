@@ -45,6 +45,7 @@ export default function Booking() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<any>(null);
+  const [reservationId, setReservationId] = useState<number | null>(null);
   
   // Atualizar roomId se vier da URL
   React.useEffect(() => {
@@ -137,10 +138,13 @@ export default function Booking() {
     // Verificar cada período bloqueado
     for (const blocked of blockedDates) {
       const blockedStart = normalizeDate(blocked.startDate);
-      const blockedEnd = normalizeDate(blocked.endDate);
+      // Subtrair 1 dia do fim do bloqueio porque o check-out é exclusivo
+      const blockedEnd = new Date(normalizeDate(blocked.endDate));
+      blockedEnd.setDate(blockedEnd.getDate() - 1);
       
       // Verificar se há conflito de datas
-      if (!(checkIn < blockedEnd && checkOut > blockedStart)) {
+      // Conflito ocorre se: checkIn <= blockedEnd && checkOut > blockedStart
+      if (!(checkIn <= blockedEnd && checkOut > blockedStart)) {
         continue; // Sem conflito neste período
       }
 
@@ -258,6 +262,7 @@ export default function Booking() {
     const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
     
     return `*Reserva Confirmada - Hostel Bryan Tatuapé*\n\n` +
+      `*Número da Reserva: ${bookingSuccess.id}*\n` +
       `*Código: ${bookingSuccess.confirmationCode}*\n\n` +
       `*Hóspede:* ${formData.firstName} ${formData.lastName}\n` +
       `*Email:* ${formData.email}\n` +
