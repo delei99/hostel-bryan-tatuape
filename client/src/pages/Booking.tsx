@@ -554,8 +554,12 @@ export default function Booking() {
 
             {/* Resumo de Preço */}
             <div className="p-4 bg-accent/5 rounded-lg">
-              <div className="flex justify-between mb-2">
-                <span>Subtotal ({priceCalculation.nights} noites):</span>
+              <div className="flex justify-between mb-2 font-semibold text-lg">
+                <span>Quantidade de Dias: {priceCalculation.nights} noite{priceCalculation.nights !== 1 ? 's' : ''}</span>
+                <span className="text-accent">({formData.checkInDate} a {formData.checkOutDate})</span>
+              </div>
+              <div className="flex justify-between mb-2 mt-4">
+                <span>Subtotal ({priceCalculation.nights} noite{priceCalculation.nights !== 1 ? 's' : ''}):</span>
                 <span>R$ {(priceCalculation.subtotal / 100).toFixed(2)}</span>
               </div>
               {priceCalculation.durationDiscountPercent > 0 && (

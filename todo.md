@@ -395,3 +395,9 @@
 - [x] Corrigir regex muito restritivo de validação de email
 - [x] Usar validação mais flexível com .email().or(regex simples)
 - [x] Testar com diferentes formatos de email
+
+
+## Fase 45: Adicionar Quantidade de Dias na Reserva
+- [x] Calcular quantidade de dias entre check-in e check-out
+- [x] Exibir quantidade de dias no resumo da reserva
+- [x] Testar cálculo com diferentes períodos\u00edodos
