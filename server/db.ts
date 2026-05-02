@@ -815,3 +815,31 @@ export async function updateBooking(bookingId: number, updateData: any, editedBy
     room: updatedBooking.room,
   };
 }
+
+
+/**
+ * Atualizar informações do quarto (nome, preço, descrição, etc)
+ */
+export async function updateRoom(roomId: number, updateData: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateSet: Record<string, any> = {};
+
+  // Apenas campos permitidos
+  const allowedFields = ['name', 'description', 'pricePerNight', 'capacity', 'type', 'amenities', 'status'];
+  
+  for (const field of allowedFields) {
+    if (updateData[field] !== undefined) {
+      updateSet[field] = updateData[field];
+    }
+  }
+
+  if (Object.keys(updateSet).length === 0) {
+    throw new Error("No valid fields to update");
+  }
+
+  await db.update(rooms).set(updateSet).where(eq(rooms.id, roomId));
+
+  return getRoomById(roomId);
+}

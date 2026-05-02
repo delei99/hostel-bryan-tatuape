@@ -230,6 +230,11 @@ export default function AdminDashboard() {
             <p className="text-foreground/70">Gerencie todas as reservas do Hostel Bryan Tatuapé</p>
           </div>
           <div className="flex gap-3">
+            <Link href="/admin/quartos">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                Editar Quartos
+              </Button>
+            </Link>
             <Link href="/admin/fotos">
               <Button className="bg-accent hover:bg-opacity-90">
                 Gerenciar Fotos
