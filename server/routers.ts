@@ -83,6 +83,26 @@ export const appRouter = router({
         const { getBookingById } = await import("./db");
         return getBookingById(input.id);
       }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        roomId: z.number(),
+        checkInDate: z.string(),
+        checkOutDate: z.string(),
+        numberOfGuests: z.string(),
+        specialRequests: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { updateBooking } = await import("./db");
+        return updateBooking(input.id, {
+          roomId: input.roomId,
+          checkInDate: input.checkInDate,
+          checkOutDate: input.checkOutDate,
+          numberOfGuests: parseInt(input.numberOfGuests),
+          specialRequests: input.specialRequests,
+        }, ctx.user?.email || 'system');
+      }),
   }),
 
   blockedDates: router({

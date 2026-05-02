@@ -417,3 +417,10 @@
 - [x] Corrigir normalizeDate para usar UTC getters (Date.UTC)
 - [x] Corrigir exibição de datas bloqueadas para usar UTC
 - [x] Testar com datas específicas (25/05/2026)
+
+
+## Fase 48: Adicionar Opção de Mudar de Quarto na Edição
+- [x] Adicionar seletor de quarto na página de edição de reserva
+- [x] Implementar atualização automática de datas bloqueadas ao mudar quarto
+- [x] Atualizar calendário para refletir novo quarto
+- [x] Testar fluxo completo de mudança de quarto
