@@ -38,8 +38,21 @@ export default function AdminDashboard() {
     setEditPassword("");
   };
 
-  // Buscar todas as reservas
-  const { data: bookings, isLoading, error, refetch } = trpc.bookings.list.useQuery({ roomId: undefined }, {
+  // Verificar se usuário é admin antes de renderizar
+  if (isAuthenticated && user?.role !== "admin") {
+    return (
+      <DashboardLayout>
+        <Card className="p-8 text-center border-red-200 bg-red-50">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Acesso Negado</h2>
+          <p className="text-red-600 mb-4">Apenas administradores podem acessar este painel.</p>
+          <p className="text-red-600 text-sm">Entre em contato com o proprietário do hostel para obter acesso.</p>
+        </Card>
+      </DashboardLayout>
+    );
+  }
+
+  // Buscar todas as reservas (sem input, pois procedure não aceita)
+  const { data: bookings, isLoading, error, refetch } = trpc.bookings.list.useQuery(undefined, {
     enabled: isAuthenticated && user?.role === "admin",
   });
 
@@ -675,17 +688,11 @@ export default function AdminDashboard() {
                       }
                       updateBooking.mutate({
                         id: editingBooking.id,
-                        password: editPassword,
                         checkInDate: editFormData.checkInDate,
                         checkOutDate: editFormData.checkOutDate,
-                        checkInTime: editFormData.checkInTime,
-                        checkOutTime: editFormData.checkOutTime,
                         roomId: editFormData.roomId,
                         numberOfGuests: editFormData.numberOfGuests,
-                        firstName: editFormData.firstName,
-                        lastName: editFormData.lastName,
-                        email: editFormData.email,
-                        phone: editFormData.phone,
+                        specialRequests: editFormData.specialRequests,
                       });
                     }}
                     disabled={isEditingSubmitting || updateBooking.isPending}

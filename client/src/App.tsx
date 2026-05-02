@@ -11,9 +11,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoomPhotos from "./pages/AdminRoomPhotos";
 import PhotoUpload from "./pages/admin/PhotoUpload";
 import BlockedDates from "./pages/BlockedDates";
-import AuditLogs from "./pages/AuditLogs";
-import AccessControl from "./pages/AccessControl";
-import SecurityAlerts from "./pages/SecurityAlerts";
+// import AuditLogs from "./pages/AuditLogs";
+// import AccessControl from "./pages/AccessControl";
+// import SecurityAlerts from "./pages/SecurityAlerts";
 import RoomPhotosUpload from "./pages/RoomPhotosUpload";
 import BlockingExceptions from "./pages/BlockingExceptions";
 import EditBooking from "./pages/EditBooking";
@@ -32,9 +32,9 @@ function Router() {
       <Route path="/admin/fotos-upload" component={RoomPhotosUpload} />
       <Route path="/admin/excecoes" component={BlockingExceptions} />
       <Route path="/edit-booking" component={EditBooking} />
-      <Route path="/admin/logs" component={AuditLogs} />
+      {/* <Route path="/admin/logs" component={AuditLogs} />
       <Route path="/admin/acesso" component={AccessControl} />
-      <Route path="/admin/alertas" component={SecurityAlerts} />
+      <Route path="/admin/alertas" component={SecurityAlerts} /> */}
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
 
 export const appRouter = router({
   system: systemRouter,
@@ -72,19 +72,19 @@ export const appRouter = router({
         return createBooking(input);
       }),
 
-    list: protectedProcedure.query(async () => {
+    list: adminProcedure.query(async () => {
       const { getAllBookings } = await import("./db");
       return getAllBookings();
     }),
 
-    getById: protectedProcedure
+    getById: adminProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         const { getBookingById } = await import("./db");
         return getBookingById(input.id);
       }),
 
-    update: protectedProcedure
+    update: adminProcedure
       .input(z.object({
         id: z.number(),
         roomId: z.number(),
