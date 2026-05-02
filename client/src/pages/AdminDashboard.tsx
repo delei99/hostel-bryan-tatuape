@@ -367,13 +367,14 @@ export default function AdminDashboard() {
                             <Eye className="w-4 h-4" />
                             Detalhes
                           </Button>
-                          <Button
-                            size="sm"
-                            className="bg-accent hover:bg-accent/90 gap-2"
-                            onClick={() => handleOpenEditModal(booking)}
-                          >
-                            Editar
-                          </Button>
+                          <Link href={`/edit-booking?id=${booking.id}`}>
+                            <Button
+                              size="sm"
+                              className="bg-accent hover:bg-accent/90 gap-2"
+                            >
+                              Editar
+                            </Button>
+                          </Link>
                         </td>
                       </tr>
                     );

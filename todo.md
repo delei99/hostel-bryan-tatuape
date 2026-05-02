@@ -424,3 +424,10 @@
 - [x] Implementar atualização automática de datas bloqueadas ao mudar quarto
 - [x] Atualizar calendário para refletir novo quarto
 - [x] Testar fluxo completo de mudança de quarto
+
+
+## Fase 49: Adicionar Botão Editar no Admin Dashboard
+- [x] Encontrar página do admin dashboard com listagem de reservas
+- [x] Adicionar coluna de ações com botão Editar
+- [x] Implementar navegação para EditBooking.tsx?id=ID
+- [x] Testar fluxo completo de edição de reserva
