@@ -124,11 +124,13 @@ export default function Booking() {
   // Funcao para normalizar data sem timezone (apenas YYYY-MM-DD)
   const normalizeDate = (dateStr: string | Date): Date => {
     if (typeof dateStr === 'string') {
+      // Se for string YYYY-MM-DD, usar UTC para evitar shift de timezone
       const [year, month, day] = dateStr.split('-').map(Number);
-      return new Date(year, month - 1, day, 0, 0, 0, 0);
+      return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
     }
+    // Se for Date object (vindo do backend como ISO string), usar UTC getters
     const d = new Date(dateStr);
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
   };
 
   const isDateBlocked = (checkInStr: string, checkOutStr: string) => {
@@ -384,11 +386,12 @@ export default function Booking() {
                   <p className="text-sm text-yellow-800 font-semibold">📅 Datas bloqueadas neste quarto:</p>
                   <ul className="text-sm text-yellow-700 mt-2 space-y-1">
                     {blockedDates.map((blocked, idx) => {
-                      // Usar normalizeDate para garantir consistência
+                      // Usar normalizeDate para garantir consistência com UTC
                       const startDateObj = normalizeDate(blocked.startDate);
                       const endDateObj = normalizeDate(blocked.endDate);
-                      const startDate = startDateObj.toLocaleDateString('pt-BR');
-                      const endDate = endDateObj.toLocaleDateString('pt-BR');
+                      // Usar toUTCString e extrair data para evitar shift de timezone
+                      const startDate = new Date(startDateObj.getUTCFullYear(), startDateObj.getUTCMonth(), startDateObj.getUTCDate()).toLocaleDateString('pt-BR');
+                      const endDate = new Date(endDateObj.getUTCFullYear(), endDateObj.getUTCMonth(), endDateObj.getUTCDate()).toLocaleDateString('pt-BR');
                       return (
                         <li key={idx}>• {startDate} até {endDate}</li>
                       );

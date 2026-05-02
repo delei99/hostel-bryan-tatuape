@@ -411,7 +411,9 @@
 - [x] Testar ambas as correções
 
 
-## Fase 47: Correção Final de Lógica de Bloqueio
+## Fase 47: Correção Final de Lógica de Bloqueio com UTC
 - [x] Remover inversão de lógica na condição de conflito
 - [x] Ajustar para não bloquear o dia do check-out
+- [x] Corrigir normalizeDate para usar UTC getters (Date.UTC)
+- [x] Corrigir exibição de datas bloqueadas para usar UTC
 - [x] Testar com datas específicas (25/05/2026)
