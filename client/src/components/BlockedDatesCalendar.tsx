@@ -29,35 +29,36 @@ export default function BlockedDatesCalendar({
   const [reason, setReason] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Normalizar data para comparação (usar timezone local)
+  // Normalizar data para comparação (usar UTC para evitar shift de timezone)
   const normalizeDate = (date: Date | string): Date => {
     if (typeof date === 'string') {
       // Se for ISO string (ex: "2026-05-01T00:00:00.000Z"), extrair apenas a data
       if (date.includes('T')) {
         const dateOnly = date.split('T')[0];
         const [year, month, day] = dateOnly.split('-').map(Number);
-        return new Date(year, month - 1, day, 0, 0, 0, 0);
+        return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
       }
-      // Se for YYYY-MM-DD, fazer parse direto
+      // Se for YYYY-MM-DD, usar UTC
       const [year, month, day] = date.split('-').map(Number);
-      return new Date(year, month - 1, day, 0, 0, 0, 0);
+      return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
     }
+    // Se for Date object, usar UTC getters
     const d = new Date(date);
-    // Usar timezone local - getMonth() ja retorna 0-11, nao precisa subtrair
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
   };
 
   // Verificar se uma data está bloqueada
   const isDateBlocked = (date: Date): boolean => {
-    const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+    // Usar UTC para evitar shift de timezone
+    const normalizedDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
     
     return blockedDates.some(blocked => {
       const blockedStart = normalizeDate(blocked.startDate);
       const blockedEnd = normalizeDate(blocked.endDate);
       
-      // Comparar apenas as datas (sem horas)
-      // Uma data está bloqueada se estiver entre startDate e endDate (inclusive)
-      return normalizedDate >= blockedStart && normalizedDate <= blockedEnd;
+      // Uma data está bloqueada se estiver entre startDate e endDate (exclusive)
+      // Check-out nao bloqueia (hospede sai naquele dia)
+      return normalizedDate >= blockedStart && normalizedDate < blockedEnd;
     });
   };
 
