@@ -38,7 +38,12 @@ export default function AdminDashboard() {
     setEditPassword("");
   };
 
-  // Verificar se usuário é admin antes de renderizar
+  // Buscar todas as reservas (sem input, pois procedure não aceita)
+  const { data: bookings, isLoading, error, refetch } = trpc.bookings.list.useQuery(undefined, {
+    enabled: isAuthenticated && user?.role === "admin",
+  });
+
+  // Verificar se usuário é admin DEPOIS de chamar todos os hooks
   if (isAuthenticated && user?.role !== "admin") {
     return (
       <DashboardLayout>
@@ -50,11 +55,6 @@ export default function AdminDashboard() {
       </DashboardLayout>
     );
   }
-
-  // Buscar todas as reservas (sem input, pois procedure não aceita)
-  const { data: bookings, isLoading, error, refetch } = trpc.bookings.list.useQuery(undefined, {
-    enabled: isAuthenticated && user?.role === "admin",
-  });
 
   // Mostrar erro se houver
   if (error) {
