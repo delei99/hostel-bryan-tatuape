@@ -138,19 +138,15 @@ export default function Booking() {
     // Verificar cada período bloqueado
     for (const blocked of blockedDates) {
       const blockedStart = normalizeDate(blocked.startDate);
-      // Subtrair 1 dia do fim do bloqueio porque o check-out é exclusivo
-      const blockedEnd = new Date(normalizeDate(blocked.endDate));
-      blockedEnd.setDate(blockedEnd.getDate() - 1);
+      const blockedEnd = normalizeDate(blocked.endDate);
       
       // Verificar se há conflito de datas
-      // Conflito ocorre se: checkIn <= blockedEnd && checkOut > blockedStart
-      if (!(checkIn <= blockedEnd && checkOut > blockedStart)) {
-        continue; // Sem conflito neste período
+      // Conflito ocorre se: checkIn < blockedEnd && checkOut > blockedStart
+      // Nota: checkOut nao bloqueia (hospede sai naquele dia)
+      if (checkIn < blockedEnd && checkOut > blockedStart) {
+        // Ha conflito - esta bloqueado
+        return true;
       }
-
-      // Há conflito - está bloqueado
-      // Nota: Exceções são gerenciáveis apenas na página admin
-      return true;
     }
 
     return false; // Nenhum período bloqueado ou todas as datas têm exceções

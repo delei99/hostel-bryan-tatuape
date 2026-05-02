@@ -409,3 +409,9 @@
 - [x] Adicionar logging para debug de bookingSuccess
 - [x] Corrigir exibição de datas bloqueadas para usar normalizeDate
 - [x] Testar ambas as correções
+
+
+## Fase 47: Correção Final de Lógica de Bloqueio
+- [x] Remover inversão de lógica na condição de conflito
+- [x] Ajustar para não bloquear o dia do check-out
+- [x] Testar com datas específicas (25/05/2026)
