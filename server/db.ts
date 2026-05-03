@@ -996,3 +996,51 @@ export async function updateRoom(roomId: number, updateData: any) {
 
   return getRoomById(roomId);
 }
+
+
+/**
+ * Criar novo quarto
+ */
+export async function createRoom(roomData: {
+  name: string;
+  type: "private" | "shared" | "dorm";
+  capacity: number;
+  pricePerNight: number;
+  description?: string;
+  amenities?: string;
+  status?: "available" | "maintenance" | "archived";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db.insert(rooms).values({
+      name: roomData.name,
+      type: roomData.type,
+      capacity: roomData.capacity,
+      pricePerNight: roomData.pricePerNight,
+      description: roomData.description || null,
+      amenities: roomData.amenities || null,
+      status: roomData.status || "available",
+    });
+
+    // Extrair o ID do novo quarto
+    let roomId: number;
+    if ((result as any).insertId) {
+      roomId = Number((result as any).insertId);
+    } else if (Array.isArray(result) && (result[0] as any)?.insertId) {
+      roomId = Number((result[0] as any).insertId);
+    } else if ((result as any)[0]?.insertId) {
+      roomId = Number((result as any)[0].insertId);
+    } else {
+      throw new Error("Failed to create room: could not extract insertId");
+    }
+
+    if (!roomId || isNaN(roomId)) throw new Error("Failed to create room: invalid roomId");
+
+    return getRoomById(roomId);
+  } catch (error) {
+    console.error("[Database] Error creating room:", error);
+    throw error;
+  }
+}

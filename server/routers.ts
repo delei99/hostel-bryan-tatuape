@@ -43,6 +43,21 @@ export const appRouter = router({
         return getRoomAvailability(input.roomId, new Date(input.checkInDate), new Date(input.checkOutDate));
       }),
 
+    create: adminProcedure
+      .input(z.object({
+        name: z.string(),
+        type: z.enum(["private", "shared", "dorm"]),
+        capacity: z.number(),
+        pricePerNight: z.number(),
+        description: z.string().optional(),
+        amenities: z.string().optional(),
+        status: z.enum(["available", "maintenance", "archived"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { createRoom } = await import("./db");
+        return createRoom(input);
+      }),
+    
     update: adminProcedure
       .input(z.object({
         id: z.number(),

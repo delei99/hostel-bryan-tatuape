@@ -7,17 +7,47 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Edit2, Save, X } from "lucide-react";
+import { Edit2, Save, X, Plus } from "lucide-react";
 
 export default function AdminRooms() {
   const { data: rooms = [], isLoading, refetch } = trpc.rooms.list.useQuery();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editFormData, setEditFormData] = useState<any>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createFormData, setCreateFormData] = useState<any>({
+    name: "",
+    type: "private",
+    capacity: 1,
+    pricePerNight: 0,
+    description: "",
+    amenities: "",
+    status: "available",
+  });
 
   const updateRoomMutation = trpc.rooms.update.useMutation({
     onSuccess: () => {
       toast.success("Quarto atualizado com sucesso!");
       setEditingId(null);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Erro: ${error.message}`);
+    },
+  });
+
+  const createRoomMutation = trpc.rooms.create.useMutation({
+    onSuccess: () => {
+      toast.success("Quarto criado com sucesso!");
+      setShowCreateModal(false);
+      setCreateFormData({
+        name: "",
+        type: "private",
+        capacity: 1,
+        pricePerNight: 0,
+        description: "",
+        amenities: "",
+        status: "available",
+      });
       refetch();
     },
     onError: (error) => {
@@ -57,6 +87,29 @@ export default function AdminRooms() {
     }));
   };
 
+  const handleCreateFieldChange = (field: string, value: any) => {
+    setCreateFormData((prev: any) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleCreateRoom = () => {
+    if (!createFormData.name) {
+      toast.error("Nome do quarto é obrigatório");
+      return;
+    }
+    createRoomMutation.mutate({
+      name: createFormData.name,
+      type: createFormData.type,
+      capacity: parseInt(createFormData.capacity),
+      pricePerNight: Math.round(parseFloat(createFormData.pricePerNight) * 100),
+      description: createFormData.description || undefined,
+      amenities: createFormData.amenities || undefined,
+      status: createFormData.status,
+    });
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -70,10 +123,115 @@ export default function AdminRooms() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gerenciar Quartos</h1>
-          <p className="text-gray-600 mt-2">Edite os detalhes dos quartos do hostel</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Gerenciar Quartos</h1>
+            <p className="text-gray-600 mt-2">Edite os detalhes dos quartos do hostel</p>
+          </div>
+          <Button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2 bg-green-600 hover:bg-green-700">
+            <Plus className="w-4 h-4" />
+            Criar Novo Quarto
+          </Button>
         </div>
+
+        {showCreateModal && (
+          <Card className="p-6 bg-green-50 border-green-200">
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-gray-900">Criar Novo Quarto</h2>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Nome do Quarto *</Label>
+                  <Input
+                    value={createFormData.name}
+                    onChange={(e) => handleCreateFieldChange("name", e.target.value)}
+                    placeholder="Ex: Quarto 101"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Tipo</Label>
+                  <Select value={createFormData.type} onValueChange={(value) => handleCreateFieldChange("type", value)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="private">Privado</SelectItem>
+                      <SelectItem value="shared">Compartilhado</SelectItem>
+                      <SelectItem value="dorm">Dormitório</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Capacidade</Label>
+                  <Input
+                    type="number"
+                    value={createFormData.capacity}
+                    onChange={(e) => handleCreateFieldChange("capacity", e.target.value)}
+                    min="1"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Preço por Noite (R$)</Label>
+                  <Input
+                    type="number"
+                    value={createFormData.pricePerNight}
+                    onChange={(e) => handleCreateFieldChange("pricePerNight", e.target.value)}
+                    min="0"
+                    step="0.01"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Descrição</Label>
+                <textarea
+                  value={createFormData.description}
+                  onChange={(e) => handleCreateFieldChange("description", e.target.value)}
+                  placeholder="Descrição do quarto"
+                  className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label>Comodidades (separadas por vírgula)</Label>
+                <textarea
+                  value={createFormData.amenities}
+                  onChange={(e) => handleCreateFieldChange("amenities", e.target.value)}
+                  placeholder="Ex: WiFi, TV, Ar condicionado"
+                  className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <Label>Status</Label>
+                <Select value={createFormData.status} onValueChange={(value) => handleCreateFieldChange("status", value)}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="available">Disponível</SelectItem>
+                    <SelectItem value="maintenance">Manutenção</SelectItem>
+                    <SelectItem value="archived">Arquivado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setShowCreateModal(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleCreateRoom} disabled={createRoomMutation.isPending} className="bg-green-600 hover:bg-green-700">
+                  {createRoomMutation.isPending ? "Criando..." : "Criar Quarto"}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
 
         <div className="grid gap-4">
           {rooms.map((room: any) => (
@@ -233,7 +391,7 @@ export default function AdminRooms() {
 
         {rooms.length === 0 && (
           <Card className="p-8 text-center">
-            <p className="text-gray-500">Nenhum quarto encontrado</p>
+            <p className="text-gray-500">Nenhum quarto encontrado. Clique em "Criar Novo Quarto" para começar!</p>
           </Card>
         )}
       </div>
