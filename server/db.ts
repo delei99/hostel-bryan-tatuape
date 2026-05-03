@@ -333,7 +333,7 @@ export async function getAllBookings() {
   const db = await getDb();
   if (!db) return [];
   
-  return db
+  const result = await db
     .select({
       booking: bookings,
       guest: guests,
@@ -343,6 +343,8 @@ export async function getAllBookings() {
     .innerJoin(guests, eq(bookings.guestId, guests.id))
     .innerJoin(rooms, eq(bookings.roomId, rooms.id))
     .orderBy(desc(bookings.createdAt));
+  
+  return result;
 }
 
 export async function getBookingById(bookingId: number) {
