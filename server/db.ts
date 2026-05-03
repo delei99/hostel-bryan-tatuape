@@ -333,37 +333,145 @@ export async function getAllBookings() {
   const db = await getDb();
   if (!db) return [];
   
-  const result = await db
-    .select({
-      booking: bookings,
-      guest: guests,
-      room: rooms
-    })
-    .from(bookings)
-    .innerJoin(guests, eq(bookings.guestId, guests.id))
-    .innerJoin(rooms, eq(bookings.roomId, rooms.id))
-    .orderBy(desc(bookings.createdAt));
-  
-  return result;
+  try {
+    const result = await db
+      .select({
+        booking: {
+          id: bookings.id,
+          guestId: bookings.guestId,
+          roomId: bookings.roomId,
+          bedId: bookings.bedId,
+          checkInDate: bookings.checkInDate,
+          checkOutDate: bookings.checkOutDate,
+          numberOfGuests: bookings.numberOfGuests,
+          dailyType: bookings.dailyType,
+          discountPercentage: bookings.discountPercentage,
+          discountAmount: bookings.discountAmount,
+          cleaningFee: bookings.cleaningFee,
+          subtotal: bookings.subtotal,
+          totalPrice: bookings.totalPrice,
+          status: bookings.status,
+          specialRequests: bookings.specialRequests,
+          paymentMethod: bookings.paymentMethod,
+          paymentStatus: bookings.paymentStatus,
+          confirmationCode: bookings.confirmationCode,
+          checkInTime: bookings.checkInTime,
+          checkOutTime: bookings.checkOutTime,
+          editedAt: bookings.editedAt,
+          editedBy: bookings.editedBy,
+          createdAt: bookings.createdAt,
+          updatedAt: bookings.updatedAt,
+        },
+        guest: {
+          id: guests.id,
+          firstName: guests.firstName,
+          lastName: guests.lastName,
+          email: guests.email,
+          phone: guests.phone,
+          cpf: guests.cpf,
+          nationality: guests.nationality,
+          dateOfBirth: guests.dateOfBirth,
+          createdAt: guests.createdAt,
+          updatedAt: guests.updatedAt,
+        },
+        room: {
+          id: rooms.id,
+          name: rooms.name,
+          type: rooms.type,
+          capacity: rooms.capacity,
+          pricePerNight: rooms.pricePerNight,
+          description: rooms.description,
+          amenities: rooms.amenities,
+          imageUrl: rooms.imageUrl,
+          additionalImages: rooms.additionalImages,
+          status: rooms.status,
+          createdAt: rooms.createdAt,
+          updatedAt: rooms.updatedAt,
+        }
+      })
+      .from(bookings)
+      .innerJoin(guests, eq(bookings.guestId, guests.id))
+      .innerJoin(rooms, eq(bookings.roomId, rooms.id))
+      .orderBy(desc(bookings.createdAt));
+    
+    return result;
+  } catch (error) {
+    console.error('[Database] Error in getAllBookings:', error);
+    return [];
+  }
 }
 
 export async function getBookingById(bookingId: number) {
   const db = await getDb();
   if (!db) return undefined;
   
-  const result = await db
-    .select({
-      booking: bookings,
-      guest: guests,
-      room: rooms
-    })
-    .from(bookings)
-    .innerJoin(guests, eq(bookings.guestId, guests.id))
-    .innerJoin(rooms, eq(bookings.roomId, rooms.id))
-    .where(eq(bookings.id, bookingId))
-    .limit(1);
-  
-  return result.length > 0 ? result[0] : undefined;
+  try {
+    const result = await db
+      .select({
+        booking: {
+          id: bookings.id,
+          guestId: bookings.guestId,
+          roomId: bookings.roomId,
+          bedId: bookings.bedId,
+          checkInDate: bookings.checkInDate,
+          checkOutDate: bookings.checkOutDate,
+          numberOfGuests: bookings.numberOfGuests,
+          dailyType: bookings.dailyType,
+          discountPercentage: bookings.discountPercentage,
+          discountAmount: bookings.discountAmount,
+          cleaningFee: bookings.cleaningFee,
+          subtotal: bookings.subtotal,
+          totalPrice: bookings.totalPrice,
+          status: bookings.status,
+          specialRequests: bookings.specialRequests,
+          paymentMethod: bookings.paymentMethod,
+          paymentStatus: bookings.paymentStatus,
+          confirmationCode: bookings.confirmationCode,
+          checkInTime: bookings.checkInTime,
+          checkOutTime: bookings.checkOutTime,
+          editedAt: bookings.editedAt,
+          editedBy: bookings.editedBy,
+          createdAt: bookings.createdAt,
+          updatedAt: bookings.updatedAt,
+        },
+        guest: {
+          id: guests.id,
+          firstName: guests.firstName,
+          lastName: guests.lastName,
+          email: guests.email,
+          phone: guests.phone,
+          cpf: guests.cpf,
+          nationality: guests.nationality,
+          dateOfBirth: guests.dateOfBirth,
+          createdAt: guests.createdAt,
+          updatedAt: guests.updatedAt,
+        },
+        room: {
+          id: rooms.id,
+          name: rooms.name,
+          type: rooms.type,
+          capacity: rooms.capacity,
+          pricePerNight: rooms.pricePerNight,
+          description: rooms.description,
+          amenities: rooms.amenities,
+          imageUrl: rooms.imageUrl,
+          additionalImages: rooms.additionalImages,
+          status: rooms.status,
+          createdAt: rooms.createdAt,
+          updatedAt: rooms.updatedAt,
+        }
+      })
+      .from(bookings)
+      .innerJoin(guests, eq(bookings.guestId, guests.id))
+      .innerJoin(rooms, eq(bookings.roomId, rooms.id))
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+    
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error('[Database] Error in getBookingById:', error);
+    return undefined;
+  }
 }
 
 export async function updateBookingStatus(bookingId: number, status: string) {
