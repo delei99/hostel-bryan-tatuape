@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Upload, X, Star } from "lucide-react";
+import { Upload, X, Star, GripVertical } from "lucide-react";
 
 interface Photo {
   id?: number;
@@ -24,6 +24,8 @@ interface RoomPhotoGalleryProps {
 
 export default function RoomPhotoGallery({ photos, onPhotosChange, isLoading = false }: RoomPhotoGalleryProps) {
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
@@ -114,6 +116,51 @@ export default function RoomPhotoGallery({ photos, onPhotosChange, isLoading = f
     onPhotosChange(updatedPhotos);
   };
 
+  // Funções de Drag and Drop
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (index: number, e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (dropIndex: number, e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
+
+    // Reordenar fotos
+    const updatedPhotos = [...photos];
+    const draggedPhoto = updatedPhotos[draggedIndex];
+    
+    // Remover foto do índice original
+    updatedPhotos.splice(draggedIndex, 1);
+    
+    // Inserir foto no novo índice
+    updatedPhotos.splice(dropIndex, 0, draggedPhoto);
+
+    // Atualizar displayOrder
+    updatedPhotos.forEach((photo, i) => {
+      photo.displayOrder = i;
+    });
+
+    onPhotosChange(updatedPhotos);
+    setDraggedIndex(null);
+    toast.success("Ordem das fotos atualizada");
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -134,104 +181,128 @@ export default function RoomPhotoGallery({ photos, onPhotosChange, isLoading = f
           <p className="text-gray-500">Nenhuma foto adicionada. Clique em "Adicionar Foto" para começar.</p>
         </Card>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
-          {photos.map((photo, index) => (
-            <Card key={index} className="p-4 space-y-3">
-              {/* Prévia da foto */}
-              <div className="relative bg-gray-100 rounded-lg overflow-hidden h-40 flex items-center justify-center">
-                {photo.photoUrl ? (
-                  <>
-                    <img
-                      src={photo.photoUrl}
-                      alt={`Foto ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    {photo.isMainPhoto && (
-                      <div className="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-current" />
-                        Principal
+        <div className="space-y-3">
+          <p className="text-sm text-gray-600">💡 Dica: Arraste as fotos para reordenar</p>
+          <div className="grid grid-cols-2 gap-4">
+            {photos.map((photo, index) => (
+              <div
+                key={index}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(index, e)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(index, e)}
+                onDragEnd={handleDragEnd}
+                className={`transition-all cursor-move ${
+                  draggedIndex === index ? "opacity-50" : ""
+                } ${dragOverIndex === index ? "ring-2 ring-blue-500 ring-offset-2" : ""}`}
+              >
+                <Card className="p-4 space-y-3 h-full">
+                  {/* Ícone de arrastar */}
+                  <div className="flex items-center justify-between">
+                    <GripVertical className="w-5 h-5 text-gray-400" />
+                    <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      #{index + 1}
+                    </span>
+                  </div>
+
+                  {/* Prévia da foto */}
+                  <div className="relative bg-gray-100 rounded-lg overflow-hidden h-40 flex items-center justify-center">
+                    {photo.photoUrl ? (
+                      <>
+                        <img
+                          src={photo.photoUrl}
+                          alt={`Foto ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        {photo.isMainPhoto && (
+                          <div className="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-current" />
+                            Principal
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center">
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-500">Clique para fazer upload</p>
                       </div>
                     )}
-                  </>
-                ) : (
-                  <div className="text-center">
-                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">Clique para fazer upload</p>
                   </div>
-                )}
+
+                  {/* Input de arquivo */}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileSelect(e, index)}
+                    disabled={uploadingIndex === index || isLoading}
+                    className="hidden"
+                    id={`photo-input-${index}`}
+                  />
+                  <label htmlFor={`photo-input-${index}`}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full cursor-pointer"
+                      disabled={uploadingIndex === index || isLoading}
+                      onClick={() => document.getElementById(`photo-input-${index}`)?.click()}
+                    >
+                      {uploadingIndex === index ? "Enviando..." : "Escolher Imagem"}
+                    </Button>
+                  </label>
+
+                  {/* Campo de legenda */}
+                  <div>
+                    <Label className="text-xs text-gray-600">Legenda (opcional)</Label>
+                    <Input
+                      type="text"
+                      placeholder="Ex: Vista do quarto"
+                      value={photo.caption || ""}
+                      onChange={(e) => handleCaptionChange(index, e.target.value)}
+                      disabled={isLoading}
+                      className="mt-1"
+                    />
+                  </div>
+
+                  {/* Botões de ação */}
+                  <div className="flex gap-2">
+                    {!photo.isMainPhoto && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSetMainPhoto(index)}
+                        disabled={isLoading}
+                        className="flex-1 flex items-center gap-1"
+                      >
+                        <Star className="w-3 h-3" />
+                        Principal
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleRemovePhoto(index)}
+                      disabled={isLoading}
+                      className="flex-1 flex items-center gap-1"
+                    >
+                      <X className="w-3 h-3" />
+                      Remover
+                    </Button>
+                  </div>
+
+                  {/* Indicador de status */}
+                  {!photo.photoUrl && (
+                    <p className="text-xs text-orange-600 text-center">Foto não enviada</p>
+                  )}
+                  {photo.photoUrl && (
+                    <p className="text-xs text-green-600 text-center">✓ Foto enviada</p>
+                  )}
+                </Card>
               </div>
-
-              {/* Input de arquivo */}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileSelect(e, index)}
-                disabled={uploadingIndex === index || isLoading}
-                className="hidden"
-                id={`photo-input-${index}`}
-              />
-              <label htmlFor={`photo-input-${index}`}>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full cursor-pointer"
-                  disabled={uploadingIndex === index || isLoading}
-                  onClick={() => document.getElementById(`photo-input-${index}`)?.click()}
-                >
-                  {uploadingIndex === index ? "Enviando..." : "Escolher Imagem"}
-                </Button>
-              </label>
-
-              {/* Campo de legenda */}
-              <div>
-                <Label className="text-xs text-gray-600">Legenda (opcional)</Label>
-                <Input
-                  type="text"
-                  placeholder="Ex: Vista do quarto"
-                  value={photo.caption || ""}
-                  onChange={(e) => handleCaptionChange(index, e.target.value)}
-                  disabled={isLoading}
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Botões de ação */}
-              <div className="flex gap-2">
-                {!photo.isMainPhoto && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSetMainPhoto(index)}
-                    disabled={isLoading}
-                    className="flex-1 flex items-center gap-1"
-                  >
-                    <Star className="w-3 h-3" />
-                    Principal
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleRemovePhoto(index)}
-                  disabled={isLoading}
-                  className="flex-1 flex items-center gap-1"
-                >
-                  <X className="w-3 h-3" />
-                  Remover
-                </Button>
-              </div>
-
-              {/* Indicador de status */}
-              {!photo.photoUrl && (
-                <p className="text-xs text-orange-600 text-center">Foto não enviada</p>
-              )}
-              {photo.photoUrl && (
-                <p className="text-xs text-green-600 text-center">✓ Foto enviada</p>
-              )}
-            </Card>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
@@ -244,7 +315,7 @@ export default function RoomPhotoGallery({ photos, onPhotosChange, isLoading = f
             {photos.find((p) => p.isMainPhoto) && (
               <>
                 {" "}
-                • <strong>Foto principal:</strong> {photos.find((p) => p.isMainPhoto)?.caption || "Sem legenda"}
+                • <strong>Foto principal:</strong> #{photos.findIndex((p) => p.isMainPhoto) + 1}
               </>
             )}
           </p>
