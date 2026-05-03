@@ -43,6 +43,9 @@ export default function AdminDashboard() {
     enabled: isAuthenticated && user?.role === "admin",
   });
 
+  // Buscar lista de quartos
+  const { data: rooms = [] } = trpc.rooms.list.useQuery();
+
   // Mutation para editar reserva
   const generateEditedBookingMessage = (booking: any, guest: any, room: any) => {
     return `*Reserva Editada - Hostel Bryan Tatuape*\n\n` +
@@ -564,13 +567,16 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <Label>Quarto</Label>
-                        <Select value={editFormData?.roomId?.toString() || ''} onValueChange={(value) => updateEditFormData('roomId', parseInt(value))}>
+                        <Select value={editFormData?.roomId?.toString() || '0'} onValueChange={(value) => updateEditFormData('roomId', parseInt(value))}>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione um quarto" />
                           </SelectTrigger>
                           <SelectContent>
-                            {/* Aqui você adicionaria os quartos disponíveis */}
-                            <SelectItem value={editFormData?.roomId?.toString() || ''}>Quarto {editFormData?.roomId}</SelectItem>
+                            {rooms.map((room: any) => (
+                              <SelectItem key={room.id} value={room.id.toString()}>
+                                {room.name} - {room.type}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
