@@ -43,44 +43,6 @@ export default function AdminDashboard() {
     enabled: isAuthenticated && user?.role === "admin",
   });
 
-  // Verificar se usuário é admin DEPOIS de chamar todos os hooks
-  if (isAuthenticated && user?.role !== "admin") {
-    return (
-      <DashboardLayout>
-        <Card className="p-8 text-center border-red-200 bg-red-50">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Acesso Negado</h2>
-          <p className="text-red-600 mb-4">Apenas administradores podem acessar este painel.</p>
-          <p className="text-red-600 text-sm">Entre em contato com o proprietário do hostel para obter acesso.</p>
-        </Card>
-      </DashboardLayout>
-    );
-  }
-
-  // Mostrar erro se houver
-  if (error) {
-    return (
-      <DashboardLayout>
-        <Card className="p-8 text-center border-red-200 bg-red-50">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Erro ao Carregar Reservas</h2>
-          <p className="text-red-600 mb-4">{error.message || 'Erro desconhecido'}</p>
-          <Button onClick={() => refetch()} className="bg-red-600 hover:bg-red-700">
-            Tentar Novamente
-          </Button>
-        </Card>
-      </DashboardLayout>
-    );
-  }
-
-  // Nota: Atualização de status de reserva em desenvolvimento
-  const handleUpdateStatus = () => {
-    toast.info("Atualização de status em desenvolvimento");
-  };
-
-  const updateStatus = {
-    mutate: handleUpdateStatus,
-    isPending: false,
-  }
-
   // Mutation para editar reserva
   const generateEditedBookingMessage = (booking: any, guest: any, room: any) => {
     return `*Reserva Editada - Hostel Bryan Tatuape*\n\n` +
@@ -134,16 +96,14 @@ export default function AdminDashboard() {
     },
   });
 
-  // Verificar se é admin
-  if (!isAuthenticated || user?.role !== "admin") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="p-8 text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-4">Acesso Negado</h2>
-          <p className="text-foreground/70">Apenas administradores podem acessar este painel.</p>
-        </Card>
-      </div>
-    );
+  // Nota: Atualização de status de reserva em desenvolvimento
+  const handleUpdateStatus = () => {
+    toast.info("Atualização de status em desenvolvimento");
+  };
+
+  const updateStatus = {
+    mutate: handleUpdateStatus,
+    isPending: false,
   }
 
   // Filtrar e buscar reservas
@@ -220,6 +180,44 @@ export default function AdminDashboard() {
     }
   };
 
+  // Renderizar conteúdo baseado no estado de autenticação
+  if (!isAuthenticated) {
+    return (
+      <DashboardLayout>
+        <Card className="p-8 text-center border-red-200 bg-red-50">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Não Autenticado</h2>
+          <p className="text-red-600 mb-4">Você precisa estar autenticado para acessar este painel.</p>
+        </Card>
+      </DashboardLayout>
+    );
+  }
+
+  if (user?.role !== "admin") {
+    return (
+      <DashboardLayout>
+        <Card className="p-8 text-center border-red-200 bg-red-50">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Acesso Negado</h2>
+          <p className="text-red-600 mb-4">Apenas administradores podem acessar este painel.</p>
+          <p className="text-red-600 text-sm">Entre em contato com o proprietário do hostel para obter acesso.</p>
+        </Card>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <Card className="p-8 text-center border-red-200 bg-red-50">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Erro ao Carregar Reservas</h2>
+          <p className="text-red-600 mb-4">{error.message || 'Erro desconhecido'}</p>
+          <Button onClick={() => refetch()} className="bg-red-600 hover:bg-red-700">
+            Tentar Novamente
+          </Button>
+        </Card>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -274,7 +272,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-foreground/70 text-sm mb-2">Receita Total</p>
-                <p className="text-3xl font-bold text-accent">R$ {(stats.revenue / 100).toFixed(2)}</p>
+                <p className="text-3xl font-bold text-foreground">R$ {(stats.revenue / 100).toFixed(2)}</p>
               </div>
               <DollarSign className="w-10 h-10 text-accent opacity-20" />
             </div>
@@ -284,119 +282,112 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-foreground/70 text-sm mb-2">Taxa de Ocupação</p>
-                <p className="text-3xl font-bold text-secondary">{stats.occupancy}%</p>
+                <p className="text-3xl font-bold text-foreground">{stats.occupancy}%</p>
               </div>
-              <Users className="w-10 h-10 text-secondary opacity-20" />
+              <Users className="w-10 h-10 text-accent opacity-20" />
             </div>
           </Card>
         </div>
 
         {/* Filtros e Busca */}
         <Card className="p-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-bold text-foreground">Filtros</h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm text-foreground/70 mb-2 block">Buscar</label>
-                <Input
-                  placeholder="Nome, email ou código de confirmação..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="text-sm text-foreground/70 mb-2 block">Status</label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
-                >
-                  <option value="all">Todos os Status</option>
-                  <option value="pending">Pendente</option>
-                  <option value="confirmed">Confirmada</option>
-                  <option value="checked_in">Check-in</option>
-                  <option value="checked_out">Check-out</option>
-                  <option value="cancelled">Cancelada</option>
-                </select>
-              </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="search">Buscar Reserva</Label>
+              <Input
+                id="search"
+                placeholder="Nome, email ou código..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="status">Filtrar por Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="confirmed">Confirmada</SelectItem>
+                  <SelectItem value="checked_in">Check-in</SelectItem>
+                  <SelectItem value="checked_out">Check-out</SelectItem>
+                  <SelectItem value="cancelled">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </Card>
 
-        {/* Lista de Reservas */}
-        <Card className="overflow-hidden">
+        {/* Tabela de Reservas */}
+        <Card className="p-6">
+          <h2 className="text-xl font-bold text-foreground mb-4">Reservas</h2>
           {isLoading ? (
-            <div className="p-12 text-center">
+            <div className="text-center py-8">
+              <Clock className="w-8 h-8 animate-spin mx-auto text-accent mb-2" />
               <p className="text-foreground/70">Carregando reservas...</p>
             </div>
           ) : filteredBookings.length === 0 ? (
-            <div className="p-12 text-center">
+            <div className="text-center py-8">
               <p className="text-foreground/70">Nenhuma reserva encontrada</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-accent/10 border-b border-border">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Hóspede</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Quarto</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Datas</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Valor</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Status</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Ações</th>
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-4 font-semibold text-foreground">Hóspede</th>
+                    <th className="text-left py-3 px-4 font-semibold text-foreground">Código</th>
+                    <th className="text-left py-3 px-4 font-semibold text-foreground">Período</th>
+                    <th className="text-left py-3 px-4 font-semibold text-foreground">Status</th>
+                    <th className="text-left py-3 px-4 font-semibold text-foreground">Total</th>
+                    <th className="text-left py-3 px-4 font-semibold text-foreground">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredBookings.map((item: any, index: number) => {
-                    const booking = item.booking;
-                    const guest = item.guest;
-                    const room = item.room;
-
-                    const checkIn = new Date(booking.checkInDate).toLocaleDateString('pt-BR');
-                    const checkOut = new Date(booking.checkOutDate).toLocaleDateString('pt-BR');
-
-                    return (
-                      <tr key={index} className="border-b border-border hover:bg-accent/5 transition-colors">
-                        <td className="px-6 py-4">
-                          <div>
-                            <p className="font-semibold text-foreground">{guest.firstName} {guest.lastName}</p>
-                            <p className="text-sm text-foreground/70">{guest.email}</p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-foreground">{room.name}</td>
-                        <td className="px-6 py-4 text-foreground text-sm">
-                          {checkIn} até {checkOut}
-                        </td>
-                        <td className="px-6 py-4 text-foreground font-semibold">
-                          R$ {(booking.totalPrice / 100).toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(booking.status)}`}>
-                            {getStatusLabel(booking.status)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 flex gap-2">
+                  {filteredBookings.map((item: any) => (
+                    <tr key={item.booking.id} className="border-b border-border hover:bg-accent/5">
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-medium text-foreground">{item.guest.firstName} {item.guest.lastName}</p>
+                          <p className="text-sm text-foreground/70">{item.guest.email}</p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 font-mono text-sm text-foreground">{item.booking.confirmationCode}</td>
+                      <td className="py-3 px-4 text-sm text-foreground">
+                        {new Date(item.booking.checkInDate).toLocaleDateString('pt-BR')} - {new Date(item.booking.checkOutDate).toLocaleDateString('pt-BR')}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(item.booking.status)}`}>
+                          {getStatusLabel(item.booking.status)}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-semibold text-foreground">R$ {(item.booking.totalPrice / 100).toFixed(2)}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-2">
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setSelectedBooking(booking)}
-                            className="gap-2"
+                            onClick={() => setSelectedBooking(item)}
+                            className="flex items-center gap-1"
                           >
                             <Eye className="w-4 h-4" />
-                            Detalhes
+                            Ver
                           </Button>
-                          <Link href={`/edit-booking?id=${booking.id}`}>
-                            <Button
-                              size="sm"
-                              className="bg-accent hover:bg-accent/90 gap-2"
-                            >
-                              Editar
-                            </Button>
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenEditModal(item)}
+                            className="flex items-center gap-1"
+                          >
+                            <Clock className="w-4 h-4" />
+                            Editar
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -405,11 +396,11 @@ export default function AdminDashboard() {
 
         {/* Modal de Detalhes */}
         {selectedBooking && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="max-w-2xl w-full max-h-96 overflow-y-auto">
-              <div className="p-8">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-bold text-foreground">Detalhes da Reserva</h3>
+                  <h2 className="text-2xl font-bold text-foreground">Detalhes da Reserva</h2>
                   <button
                     onClick={() => setSelectedBooking(null)}
                     className="text-foreground/70 hover:text-foreground"
@@ -418,110 +409,96 @@ export default function AdminDashboard() {
                   </button>
                 </div>
 
-                <div className="space-y-4 mb-6">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-foreground/70 mb-1">Código de Confirmação</p>
-                      <p className="font-mono font-bold text-accent">{selectedBooking.confirmationCode}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-foreground/70 mb-1">Status</p>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(selectedBooking.status)}`}>
-                        {getStatusLabel(selectedBooking.status)}
-                      </span>
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-3">Informações da Reserva</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Código de Confirmação</Label>
+                        <p className="font-mono text-foreground">{selectedBooking.booking.confirmationCode}</p>
+                      </div>
+                      <div>
+                        <Label>Status</Label>
+                        <p className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${getStatusColor(selectedBooking.booking.status)}`}>
+                          {getStatusLabel(selectedBooking.booking.status)}
+                        </p>
+                      </div>
+                      <div>
+                        <Label>Check-in</Label>
+                        <p className="text-foreground">{new Date(selectedBooking.booking.checkInDate).toLocaleDateString('pt-BR')} às {selectedBooking.booking.checkInTime}</p>
+                      </div>
+                      <div>
+                        <Label>Check-out</Label>
+                        <p className="text-foreground">{new Date(selectedBooking.booking.checkOutDate).toLocaleDateString('pt-BR')} às {selectedBooking.booking.checkOutTime}</p>
+                      </div>
                     </div>
                   </div>
 
                   <div className="border-t border-border pt-4">
                     <h4 className="font-semibold text-foreground mb-3">Informações do Hóspede</h4>
-                    <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-foreground/70">Nome</p>
-                        <p className="text-foreground">{selectedBooking.guestId}</p>
+                        <Label>Nome</Label>
+                        <p className="text-foreground">{selectedBooking.guest.firstName} {selectedBooking.guest.lastName}</p>
                       </div>
                       <div>
-                        <p className="text-foreground/70">Email</p>
-                        <p className="text-foreground">{selectedBooking.email}</p>
+                        <Label>Email</Label>
+                        <p className="text-foreground">{selectedBooking.guest.email}</p>
+                      </div>
+                      <div>
+                        <Label>Telefone</Label>
+                        <p className="text-foreground">{selectedBooking.guest.phone || 'Não informado'}</p>
+                      </div>
+                      <div>
+                        <Label>Hóspedes</Label>
+                        <p className="text-foreground">{selectedBooking.booking.numberOfGuests}</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="border-t border-border pt-4">
-                    <h4 className="font-semibold text-foreground mb-3">Detalhes da Hospedagem</h4>
-                    <div className="grid md:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-foreground/70">Check-in</p>
-                        <p className="text-foreground">{new Date(selectedBooking.checkInDate).toLocaleDateString('pt-BR')}</p>
+                    <h4 className="font-semibold text-foreground mb-3">Valores</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-foreground/70">Subtotal:</span>
+                        <span className="text-foreground">R$ {(selectedBooking.booking.subtotal / 100).toFixed(2)}</span>
                       </div>
-                      <div>
-                        <p className="text-foreground/70">Check-out</p>
-                        <p className="text-foreground">{new Date(selectedBooking.checkOutDate).toLocaleDateString('pt-BR')}</p>
+                      {selectedBooking.booking.discountPercentage > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-foreground/70">Desconto ({selectedBooking.booking.discountPercentage}%):</span>
+                          <span className="text-foreground">-R$ {(selectedBooking.booking.discountAmount / 100).toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-foreground/70">Taxa de Limpeza:</span>
+                        <span className="text-foreground">R$ {(selectedBooking.booking.cleaningFee / 100).toFixed(2)}</span>
                       </div>
-                      <div>
-                        <p className="text-foreground/70">Hóspedes</p>
-                        <p className="text-foreground">{selectedBooking.numberOfGuests}</p>
-                      </div>
-                      <div>
-                        <p className="text-foreground/70">Valor Total</p>
-                        <p className="text-foreground font-bold">R$ {(selectedBooking.totalPrice / 100).toFixed(2)}</p>
+                      <div className="flex justify-between font-semibold border-t border-border pt-2">
+                        <span className="text-foreground">Total:</span>
+                        <span className="text-foreground">R$ {(selectedBooking.booking.totalPrice / 100).toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
 
-                  {selectedBooking.specialRequests && (
+                  {selectedBooking.booking.specialRequests && (
                     <div className="border-t border-border pt-4">
-                      <h4 className="font-semibold text-foreground mb-2">Pedidos Especiais</h4>
-                      <p className="text-foreground text-sm">{selectedBooking.specialRequests}</p>
+                      <h4 className="font-semibold text-foreground mb-3">Observações</h4>
+                      <p className="text-foreground">{selectedBooking.booking.specialRequests}</p>
                     </div>
                   )}
                 </div>
 
                 <div className="border-t border-border pt-6 flex gap-3">
-                  {selectedBooking.status === "pending" && (
-                    <Button
-                      onClick={() => {
-                        handleUpdateStatus();
-                      }}
-                      disabled={updateStatus.isPending}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      Confirmar Reserva
-                    </Button>
-                  )}
-                  {selectedBooking.status === "confirmed" && (
-                    <Button
-                      onClick={() => {
-                        handleUpdateStatus();
-                      }}
-                      disabled={updateStatus.isPending}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      Check-in
-                    </Button>
-                  )}
-                  {selectedBooking.status === "checked_in" && (
-                    <Button
-                      onClick={() => {
-                        handleUpdateStatus();
-                      }}
-                      disabled={updateStatus.isPending}
-                      className="bg-gray-600 hover:bg-gray-700 text-white"
-                    >
-                      Check-out
-                    </Button>
-                  )}
-                  {selectedBooking.status !== "cancelled" && selectedBooking.status !== "checked_out" && (
-                    <Button
-                      onClick={() => {
-                        handleUpdateStatus();
-                      }}
-                      disabled={updateStatus.isPending}
-                      variant="outline"
-                      className="border-red-600 text-red-600 hover:bg-red-50"
-                    >
-                      Cancelar
-                    </Button>
-                  )}
+                  <Button
+                    onClick={() => {
+                      handleOpenEditModal(selectedBooking);
+                      setSelectedBooking(null);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                  >
+                    <Clock className="w-4 h-4" />
+                    Editar Reserva
+                  </Button>
                   <Button
                     onClick={() => setSelectedBooking(null)}
                     variant="outline"
@@ -534,13 +511,13 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Modal de Edicao */}
+        {/* Modal de Edição */}
         {editingBooking && (
-          <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 md:items-center p-0 md:p-4">
-            <Card className="w-full md:max-w-2xl md:max-h-[90vh] md:overflow-y-auto rounded-t-lg md:rounded-lg max-h-[95vh] overflow-y-auto">
-              <div className="p-6 md:p-8">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-bold text-foreground">Editar Reserva</h3>
+                  <h2 className="text-2xl font-bold text-foreground">Editar Reserva</h2>
                   <button
                     onClick={() => setEditingBooking(null)}
                     className="text-foreground/70 hover:text-foreground"
@@ -549,120 +526,72 @@ export default function AdminDashboard() {
                   </button>
                 </div>
 
-                <div className="space-y-4 mb-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Check-in</Label>
-                      <Input 
-                        type="date" 
-                        value={editFormData?.checkInDate || ''}
-                        onChange={(e) => updateEditFormData('checkInDate', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label>Check-out</Label>
-                      <Input 
-                        type="date" 
-                        value={editFormData?.checkOutDate || ''}
-                        onChange={(e) => updateEditFormData('checkOutDate', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label>Horario Check-in *</Label>
-                      <Select value={editFormData?.checkInTime || ''} onValueChange={(value) => updateEditFormData('checkInTime', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o horário" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 20 }, (_, i) => {
-                            const hour = 14 + Math.floor(i / 2);
-                            const minute = i % 2 === 0 ? '00' : '30';
-                            if (hour > 23) return null;
-                            const time = `${String(hour).padStart(2, '0')}:${minute}`;
-                            return (
-                              <SelectItem key={time} value={time}>
-                                {time}
-                              </SelectItem>
-                            );
-                          }).filter(Boolean)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Horario Check-out *</Label>
-                      <Select value={editFormData?.checkOutTime || ''} onValueChange={(value) => updateEditFormData('checkOutTime', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o horário" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 25 }, (_, i) => {
-                            const hour = Math.floor(i / 2);
-                            const minute = i % 2 === 0 ? '00' : '30';
-                            if (hour > 12) return null;
-                            const time = `${String(hour).padStart(2, '0')}:${minute}`;
-                            return (
-                              <SelectItem key={time} value={time}>
-                                {time}
-                              </SelectItem>
-                            );
-                          }).filter(Boolean)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Quarto</Label>
-                      <Input 
-                        type="number" 
-                        value={editFormData?.roomId || ''}
-                        onChange={(e) => updateEditFormData('roomId', parseInt(e.target.value))}
-                      />
-                    </div>
-                    <div>
-                      <Label>Hospedes</Label>
-                      <Input 
-                        type="number" 
-                        value={editFormData?.numberOfGuests || ''}
-                        onChange={(e) => updateEditFormData('numberOfGuests', parseInt(e.target.value))}
-                      />
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-3">Informações da Reserva</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Check-in</Label>
+                        <Input 
+                          type="date" 
+                          value={editFormData?.checkInDate?.split('T')[0] || ''}
+                          onChange={(e) => updateEditFormData('checkInDate', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label>Check-out</Label>
+                        <Input 
+                          type="date" 
+                          value={editFormData?.checkOutDate?.split('T')[0] || ''}
+                          onChange={(e) => updateEditFormData('checkOutDate', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label>Horário Check-in</Label>
+                        <Input 
+                          type="time" 
+                          value={editFormData?.checkInTime || ''}
+                          onChange={(e) => updateEditFormData('checkInTime', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label>Horário Check-out</Label>
+                        <Input 
+                          type="time" 
+                          value={editFormData?.checkOutTime || ''}
+                          onChange={(e) => updateEditFormData('checkOutTime', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label>Quarto</Label>
+                        <Select value={editFormData?.roomId?.toString() || ''} onValueChange={(value) => updateEditFormData('roomId', parseInt(value))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um quarto" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {/* Aqui você adicionaria os quartos disponíveis */}
+                            <SelectItem value={editFormData?.roomId?.toString() || ''}>Quarto {editFormData?.roomId}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Número de Hóspedes</Label>
+                        <Input 
+                          type="number" 
+                          value={editFormData?.numberOfGuests || ''}
+                          onChange={(e) => updateEditFormData('numberOfGuests', parseInt(e.target.value))}
+                        />
+                      </div>
                     </div>
                   </div>
 
                   <div className="border-t border-border pt-4">
-                    <h4 className="font-semibold text-foreground mb-3">Informacoes do Hospede</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label>Nome</Label>
-                        <Input 
-                          type="text" 
-                          value={editFormData?.firstName || ''}
-                          onChange={(e) => updateEditFormData('firstName', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label>Sobrenome</Label>
-                        <Input 
-                          type="text" 
-                          value={editFormData?.lastName || ''}
-                          onChange={(e) => updateEditFormData('lastName', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label>Email</Label>
-                        <Input 
-                          type="email" 
-                          value={editFormData?.email || ''}
-                          onChange={(e) => updateEditFormData('email', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label>Telefone</Label>
-                        <Input 
-                          type="tel" 
-                          value={editFormData?.phone || ''}
-                          onChange={(e) => updateEditFormData('phone', e.target.value)}
-                        />
-                      </div>
-                    </div>
+                    <h4 className="font-semibold text-foreground mb-3">Observações</h4>
+                    <Input 
+                      placeholder="Observações especiais" 
+                      value={editFormData?.specialRequests || ''}
+                      onChange={(e) => updateEditFormData('specialRequests', e.target.value)}
+                    />
                   </div>
 
                   <div className="border-t border-border pt-4">
@@ -692,7 +621,7 @@ export default function AdminDashboard() {
                         return;
                       }
                       updateBooking.mutate({
-                        id: editingBooking.id,
+                        id: editingBooking.booking.id,
                         checkInDate: editFormData.checkInDate,
                         checkOutDate: editFormData.checkOutDate,
                         roomId: editFormData.roomId,
@@ -709,7 +638,7 @@ export default function AdminDashboard() {
                         Salvando...
                       </>
                     ) : (
-                      "Salvar Alteracoes"
+                      "Salvar Alterações"
                     )}
                   </Button>
                   <Button
