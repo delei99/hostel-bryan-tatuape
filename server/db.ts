@@ -308,6 +308,29 @@ export async function createBooking(bookingData: any) {
   // Atualizar booking com o código de confirmação
   await db.update(bookings).set({ confirmationCode }).where(eq(bookings.id, bookingId));
   
+  // Enviar notificação para o hóspede
+  try {
+    const { notifyGuest } = await import('./_core/guestNotification');
+    const roomResult = await db.select().from(rooms).where(eq(rooms.id, bookingData.roomId)).limit(1);
+    const room = roomResult.length > 0 ? roomResult[0] : null;
+    
+    if (room) {
+      await notifyGuest({
+        guestEmail: bookingData.email,
+        guestPhone: bookingData.phone,
+        guestName: `${bookingData.firstName} ${bookingData.lastName}`,
+        bookingCode: confirmationCode,
+        checkInDate: new Date(bookingData.checkInDate).toLocaleDateString('pt-BR'),
+        checkOutDate: new Date(bookingData.checkOutDate).toLocaleDateString('pt-BR'),
+        roomName: room.name,
+        totalPrice: bookingData.totalPrice,
+        message: 'Sua reserva foi confirmada com sucesso! Aqui estão os detalhes:',
+      });
+    }
+  } catch (error) {
+    console.error('[Booking] Erro ao enviar notificação:', error);
+  }
+  
   // Retornar dados completos da reserva com confirmationCode
   return {
     id: bookingId,
@@ -918,6 +941,26 @@ export async function updateBooking(bookingId: number, updateData: any, editedBy
   // Retornar dados atualizados com guest e room para WhatsApp
   const updatedBooking = await getBookingById(bookingId);
   if (!updatedBooking) throw new Error("Booking not found after update");
+  
+  // Enviar notificação para o hóspede sobre a edição
+  try {
+    const { notifyGuest } = await import('./_core/guestNotification');
+    if (updatedBooking.guest.email && updatedBooking.booking.confirmationCode) {
+      await notifyGuest({
+        guestEmail: updatedBooking.guest.email,
+        guestPhone: updatedBooking.guest.phone || undefined,
+        guestName: `${updatedBooking.guest.firstName} ${updatedBooking.guest.lastName}`,
+        bookingCode: updatedBooking.booking.confirmationCode,
+        checkInDate: new Date(updatedBooking.booking.checkInDate).toLocaleDateString('pt-BR'),
+        checkOutDate: new Date(updatedBooking.booking.checkOutDate).toLocaleDateString('pt-BR'),
+        roomName: updatedBooking.room.name,
+        totalPrice: updatedBooking.booking.totalPrice,
+        message: 'Sua reserva foi editada! Aqui estão os detalhes atualizados:',
+      });
+    }
+  } catch (error) {
+    console.error('[Booking] Erro ao enviar notificação de edição:', error);
+  }
   
   return {
     booking: updatedBooking.booking,
