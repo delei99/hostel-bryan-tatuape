@@ -52,7 +52,39 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   
-  // Endpoint de upload de fotos
+  // Endpoint genérico de upload de fotos (sem salvar no banco)
+  app.post('/api/upload-photo', upload.single('file'), async (req, res) => {
+    try {
+      const file = req.file;
+      
+      if (!file) {
+        return res.status(400).json({ error: 'Arquivo faltando' });
+      }
+      
+      // Otimizar imagem com Sharp
+      const optimizedBuffer = await sharp(file.buffer)
+        .resize(1200, 1200, {
+          fit: 'inside',
+          withoutEnlargement: true
+        })
+        .jpeg({ quality: 80 })
+        .toBuffer();
+      
+      // Fazer upload para S3
+      const { storagePut } = await import('../storage');
+      const timestamp = Date.now();
+      const randomSuffix = Math.random().toString(36).substring(7);
+      const fileKey = `room-photos/${timestamp}-${randomSuffix}.jpg`;
+      const { url } = await storagePut(fileKey, optimizedBuffer, 'image/jpeg');
+      
+      return res.json({ url });
+    } catch (error) {
+      console.error('Erro ao fazer upload de foto:', error);
+      return res.status(500).json({ error: 'Erro ao fazer upload: ' + (error instanceof Error ? error.message : 'Erro desconhecido') });
+    }
+  });
+  
+  // Endpoint de upload de fotos com salvar no banco
   app.post('/api/upload-room-photo', upload.single('file'), async (req, res) => {
     try {
       const { roomId } = req.body;

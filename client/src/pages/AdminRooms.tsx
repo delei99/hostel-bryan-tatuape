@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import RoomPhotoGallery from "@/components/RoomPhotoGallery";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Edit2, Save, X, Plus } from "lucide-react";
@@ -23,6 +24,8 @@ export default function AdminRooms() {
     amenities: "",
     status: "available",
   });
+  const [createPhotos, setCreatePhotos] = useState<any[]>([]);
+  const [editPhotos, setEditPhotos] = useState<any[]>([]);
 
   const updateRoomMutation = trpc.rooms.update.useMutation({
     onSuccess: () => {
@@ -221,6 +224,8 @@ export default function AdminRooms() {
                 </Select>
               </div>
 
+              <RoomPhotoGallery photos={createPhotos} onPhotosChange={setCreatePhotos} isLoading={createRoomMutation.isPending} />
+
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setShowCreateModal(false)}>
                   Cancelar
@@ -318,6 +323,8 @@ export default function AdminRooms() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <RoomPhotoGallery photos={editPhotos} onPhotosChange={setEditPhotos} isLoading={updateRoomMutation.isPending} />
 
                   <div className="flex gap-2 justify-end">
                     <Button
