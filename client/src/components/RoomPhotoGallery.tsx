@@ -93,12 +93,13 @@ export default function RoomPhotoGallery({ photos, onPhotosChange, isLoading = f
 
   const handleRemovePhoto = (index: number) => {
     const updatedPhotos = photos.filter((_, i) => i !== index);
-    // Atualizar displayOrder
+    // Atualizar displayOrder e garantir que primeira foto seja principal
     updatedPhotos.forEach((photo, i) => {
       photo.displayOrder = i;
+      photo.isMainPhoto = i === 0;
     });
     onPhotosChange(updatedPhotos);
-    toast.success("Foto removida");
+    toast.success("Foto removida. Primeira foto agora é a capa principal.");
   };
 
   const handleSetMainPhoto = (index: number) => {
@@ -146,14 +147,15 @@ export default function RoomPhotoGallery({ photos, onPhotosChange, isLoading = f
     // Inserir foto no novo índice
     updatedPhotos.splice(dropIndex, 0, draggedPhoto);
 
-    // Atualizar displayOrder
+    // Atualizar displayOrder e definir primeira foto como principal
     updatedPhotos.forEach((photo, i) => {
       photo.displayOrder = i;
+      photo.isMainPhoto = i === 0;
     });
 
     onPhotosChange(updatedPhotos);
     setDraggedIndex(null);
-    toast.success("Ordem das fotos atualizada");
+    toast.success("Ordem atualizada! Primeira foto definida como capa principal.");
   };
 
   const handleDragEnd = () => {
