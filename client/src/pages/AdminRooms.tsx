@@ -400,6 +400,10 @@ export default function AdminRooms() {
                           {room.status === "available" ? "✅ Disponível" : room.status === "maintenance" ? "🔧 Manutenção" : "📦 Arquivado"}
                         </p>
                       </div>
+                      <div>
+                        <span className="text-gray-600">Banheiro:</span>
+                        <p className="font-medium">{room.bathroomType === "private" ? "Privado" : "Compartilhado"}</p>
+                      </div>
                     </div>
                     {room.description && (
                       <div className="mt-4">
