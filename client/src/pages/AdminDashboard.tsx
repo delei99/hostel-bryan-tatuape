@@ -72,6 +72,20 @@ export default function AdminDashboard() {
     }
   };
 
+  // Mutation para atualizar status
+  const updateStatusMutation = trpc.bookings.updateStatus.useMutation({
+    onSuccess: (result) => {
+      toast.success("Status atualizado com sucesso!");
+      if (result) {
+        setSelectedBooking({ ...selectedBooking, booking: result.booking });
+      }
+      refetch();
+    },
+    onError: (error) => {
+      toast.error("Erro ao atualizar status: " + error.message);
+    },
+  });
+
   // Mutation para editar reserva
   const generateEditedBookingMessage = (booking: any, guest: any, room: any) => {
     return `*Reserva Editada - Hostel Bryan Tatuape*\n\n` +
@@ -457,9 +471,21 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <Label>Status</Label>
-                        <p className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${getStatusColor(selectedBooking.booking.status)}`}>
-                          {getStatusLabel(selectedBooking.booking.status)}
-                        </p>
+                        <Select value={selectedBooking.booking.status} onValueChange={(newStatus) => {
+                          updateStatusMutation.mutate({
+                            id: selectedBooking.booking.id,
+                            status: newStatus as "pending" | "confirmed" | "cancelled",
+                          });
+                        }}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pendente</SelectItem>
+                            <SelectItem value="confirmed">Confirmada</SelectItem>
+                            <SelectItem value="cancelled">Cancelada</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label>Check-in</Label>

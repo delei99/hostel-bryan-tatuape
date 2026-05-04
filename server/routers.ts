@@ -141,6 +141,16 @@ export const appRouter = router({
         const { deleteBooking } = await import("./db");
         return deleteBooking(input.id);
       }),
+
+    updateStatus: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(["pending", "confirmed", "cancelled"]),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { updateBookingStatus } = await import("./db");
+        return updateBookingStatus(input.id, input.status);
+      }),
   }),
 
   blockedDates: router({

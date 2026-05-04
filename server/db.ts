@@ -501,10 +501,16 @@ export async function updateBookingStatus(bookingId: number, status: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  await db
-    .update(bookings)
-    .set({ status: status as any })
-    .where(eq(bookings.id, bookingId));
+  try {
+    await db
+      .update(bookings)
+      .set({ status: status as any })
+      .where(eq(bookings.id, bookingId));
+    return getBookingById(bookingId);
+  } catch (error) {
+    console.error("[Database] Error updating booking status:", error);
+    throw error;
+  }
 }
 
 export async function getBookingsByGuestEmail(email: string) {
@@ -1060,3 +1066,5 @@ export async function deleteBooking(bookingId: number) {
     throw error;
   }
 }
+
+
