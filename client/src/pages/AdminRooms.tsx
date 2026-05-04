@@ -22,6 +22,7 @@ export default function AdminRooms() {
     pricePerNight: 0,
     description: "",
     amenities: "",
+    bathroomType: "shared",
     status: "available",
   });
   const [createPhotos, setCreatePhotos] = useState<any[]>([]);
@@ -49,6 +50,7 @@ export default function AdminRooms() {
         pricePerNight: 0,
         description: "",
         amenities: "",
+        bathroomType: "shared",
         status: "available",
       });
       refetch();
@@ -79,6 +81,7 @@ export default function AdminRooms() {
       capacity: parseInt(editFormData.capacity),
       type: editFormData.type,
       amenities: editFormData.amenities,
+      bathroomType: editFormData.bathroomType,
       status: editFormData.status,
     });
   };
@@ -109,6 +112,7 @@ export default function AdminRooms() {
       pricePerNight: Math.round(parseFloat(createFormData.pricePerNight) * 100),
       description: createFormData.description || undefined,
       amenities: createFormData.amenities || undefined,
+      bathroomType: createFormData.bathroomType,
       status: createFormData.status,
     });
   };
@@ -162,6 +166,18 @@ export default function AdminRooms() {
                       <SelectItem value="private">Privado</SelectItem>
                       <SelectItem value="shared">Compartilhado</SelectItem>
                       <SelectItem value="dorm">Dormitório</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Tipo de Banheiro</Label>
+                  <Select value={createFormData.bathroomType} onValueChange={(value) => handleCreateFieldChange("bathroomType", value)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="private">Privado</SelectItem>
+                      <SelectItem value="shared">Compartilhado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -286,6 +302,21 @@ export default function AdminRooms() {
                         onChange={(e) => handleFieldChange("capacity", parseInt(e.target.value))}
                         className="mt-1"
                       />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium">Tipo de Banheiro</Label>
+                      <Select value={editFormData?.bathroomType || "shared"} onValueChange={(value) => handleFieldChange("bathroomType", value)}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="private">Privado</SelectItem>
+                          <SelectItem value="shared">Compartilhado</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 

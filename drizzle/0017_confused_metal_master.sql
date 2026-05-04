@@ -1,0 +1,1 @@
+ALTER TABLE `rooms` ADD `bathroomType` enum('private','shared') DEFAULT 'shared' NOT NULL;

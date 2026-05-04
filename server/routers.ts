@@ -51,6 +51,7 @@ export const appRouter = router({
         pricePerNight: z.number(),
         description: z.string().optional(),
         amenities: z.string().optional(),
+        bathroomType: z.enum(["private", "shared"]).optional(),
         status: z.enum(["available", "maintenance", "archived"]).optional(),
       }))
       .mutation(async ({ input }) => {
@@ -67,6 +68,7 @@ export const appRouter = router({
         capacity: z.number().optional(),
         type: z.enum(["private", "shared", "dorm"]).optional(),
         amenities: z.string().optional(),
+        bathroomType: z.enum(["private", "shared"]).optional(),
         status: z.enum(["available", "maintenance", "archived"]).optional(),
       }))
       .mutation(async ({ input }) => {

@@ -1014,6 +1014,7 @@ export async function createRoom(roomData: {
   pricePerNight: number;
   description?: string;
   amenities?: string;
+  bathroomType?: "private" | "shared";
   status?: "available" | "maintenance" | "archived";
 }) {
   const db = await getDb();
@@ -1027,6 +1028,7 @@ export async function createRoom(roomData: {
       pricePerNight: roomData.pricePerNight,
       description: roomData.description || null,
       amenities: roomData.amenities || null,
+      bathroomType: roomData.bathroomType || "shared",
       status: roomData.status || "available",
     });
 
