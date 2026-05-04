@@ -1044,3 +1044,19 @@ export async function createRoom(roomData: {
     throw error;
   }
 }
+
+
+/**
+ * Deletar uma reserva
+ */
+export async function deleteBooking(bookingId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  try {
+    const result = await db.delete(bookings).where(eq(bookings.id, bookingId));
+    return { success: true, message: "Reserva deletada com sucesso" };
+  } catch (error) {
+    console.error("[Database] Error deleting booking:", error);
+    throw error;
+  }
+}

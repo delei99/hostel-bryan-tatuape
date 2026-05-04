@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Calendar, Users, DollarSign, CheckCircle, Clock, X, Eye } from "lucide-react";
+import { Calendar, Users, DollarSign, CheckCircle, Clock, X, Eye, Trash2 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 
@@ -24,6 +24,8 @@ export default function AdminDashboard() {
   const [editFormData, setEditFormData] = useState<any>(null);
   const [editPassword, setEditPassword] = useState("");
   const [isEditingSubmitting, setIsEditingSubmitting] = useState(false);
+  const [deletingBookingId, setDeletingBookingId] = useState<number | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const updateEditFormData = (field: string, value: any) => {
     setEditFormData((prev: any) => ({
@@ -45,6 +47,30 @@ export default function AdminDashboard() {
 
   // Buscar lista de quartos
   const { data: rooms = [] } = trpc.rooms.list.useQuery();
+
+  // Mutation para deletar reserva
+  const deleteBookingMutation = trpc.bookings.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Reserva deletada com sucesso!");
+      setShowDeleteConfirm(false);
+      setDeletingBookingId(null);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error("Erro ao deletar reserva: " + error.message);
+    },
+  });
+
+  const handleDeleteBooking = (bookingId: number) => {
+    setDeletingBookingId(bookingId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deletingBookingId) {
+      deleteBookingMutation.mutate({ id: deletingBookingId });
+    }
+  };
 
   // Mutation para editar reserva
   const generateEditedBookingMessage = (booking: any, guest: any, room: any) => {
@@ -387,6 +413,15 @@ export default function AdminDashboard() {
                             <Clock className="w-4 h-4" />
                             Editar
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteBooking(item.booking.id)}
+                            className="flex items-center gap-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Deletar
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -651,6 +686,41 @@ export default function AdminDashboard() {
                     onClick={() => setEditingBooking(null)}
                     variant="outline"
                     disabled={isEditingSubmitting || updateBooking.isPending}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Modal de Confirmação de Deleção */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-md">
+              <div className="p-6">
+                <h2 className="text-2xl font-bold text-foreground mb-4">Confirmar Deleção</h2>
+                <p className="text-foreground/70 mb-6">
+                  Tem certeza que deseja deletar esta reserva? Esta ação não pode ser desfeita.
+                </p>
+                <div className="flex gap-4">
+                  <Button
+                    onClick={confirmDelete}
+                    variant="destructive"
+                    disabled={deleteBookingMutation.isPending}
+                    className="flex-1"
+                  >
+                    {deleteBookingMutation.isPending ? "Deletando..." : "Deletar"}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setDeletingBookingId(null);
+                    }}
+                    variant="outline"
+                    disabled={deleteBookingMutation.isPending}
+                    className="flex-1"
                   >
                     Cancelar
                   </Button>

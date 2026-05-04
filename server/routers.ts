@@ -134,6 +134,13 @@ export const appRouter = router({
           specialRequests: input.specialRequests,
         }, ctx.user?.email || 'system');
       }),
+
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteBooking } = await import("./db");
+        return deleteBooking(input.id);
+      }),
   }),
 
   blockedDates: router({
