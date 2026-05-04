@@ -473,6 +473,28 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="border-t border-border pt-4">
+                    <h4 className="font-semibold text-foreground mb-3">Informações do Quarto</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Quarto</Label>
+                        <p className="text-foreground font-semibold">{selectedBooking.room.name}</p>
+                      </div>
+                      <div>
+                        <Label>Tipo</Label>
+                        <p className="text-foreground capitalize">{selectedBooking.room.type === 'private' ? 'Privado' : selectedBooking.room.type === 'shared' ? 'Compartilhado' : 'Dormitório'}</p>
+                      </div>
+                      <div>
+                        <Label>Capacidade</Label>
+                        <p className="text-foreground">{selectedBooking.room.capacity} {selectedBooking.room.capacity === 1 ? 'pessoa' : 'pessoas'}</p>
+                      </div>
+                      <div>
+                        <Label>Preço por Noite</Label>
+                        <p className="text-foreground">R$ {(selectedBooking.room.pricePerNight / 100).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-border pt-4">
                     <h4 className="font-semibold text-foreground mb-3">Informações do Hóspede</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
