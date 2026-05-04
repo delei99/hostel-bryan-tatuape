@@ -174,10 +174,13 @@ export default function RoomGallery() {
                     Quarto para 1 ou 2 pessoas
                   </p>
                   <p className="text-foreground">
-                    <span className="font-semibold">Capacidade:</span> 2 pessoa(s)
+                    <span className="font-semibold">Capacidade:</span> {selectedRoom.capacity} pessoa{selectedRoom.capacity > 1 ? "s" : ""}
                   </p>
                   <p className="text-foreground">
-                    <span className="font-semibold">Preço:</span> R$ 80,00 por noite
+                    <span className="font-semibold">Preço:</span> R$ {(selectedRoom.pricePerNight / 100).toFixed(2)} por noite
+                  </p>
+                  <p className="text-foreground">
+                    <span className="font-semibold">Tipo de Banheiro:</span> {selectedRoom.bathroomType === "private" ? "Privado" : "Compartilhado"}
                   </p>
                 </div>
               </div>
