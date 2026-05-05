@@ -10,16 +10,26 @@ import { ArrowLeft, Plus, Trash2, Calendar } from "lucide-react";
 import { Link } from "wouter";
 
 export default function BlockingExceptions() {
+  const [selectedRoomId, setSelectedRoomId] = useState<string>("1");
   const [selectedBlockedDateId, setSelectedBlockedDateId] = useState<string>("");
   const [exceptionDate, setExceptionDate] = useState("");
   const [reason, setReason] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
-  // Buscar datas bloqueadas
+  // Buscar quartos
+  const { data: rooms = [] } = trpc.rooms.list.useQuery();
+
+  // Buscar datas bloqueadas do quarto selecionado
   const { data: blockedDates = [] } = trpc.blockedDates.list.useQuery(
-    { roomId: 1 }, // Usar roomId 1 como padrão para listar todas
-    { enabled: true }
+    { roomId: parseInt(selectedRoomId) },
+    { enabled: !!selectedRoomId }
   );
+
+  // Resetar seleção de bloqueio quando mudar de quarto
+  const handleRoomChange = (roomId: string) => {
+    setSelectedRoomId(roomId);
+    setSelectedBlockedDateId("");
+  };
 
   // Buscar exceções da data bloqueada selecionada
   const { data: exceptions = [], refetch: refetchExceptions } = trpc.blockingExceptions.getByBlockedDate.useQuery(
@@ -86,6 +96,22 @@ export default function BlockingExceptions() {
           <Card className="p-6 lg:col-span-1">
             <h2 className="text-xl font-bold text-foreground mb-6">Adicionar Exceção</h2>
             <form onSubmit={handleAddException} className="space-y-4">
+              <div>
+                <Label htmlFor="room">Quarto</Label>
+                <Select value={selectedRoomId} onValueChange={handleRoomChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um quarto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rooms.map((room) => (
+                      <SelectItem key={room.id} value={room.id.toString()}>
+                        {room.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div>
                 <Label htmlFor="blockedDate">Período Bloqueado</Label>
                 <Select value={selectedBlockedDateId} onValueChange={setSelectedBlockedDateId}>
