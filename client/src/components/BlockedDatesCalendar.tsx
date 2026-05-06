@@ -14,14 +14,25 @@ interface BlockedDate {
   observation?: string;
 }
 
+interface BlockingException {
+  id: number;
+  blockedDateId: number;
+  exceptionDate: Date | string;
+  reason?: string | null;
+  createdBy: number;
+  createdAt: Date;
+}
+
 interface BlockedDatesCalendarProps {
   blockedDates: BlockedDate[];
+  exceptions?: BlockingException[];
   roomId: number;
   onBlockPeriod: (startDate: Date, endDate: Date, reason: string) => Promise<void>;
 }
 
 export default function BlockedDatesCalendar({
   blockedDates,
+  exceptions = [],
   roomId,
   onBlockPeriod,
 }: BlockedDatesCalendarProps) {
@@ -32,14 +43,18 @@ export default function BlockedDatesCalendar({
   // Normalizar data para comparação (usar UTC para evitar shift de timezone)
   const normalizeDate = (date: Date | string): Date => {
     if (typeof date === 'string') {
-      // Se for ISO string (ex: "2026-05-01T00:00:00.000Z"), extrair apenas a data
+      // Extrair apenas a parte da data (suporta ISO, YYYY-MM-DD, e MySQL YYYY-MM-DD HH:mm:ss)
+      let dateOnly = date;
       if (date.includes('T')) {
-        const dateOnly = date.split('T')[0];
-        const [year, month, day] = dateOnly.split('-').map(Number);
-        return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+        dateOnly = date.split('T')[0];
+      } else if (date.includes(' ')) {
+        dateOnly = date.split(' ')[0];
       }
-      // Se for YYYY-MM-DD, usar UTC
-      const [year, month, day] = date.split('-').map(Number);
+      const [year, month, day] = dateOnly.split('-').map(Number);
+      if (isNaN(year) || isNaN(month) || isNaN(day)) {
+        console.error('[BlockedDatesCalendar] Invalid date format:', date);
+        return new Date();
+      }
       return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
     }
     // Se for Date object, usar UTC getters
@@ -51,6 +66,15 @@ export default function BlockedDatesCalendar({
   const isDateBlocked = (date: Date): boolean => {
     // Usar UTC para evitar shift de timezone
     const normalizedDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
+    
+    // Verificar se a data tem uma exceção
+    const hasException = exceptions.some(exc => {
+      const excDate = normalizeDate(exc.exceptionDate);
+      return normalizedDate.getTime() === excDate.getTime();
+    });
+    
+    // Se tem exceção, não está bloqueada
+    if (hasException) return false;
     
     return blockedDates.some(blocked => {
       const blockedStart = normalizeDate(blocked.startDate);

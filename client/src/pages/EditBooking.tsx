@@ -57,8 +57,18 @@ export default function EditBooking() {
   // Normalizar data para comparação (usar UTC para evitar shift de timezone)
   const normalizeDate = (dateStr: string | Date): Date => {
     if (typeof dateStr === 'string') {
-      // Se for string YYYY-MM-DD, usar UTC para evitar shift de timezone
-      const [year, month, day] = dateStr.split('-').map(Number);
+      // Extrair apenas a parte da data (suporta ISO, YYYY-MM-DD, e MySQL YYYY-MM-DD HH:mm:ss)
+      let dateOnly = dateStr;
+      if (dateStr.includes('T')) {
+        dateOnly = dateStr.split('T')[0];
+      } else if (dateStr.includes(' ')) {
+        dateOnly = dateStr.split(' ')[0];
+      }
+      const [year, month, day] = dateOnly.split('-').map(Number);
+      if (isNaN(year) || isNaN(month) || isNaN(day)) {
+        console.error('[EditBooking] Invalid date format:', dateStr);
+        return new Date();
+      }
       return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
     }
     // Se for Date object (vindo do backend como ISO string), usar UTC getters

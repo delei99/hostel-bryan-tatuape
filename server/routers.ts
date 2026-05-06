@@ -222,6 +222,13 @@ export const appRouter = router({
   }),
 
   blockingExceptions: router({
+    getByRoom: publicProcedure
+      .input(z.object({ roomId: z.number() }))
+      .query(async ({ input }) => {
+        const { getBlockingExceptionsByRoom } = await import("./db");
+        return getBlockingExceptionsByRoom(input.roomId);
+      }),
+
     getByBlockedDate: publicProcedure
       .input(z.object({ blockedDateId: z.number() }))
       .query(async ({ input }) => {

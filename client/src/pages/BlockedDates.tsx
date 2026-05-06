@@ -84,6 +84,12 @@ export default function BlockedDates() {
   const updateBlockedDate = trpc.blockedDates.update.useMutation();
   const createException = trpc.blockingExceptions.create.useMutation();
 
+  // Buscar exceções para o quarto selecionado
+  const { data: exceptions = [] } = trpc.blockingExceptions.getByRoom.useQuery(
+    { roomId: roomIds.length > 0 ? parseInt(roomIds[0]) : 1 },
+    { enabled: roomIds.length > 0 }
+  );
+
   // Sincronizar selectAll quando selectedBlockedIds ou blockedDates muda
   useEffect(() => {
     if (blockedDates.length > 0) {
@@ -391,6 +397,7 @@ export default function BlockedDates() {
           <div className="lg:col-span-1">
             <BlockedDatesCalendar
               blockedDates={blockedDates as any}
+              exceptions={exceptions}
               roomId={roomIds.length > 0 ? parseInt(roomIds[0]) : 1}
               onBlockPeriod={async (startDate, endDate, reason) => {
                 // Usar datas locais sem conversão UTC

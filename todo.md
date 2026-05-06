@@ -431,3 +431,17 @@
 - [x] Adicionar coluna de ações com botão Editar
 - [x] Implementar navegação para EditBooking.tsx?id=ID
 - [x] Testar fluxo completo de edição de reserva
+
+## Fase 50: Corrigir Erro "Unknown Error" e Sincronizar Exceções
+- [x] Investigar e diagnosticar erro "unknown error" na página de bloqueios
+- [x] Identificar problema com formato de datas MySQL (YYYY-MM-DD HH:mm:ss)
+- [x] Corrigir função normalizeDate em BlockedDatesCalendar.tsx
+- [x] Corrigir função normalizeDate em Booking.tsx
+- [x] Corrigir função normalizeDate em EditBooking.tsx
+- [x] Implementar rota blockingExceptions.getByRoom em routers.ts
+- [x] Implementar função getBlockingExceptionsByRoom em db.ts
+- [x] Adicionar prop exceptions ao BlockedDatesCalendar
+- [x] Atualizar isDateBlocked para considerar exceções
+- [x] Sincronizar calendário visual com exceções
+- [x] Todos os 47 testes passando
+- [x] TypeScript compilando sem erros

@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, lt, or } from "drizzle-orm";
+import { and, desc, eq, gt, lt, or, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog, failedUnblockAttempts, InsertFailedUnblockAttempt, FailedUnblockAttempt, blockingExceptions, InsertBlockingException, BlockingException } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -1070,3 +1070,23 @@ export async function deleteBooking(bookingId: number) {
 }
 
 
+
+export async function getBlockingExceptionsByRoom(roomId: number): Promise<BlockingException[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Get all blocked dates for the room, then get all exceptions for those blocked dates
+  const blockedDateRecords = await db
+    .select({ id: blockedDates.id })
+    .from(blockedDates)
+    .where(eq(blockedDates.roomId, roomId));
+  
+  if (blockedDateRecords.length === 0) return [];
+  
+  const blockedDateIds = blockedDateRecords.map(bd => bd.id);
+  
+  return db
+    .select()
+    .from(blockingExceptions)
+    .where(inArray(blockingExceptions.blockedDateId, blockedDateIds));
+}
