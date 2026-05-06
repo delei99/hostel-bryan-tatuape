@@ -13,6 +13,7 @@ export default function BlockingExceptions() {
   const [selectedRoomId, setSelectedRoomId] = useState<string>("1");
   const [selectedBlockedDateId, setSelectedBlockedDateId] = useState<string>("");
   const [exceptionDate, setExceptionDate] = useState("");
+  const [exceptionEndDate, setExceptionEndDate] = useState("");
   const [reason, setReason] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
@@ -48,16 +49,41 @@ export default function BlockingExceptions() {
       return;
     }
 
+    const startDate = new Date(exceptionDate);
+    const endDate = exceptionEndDate ? new Date(exceptionEndDate) : startDate;
+    
+    if (endDate < startDate) {
+      toast.error("A data final deve ser maior ou igual à data inicial!");
+      return;
+    }
+
     try {
       setIsAdding(true);
-      await createException.mutateAsync({
-        blockedDateId: parseInt(selectedBlockedDateId),
-        exceptionDate: new Date(exceptionDate),
-        reason: reason || undefined,
-      });
-
-      toast.success("Exceção adicionada com sucesso!");
+      
+      if (exceptionEndDate) {
+        const currentDate = new Date(startDate);
+        let count = 0;
+        while (currentDate <= endDate) {
+          await createException.mutateAsync({
+            blockedDateId: parseInt(selectedBlockedDateId),
+            exceptionDate: new Date(currentDate),
+            reason: reason || undefined,
+          });
+          currentDate.setDate(currentDate.getDate() + 1);
+          count++;
+        }
+        toast.success(`${count} exceção(ões) adicionada(s) com sucesso!`);
+      } else {
+        await createException.mutateAsync({
+          blockedDateId: parseInt(selectedBlockedDateId),
+          exceptionDate: startDate,
+          reason: reason || undefined,
+        });
+        toast.success("Exceção adicionada com sucesso!");
+      }
+      
       setExceptionDate("");
+      setExceptionEndDate("");
       setReason("");
       refetchExceptions();
     } catch (error: any) {
@@ -130,12 +156,22 @@ export default function BlockingExceptions() {
               </div>
 
               <div>
-                <Label htmlFor="exceptionDate">Data da Exceção</Label>
+                <Label htmlFor="exceptionDate">Data Inicial da Exceção</Label>
                 <Input
                   type="date"
                   value={exceptionDate}
                   onChange={(e) => setExceptionDate(e.target.value)}
                   required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="exceptionEndDate">Data Final da Exceção (Opcional)</Label>
+                <Input
+                  type="date"
+                  value={exceptionEndDate}
+                  onChange={(e) => setExceptionEndDate(e.target.value)}
+                  placeholder="Deixe em branco para uma única data"
                 />
               </div>
 
