@@ -54,8 +54,24 @@ export default function BlockingExceptions() {
       return;
     }
 
-    const startDate = new Date(exceptionDate);
-    const endDate = exceptionEndDate ? new Date(exceptionEndDate) : startDate;
+    // Normalizar datas para evitar problemas de timezone
+    const normalizeDate = (dateStr: string) => {
+      const [year, month, day] = dateStr.split('-');
+      return new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
+    };
+    
+    const startDate = normalizeDate(exceptionDate);
+    const endDate = exceptionEndDate ? normalizeDate(exceptionEndDate) : startDate;
+    
+    if (isNaN(startDate.getTime())) {
+      toast.error("Data inicial inválida!");
+      return;
+    }
+    
+    if (isNaN(endDate.getTime())) {
+      toast.error("Data final inválida!");
+      return;
+    }
     
     if (endDate < startDate) {
       toast.error("A data final deve ser maior ou igual à data inicial!");
@@ -74,7 +90,7 @@ export default function BlockingExceptions() {
             exceptionDate: new Date(currentDate),
             reason: reason || undefined,
           });
-          currentDate.setDate(currentDate.getDate() + 1);
+          currentDate.setUTCDate(currentDate.getUTCDate() + 1);
           count++;
         }
         toast.success(`${count} exceção(ões) adicionada(s) com sucesso!`);
