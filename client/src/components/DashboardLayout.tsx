@@ -32,7 +32,6 @@ const menuItems = [
   { icon: Home, label: "Gerenciar Quartos", path: "/admin/quartos" },
   { icon: Image, label: "Gerenciar Fotos", path: "/admin/fotos" },
   { icon: Calendar, label: "Bloquear Datas", path: "/admin/bloqueios" },
-  { icon: Unlock, label: "Desbloquear Datas", path: "/admin/bloqueios-excecoes" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";

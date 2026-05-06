@@ -16,7 +16,6 @@ import BlockedDates from "./pages/BlockedDates";
 // import AccessControl from "./pages/AccessControl";
 // import SecurityAlerts from "./pages/SecurityAlerts";
 import RoomPhotosUpload from "./pages/RoomPhotosUpload";
-import BlockingExceptions from "./pages/BlockingExceptions";
 import EditBooking from "./pages/EditBooking";
 
 function Router() {
@@ -31,9 +30,7 @@ function Router() {
       <Route path="/admin/fotos" component={AdminRoomPhotos} />
       <Route path="/admin/fotos/upload" component={PhotoUpload} />
       <Route path="/admin/bloqueios" component={BlockedDates} />
-      <Route path="/admin/bloqueios-excecoes" component={BlockingExceptions} />
       <Route path="/admin/fotos-upload" component={RoomPhotosUpload} />
-      <Route path="/admin/excecoes" component={BlockingExceptions} />
       <Route path="/edit-booking" component={EditBooking} />
       {/* <Route path="/admin/logs" component={AuditLogs} />
       <Route path="/admin/acesso" component={AccessControl} />
