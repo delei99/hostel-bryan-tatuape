@@ -10,18 +10,8 @@ import { toast } from "sonner";
 import { ArrowLeft, Lock, Unlock, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import BlockedDatesCalendar from "@/components/BlockedDatesCalendar";
-import DashboardLayout from "@/components/DashboardLayout";
-import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function BlockedDates() {
-  return (
-    <DashboardLayout>
-      <BlockedDatesContent />
-    </DashboardLayout>
-  );
-}
-
-function BlockedDatesContent() {
   const [roomIds, setRoomIds] = useState<string[]>(["1"]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -415,12 +405,6 @@ function BlockedDatesContent() {
                   });
                 }
                 refetch();
-              }}
-              onUnblockByException={(blockedDateId, startDate, endDate) => {
-                setExceptionBlockedDateId(blockedDateId);
-                setExceptionStartDate(startDate.toISOString().split('T')[0]);
-                setExceptionEndDate(endDate.toISOString().split('T')[0]);
-                setUnblockExceptionModalOpen(true);
               }}
             />
           </div>
