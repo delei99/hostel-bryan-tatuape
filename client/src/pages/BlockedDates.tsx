@@ -38,6 +38,12 @@ export default function BlockedDates() {
   const [editEndDate, setEditEndDate] = useState("");
   const [editReason, setEditReason] = useState("");
   const [editMode, setEditMode] = useState<'observation' | 'dates'>('observation');
+  const [unblockExceptionModalOpen, setUnblockExceptionModalOpen] = useState(false);
+  const [exceptionBlockedDateId, setExceptionBlockedDateId] = useState<number | null>(null);
+  const [exceptionStartDate, setExceptionStartDate] = useState("");
+  const [exceptionEndDate, setExceptionEndDate] = useState("");
+  const [exceptionReason, setExceptionReason] = useState("");
+  const [isCreatingException, setIsCreatingException] = useState(false);
 
   // Carregar observações do localStorage
   useEffect(() => {
@@ -227,6 +233,56 @@ export default function BlockedDates() {
     setUnblockPassword("");
     setUnblockShowPassword(false);
     setUnblockModalOpen(true);
+  };
+
+  const handleOpenExceptionModal = (blockedDateId: number) => {
+    setExceptionBlockedDateId(blockedDateId);
+    setExceptionStartDate("");
+    setExceptionEndDate("");
+    setExceptionReason("");
+    setUnblockExceptionModalOpen(true);
+  };
+
+  const handleCreateException = async () => {
+    if (!exceptionBlockedDateId || !exceptionStartDate) {
+      toast.error("Preencha os campos obrigatórios!");
+      return;
+    }
+
+    try {
+      setIsCreatingException(true);
+      const startDate = new Date(exceptionStartDate);
+      const endDate = exceptionEndDate ? new Date(exceptionEndDate) : startDate;
+
+      if (endDate < startDate) {
+        toast.error("A data final deve ser maior ou igual à data inicial!");
+        return;
+      }
+
+      const currentDate = new Date(startDate);
+      let count = 0;
+      while (currentDate <= endDate) {
+        await trpc.blockingExceptions.create.useMutation().mutateAsync({
+          blockedDateId: exceptionBlockedDateId,
+          exceptionDate: new Date(currentDate),
+          reason: exceptionReason || undefined,
+        });
+        currentDate.setDate(currentDate.getDate() + 1);
+        count++;
+      }
+
+      toast.success(`${count} exceção(ões) criada(s) com sucesso!`);
+      setUnblockExceptionModalOpen(false);
+      setExceptionBlockedDateId(null);
+      setExceptionStartDate("");
+      setExceptionEndDate("");
+      setExceptionReason("");
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao criar exceção");
+    } finally {
+      setIsCreatingException(false);
+    }
   };
   const handleConfirmUnblock = async () => {
     if (!selectedUnblockId || !unblockPassword) {
@@ -522,12 +578,19 @@ export default function BlockedDates() {
                       )}
 
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <Button
                         onClick={() => handleEditObservation(blocked.id)}
                         className="bg-blue-600 hover:bg-blue-700 text-white"
                       >
                         Editar
+                      </Button>
+                      <Button
+                        onClick={() => handleOpenExceptionModal(blocked.id)}
+                        className="bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-2"
+                      >
+                        <Unlock className="w-4 h-4" />
+                        Desbloquear por Exceção
                       </Button>
                       <Button
                         onClick={() => handleUnblockDate(blocked.id)}
@@ -712,6 +775,75 @@ export default function BlockedDates() {
                     setEditPassword("");
                     setEditingId(null);
                     setEditMode('observation');
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Modal de Desbloquear por Exceção */}
+      {unblockExceptionModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold text-foreground mb-4">Desbloquear Período por Exceção</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="exceptionStartDate">Data Inicial</Label>
+                <Input
+                  id="exceptionStartDate"
+                  type="date"
+                  value={exceptionStartDate}
+                  onChange={(e) => setExceptionStartDate(e.target.value)}
+                  className="text-foreground"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="exceptionEndDate">Data Final (Opcional)</Label>
+                <Input
+                  id="exceptionEndDate"
+                  type="date"
+                  value={exceptionEndDate}
+                  onChange={(e) => setExceptionEndDate(e.target.value)}
+                  placeholder="Deixe em branco para uma única data"
+                  className="text-foreground"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="exceptionReason">Motivo do Desbloqueio (Opcional)</Label>
+                <Input
+                  id="exceptionReason"
+                  type="text"
+                  value={exceptionReason}
+                  onChange={(e) => setExceptionReason(e.target.value)}
+                  placeholder="Ex: Reserva cancelada, Erro de bloqueio"
+                  className="text-foreground"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleCreateException}
+                  disabled={isCreatingException}
+                  className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+                >
+                  {isCreatingException ? "Criando..." : "Desbloquear"}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setUnblockExceptionModalOpen(false);
+                    setExceptionBlockedDateId(null);
+                    setExceptionStartDate("");
+                    setExceptionEndDate("");
+                    setExceptionReason("");
                   }}
                   variant="outline"
                   className="flex-1"
