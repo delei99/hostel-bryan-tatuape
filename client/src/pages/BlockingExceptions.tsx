@@ -227,7 +227,7 @@ export default function BlockingExceptions() {
                       <Calendar className="w-5 h-5 text-blue-600" />
                       <div>
                         <p className="font-medium text-foreground">
-                          {new Date(exception.exceptionDate).toLocaleDateString("pt-BR")}
+                          {new Date(String(exception.exceptionDate).split('T')[0] + 'T00:00:00').toLocaleDateString("pt-BR")}
                         </p>
                         {exception.reason && (
                           <p className="text-sm text-muted-foreground">{exception.reason}</p>
