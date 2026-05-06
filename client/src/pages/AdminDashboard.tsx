@@ -270,7 +270,7 @@ export default function AdminDashboard() {
             <h1 className="text-4xl font-bold text-foreground mb-2">Painel Administrativo</h1>
             <p className="text-foreground/70">Gerencie todas as reservas do Hostel Bryan Tatuapé</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Link href="/admin/quartos">
               <Button className="bg-blue-600 hover:bg-blue-700">
                 Editar Quartos
@@ -284,6 +284,11 @@ export default function AdminDashboard() {
             <Link href="/admin/bloqueios">
               <Button className="bg-red-600 hover:bg-red-700">
                 Bloquear Datas
+              </Button>
+            </Link>
+            <Link href="/admin/bloqueios-excecoes">
+              <Button className="bg-orange-600 hover:bg-orange-700">
+                Desbloquear Datas
               </Button>
             </Link>
           </div>

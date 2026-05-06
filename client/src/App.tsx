@@ -31,6 +31,7 @@ function Router() {
       <Route path="/admin/fotos" component={AdminRoomPhotos} />
       <Route path="/admin/fotos/upload" component={PhotoUpload} />
       <Route path="/admin/bloqueios" component={BlockedDates} />
+      <Route path="/admin/bloqueios-excecoes" component={BlockingExceptions} />
       <Route path="/admin/fotos-upload" component={RoomPhotosUpload} />
       <Route path="/admin/excecoes" component={BlockingExceptions} />
       <Route path="/edit-booking" component={EditBooking} />
