@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
+import { visualizer } from "rollup-plugin-visualizer";
 
 // =============================================================================
 // Manus Debug Collector - Vite Plugin
@@ -150,7 +151,17 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
+const plugins = [
+  react(),
+  tailwindcss(),
+  jsxLocPlugin(),
+  vitePluginManusRuntime(),
+  vitePluginManusDebugCollector(),
+  visualizer({
+    filename: path.resolve(import.meta.dirname, 'dist/stats.html'),
+    open: false,
+  }),
+];
 
 export default defineConfig({
   plugins,
@@ -167,6 +178,17 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-slot'],
+          'calendar': ['react-calendar'],
+          'trpc': ['@trpc/client', '@trpc/react-query'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
   },
   server: {
     host: true,
