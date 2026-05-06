@@ -82,6 +82,7 @@ export default function BlockedDates() {
   const createBlockedDate = trpc.blockedDates.create.useMutation();
   const deleteBlockedDate = trpc.blockedDates.delete.useMutation();
   const updateBlockedDate = trpc.blockedDates.update.useMutation();
+  const createException = trpc.blockingExceptions.create.useMutation();
 
   // Sincronizar selectAll quando selectedBlockedIds ou blockedDates muda
   useEffect(() => {
@@ -262,7 +263,7 @@ export default function BlockedDates() {
       const currentDate = new Date(startDate);
       let count = 0;
       while (currentDate <= endDate) {
-        await trpc.blockingExceptions.create.useMutation().mutateAsync({
+        await createException.mutateAsync({
           blockedDateId: exceptionBlockedDateId,
           exceptionDate: new Date(currentDate),
           reason: exceptionReason || undefined,
