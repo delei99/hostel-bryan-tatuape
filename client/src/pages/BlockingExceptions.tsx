@@ -44,8 +44,13 @@ export default function BlockingExceptions() {
   const handleAddException = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedBlockedDateId || !exceptionDate) {
-      toast.error("Preencha todos os campos!");
+    if (!exceptionDate) {
+      toast.error("Preencha a data da exceção!");
+      return;
+    }
+    
+    if (!selectedBlockedDateId) {
+      toast.error("Selecione um período bloqueado!");
       return;
     }
 
