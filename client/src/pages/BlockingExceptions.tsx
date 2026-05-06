@@ -44,34 +44,13 @@ export default function BlockingExceptions() {
   const handleAddException = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedBlockedDateId) {
-      toast.error("Selecione um período bloqueado!");
-      return;
-    }
-    
-    if (!exceptionDate) {
-      toast.error("Preencha a data da exceção!");
+    if (!selectedBlockedDateId || !exceptionDate) {
+      toast.error("Preencha todos os campos!");
       return;
     }
 
-    // Normalizar datas para evitar problemas de timezone
-    const normalizeDate = (dateStr: string) => {
-      const [year, month, day] = dateStr.split('-');
-      return new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
-    };
-    
-    const startDate = normalizeDate(exceptionDate);
-    const endDate = exceptionEndDate ? normalizeDate(exceptionEndDate) : startDate;
-    
-    if (isNaN(startDate.getTime())) {
-      toast.error("Data inicial inválida!");
-      return;
-    }
-    
-    if (isNaN(endDate.getTime())) {
-      toast.error("Data final inválida!");
-      return;
-    }
+    const startDate = new Date(exceptionDate);
+    const endDate = exceptionEndDate ? new Date(exceptionEndDate) : startDate;
     
     if (endDate < startDate) {
       toast.error("A data final deve ser maior ou igual à data inicial!");
@@ -90,7 +69,7 @@ export default function BlockingExceptions() {
             exceptionDate: new Date(currentDate),
             reason: reason || undefined,
           });
-          currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+          currentDate.setDate(currentDate.getDate() + 1);
           count++;
         }
         toast.success(`${count} exceção(ões) adicionada(s) com sucesso!`);
@@ -248,7 +227,7 @@ export default function BlockingExceptions() {
                       <Calendar className="w-5 h-5 text-blue-600" />
                       <div>
                         <p className="font-medium text-foreground">
-                          {new Date(String(exception.exceptionDate).split('T')[0] + 'T00:00:00').toLocaleDateString("pt-BR")}
+                          {new Date(exception.exceptionDate).toLocaleDateString("pt-BR")}
                         </p>
                         {exception.reason && (
                           <p className="text-sm text-muted-foreground">{exception.reason}</p>

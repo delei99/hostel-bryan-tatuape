@@ -76,33 +76,7 @@ export default function EditBooking() {
       const blockedEnd = normalizeDate(blocked.endDate);
       
       if (checkIn < blockedEnd && checkOut > blockedStart) {
-        // Verificar se TODAS as datas têm exceções
-        const exceptions = (blocked.exceptions || []).map(e => {
-          const d = new Date(e.exceptionDate);
-          return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
-        });
-        
-        // Verificar se todas as datas do período têm exceções
-        let allDatesHaveExceptions = true;
-        const currentDate = new Date(checkIn);
-        while (currentDate < checkOut) {
-          const dateStr = new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate()).toISOString().split('T')[0];
-          const hasException = exceptions.some(e => {
-            const exStr = new Date(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate()).toISOString().split('T')[0];
-            return exStr === dateStr;
-          });
-          
-          if (!hasException) {
-            allDatesHaveExceptions = false;
-            break;
-          }
-          currentDate.setUTCDate(currentDate.getUTCDate() + 1);
-        }
-        
-        // Se nem todas as datas têm exceções, está bloqueado
-        if (!allDatesHaveExceptions) {
-          return true;
-        }
+        return true;
       }
     }
 

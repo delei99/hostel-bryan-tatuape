@@ -159,18 +159,8 @@ export const appRouter = router({
     list: publicProcedure
       .input(z.object({ roomId: z.number() }))
       .query(async ({ input }) => {
-        const { getBlockedDates, getBlockingExceptionsByBlockedDate } = await import("./db");
-        const blockedDates = await getBlockedDates(input.roomId, new Date("1970-01-01"), new Date("2099-12-31"));
-        
-        // Adicionar exceções para cada período bloqueado
-        const blockedDatesWithExceptions = await Promise.all(
-          blockedDates.map(async (bd) => ({
-            ...bd,
-            exceptions: await getBlockingExceptionsByBlockedDate(bd.id)
-          }))
-        );
-        
-        return blockedDatesWithExceptions;
+        const { getBlockedDates } = await import("./db");
+        return getBlockedDates(input.roomId, new Date("1970-01-01"), new Date("2099-12-31"));
       }),
 
     create: publicProcedure
