@@ -28,7 +28,6 @@ import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Painel Admin", path: "/admin" },
   { icon: Home, label: "Gerenciar Quartos", path: "/admin/quartos" },
   { icon: Image, label: "Gerenciar Fotos", path: "/admin/fotos" },
   { icon: Calendar, label: "Bloquear Datas", path: "/admin/bloqueios" },
