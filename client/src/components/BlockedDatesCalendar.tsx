@@ -18,12 +18,14 @@ interface BlockedDatesCalendarProps {
   blockedDates: BlockedDate[];
   roomId: number;
   onBlockPeriod: (startDate: Date, endDate: Date, reason: string) => Promise<void>;
+  onUnblockByException?: (blockedDateId: number, startDate: Date, endDate: Date) => void;
 }
 
 export default function BlockedDatesCalendar({
   blockedDates,
   roomId,
   onBlockPeriod,
+  onUnblockByException,
 }: BlockedDatesCalendarProps) {
   const [selectedRange, setSelectedRange] = useState<[Date, Date] | null>(null);
   const [reason, setReason] = useState('');
@@ -74,12 +76,32 @@ export default function BlockedDatesCalendar({
   const getTileContent = (date: Date) => {
     if (isDateBlocked(date)) {
       return (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-xl">🔒</span>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-auto cursor-pointer group">
+          <span className="text-xl group-hover:scale-125 transition-transform">🔒</span>
         </div>
       );
     }
     return null;
+  };
+
+  // Obter bloqueio para uma data específica
+  const getBlockedDateForDate = (date: Date): BlockedDate | undefined => {
+    const normalizedDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
+    return blockedDates.find(blocked => {
+      const blockedStart = normalizeDate(blocked.startDate);
+      const blockedEnd = normalizeDate(blocked.endDate);
+      return normalizedDate >= blockedStart && normalizedDate < blockedEnd;
+    });
+  };
+
+  // Ao clicar em um período bloqueado
+  const handleBlockedDateClick = (date: Date) => {
+    const blockedDate = getBlockedDateForDate(date);
+    if (blockedDate && onUnblockByException) {
+      const startDate = normalizeDate(blockedDate.startDate);
+      const endDate = normalizeDate(blockedDate.endDate);
+      onUnblockByException(blockedDate.id, startDate, endDate);
+    }
   };
 
   // Lidar com seleção de intervalo
@@ -129,6 +151,11 @@ export default function BlockedDatesCalendar({
             onChange={handleDateChange}
             tileClassName={({ date }) => getTileClassName(date)}
             tileContent={({ date }) => getTileContent(date)}
+            onClickDay={(date) => {
+              if (isDateBlocked(date)) {
+                handleBlockedDateClick(date);
+              }
+            }}
             minDate={new Date()}
           />
         </div>

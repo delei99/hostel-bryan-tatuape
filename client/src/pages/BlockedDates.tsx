@@ -416,6 +416,12 @@ function BlockedDatesContent() {
                 }
                 refetch();
               }}
+              onUnblockByException={(blockedDateId, startDate, endDate) => {
+                setExceptionBlockedDateId(blockedDateId);
+                setExceptionStartDate(startDate.toISOString().split('T')[0]);
+                setExceptionEndDate(endDate.toISOString().split('T')[0]);
+                setUnblockExceptionModalOpen(true);
+              }}
             />
           </div>
 
