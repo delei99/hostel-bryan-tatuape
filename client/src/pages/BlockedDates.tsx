@@ -37,6 +37,7 @@ export default function BlockedDates() {
   const [editStartDate, setEditStartDate] = useState("");
   const [editEndDate, setEditEndDate] = useState("");
   const [editReason, setEditReason] = useState("");
+  const [editRoomId, setEditRoomId] = useState<string>("");
   const [editMode, setEditMode] = useState<'observation' | 'dates'>('observation');
   const [unblockExceptionModalOpen, setUnblockExceptionModalOpen] = useState(false);
   const [exceptionBlockedDateId, setExceptionBlockedDateId] = useState<number | null>(null);
@@ -171,6 +172,7 @@ export default function BlockedDates() {
     setEditStartDate(formatDateLocal(blocked.startDate));
     setEditEndDate(formatDateLocal(blocked.endDate));
     setEditReason(blocked.reason || "");
+    setEditRoomId(blocked.roomId.toString());
     setEditPassword("");
     setEditShowPassword(false);
     setEditMode('observation');
@@ -212,6 +214,7 @@ export default function BlockedDates() {
           startDate: start,
           endDate: end,
           reason: editReason,
+          roomId: parseInt(editRoomId),
           password: editPassword,
         });
         
@@ -226,6 +229,7 @@ export default function BlockedDates() {
       setEditStartDate("");
       setEditEndDate("");
       setEditReason("");
+      setEditRoomId("");
     } catch (error: any) {
       console.error("Erro ao editar:", error);
       const errorMessage = error?.message || "Erro ao editar";
@@ -744,6 +748,24 @@ export default function BlockedDates() {
                       placeholder="Ex: Manutenção, Reforma, etc"
                       className="text-foreground"
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="editRoom">Quarto (Mudança de Quarto)</Label>
+                    <Select value={editRoomId} onValueChange={setEditRoomId}>
+                      <SelectTrigger id="editRoom" className="text-foreground">
+                        <SelectValue placeholder="Selecione o quarto" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {rooms.map((room) => (
+                          <SelectItem key={room.id} value={room.id.toString()}>
+                            {room.name} ({room.type === 'private' ? 'Privado' : room.type === 'shared' ? 'Compartilhado' : 'Dormitório'})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Ao alterar o quarto, o bloqueio será movido automaticamente para o novo quarto selecionado.
+                    </p>
                   </div>
                 </>
               )}

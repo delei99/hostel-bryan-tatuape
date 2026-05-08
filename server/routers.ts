@@ -202,6 +202,7 @@ export const appRouter = router({
         startDate: z.date().optional(),
         endDate: z.date().optional(),
         reason: z.string().optional(),
+        roomId: z.number().optional(),
         password: z.string(),
       }))
       .mutation(async ({ input }) => {
@@ -215,6 +216,7 @@ export const appRouter = router({
           startDate: input.startDate,
           endDate: input.endDate,
           reason: input.reason,
+          roomId: input.roomId,
         });
 
         return { success: true };
