@@ -178,6 +178,11 @@ export default function AdminDashboard() {
       return;
     }
 
+
+    if (!editFormData.checkInDate || !editFormData.checkOutDate) {
+      toast.error("Por favor, selecione as datas de check-in e check-out");
+      return;
+    }
     setIsEditingSubmitting(true);
 
     try {
