@@ -27,6 +27,7 @@ export default function AdminDashboard() {
   const [deletingBookingId, setDeletingBookingId] = useState<number | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showSaveAsNewModal, setShowSaveAsNewModal] = useState(false);
+  const [useCurrentGuestData, setUseCurrentGuestData] = useState(true);
   const [newGuestData, setNewGuestData] = useState({
     firstName: "",
     lastName: "",
@@ -170,7 +171,9 @@ export default function AdminDashboard() {
 
   // Nota: Atualização de status de reserva em desenvolvimento
   const handleSaveAsNewBooking = async () => {
-    if (!newGuestData.firstName || !newGuestData.lastName || !newGuestData.email || !newGuestData.phone) {
+    const guestData = useCurrentGuestData ? editingBooking.guest : newGuestData;
+    
+    if (!guestData.firstName || !guestData.lastName || !guestData.email || !guestData.phone) {
       toast.error("Por favor, preencha todos os campos obrigatórios");
       return;
     }
@@ -190,12 +193,12 @@ export default function AdminDashboard() {
       const totalPrice = subtotal + CLEANING_FEE;
 
       await createNewBooking.mutateAsync({
-        firstName: newGuestData.firstName,
-        lastName: newGuestData.lastName,
-        email: newGuestData.email,
-        phone: newGuestData.phone,
-        cpf: newGuestData.cpf,
-        nationality: newGuestData.nationality,
+        firstName: guestData.firstName,
+        lastName: guestData.lastName,
+        email: guestData.email,
+        phone: guestData.phone,
+        cpf: guestData.cpf,
+        nationality: guestData.nationality,
         roomId: editFormData.roomId,
         checkInDate: editFormData.checkInDate,
         checkOutDate: editFormData.checkOutDate,
@@ -871,68 +874,126 @@ export default function AdminDashboard() {
         {showSaveAsNewModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card className="w-full max-w-md p-6">
-              <h2 className="text-2xl font-bold mb-4">Dados do Novo Hóspede</h2>
-              <div className="space-y-4 mb-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="newFirstName">Nome *</Label>
-                    <Input
-                      id="newFirstName"
-                      value={newGuestData.firstName}
-                      onChange={(e) => setNewGuestData(prev => ({ ...prev, firstName: e.target.value }))}
-                      placeholder="Nome"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="newLastName">Sobrenome *</Label>
-                    <Input
-                      id="newLastName"
-                      value={newGuestData.lastName}
-                      onChange={(e) => setNewGuestData(prev => ({ ...prev, lastName: e.target.value }))}
-                      placeholder="Sobrenome"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="newEmail">Email *</Label>
-                  <Input
-                    id="newEmail"
-                    type="email"
-                    value={newGuestData.email}
-                    onChange={(e) => setNewGuestData(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="email@exemplo.com"
+              <h2 className="text-2xl font-bold mb-4">Salvar como Nova Reserva</h2>
+              <div className="mb-4 p-3 bg-accent/10 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <input
+                    type="radio"
+                    id="useCurrentGuest"
+                    name="guestOption"
+                    checked={useCurrentGuestData}
+                    onChange={() => setUseCurrentGuestData(true)}
+                    className="w-4 h-4"
                   />
+                  <Label htmlFor="useCurrentGuest" className="cursor-pointer mb-0">Usar dados do hóspede atual</Label>
                 </div>
-                <div>
-                  <Label htmlFor="newPhone">Telefone *</Label>
-                  <Input
-                    id="newPhone"
-                    value={newGuestData.phone}
-                    onChange={(e) => setNewGuestData(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="(11) 99999-9999"
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="useNewGuest"
+                    name="guestOption"
+                    checked={!useCurrentGuestData}
+                    onChange={() => setUseCurrentGuestData(false)}
+                    className="w-4 h-4"
                   />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="newCpf">CPF</Label>
-                    <Input
-                      id="newCpf"
-                      value={newGuestData.cpf}
-                      onChange={(e) => setNewGuestData(prev => ({ ...prev, cpf: e.target.value }))}
-                      placeholder="000.000.000-00"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="newNationality">Nacionalidade</Label>
-                    <Input
-                      id="newNationality"
-                      value={newGuestData.nationality}
-                      onChange={(e) => setNewGuestData(prev => ({ ...prev, nationality: e.target.value }))}
-                      placeholder="Brasileira"
-                    />
-                  </div>
+                  <Label htmlFor="useNewGuest" className="cursor-pointer mb-0">Inserir dados de novo hóspede</Label>
                 </div>
               </div>
+              {useCurrentGuestData ? (
+                <div className="space-y-4 mb-6 p-3 bg-muted rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-3">Dados do hóspede atual serão usados</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs">Nome</Label>
+                      <p className="text-sm font-medium">{editingBooking?.guest?.firstName}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Sobrenome</Label>
+                      <p className="text-sm font-medium">{editingBooking?.guest?.lastName}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Email</Label>
+                    <p className="text-sm font-medium">{editingBooking?.guest?.email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Telefone</Label>
+                    <p className="text-sm font-medium">{editingBooking?.guest?.phone}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs">CPF</Label>
+                      <p className="text-sm font-medium">{editingBooking?.guest?.cpf || "N/A"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Nacionalidade</Label>
+                      <p className="text-sm font-medium">{editingBooking?.guest?.nationality || "N/A"}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 mb-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="newFirstName">Nome *</Label>
+                      <Input
+                        id="newFirstName"
+                        value={newGuestData.firstName}
+                        onChange={(e) => setNewGuestData(prev => ({ ...prev, firstName: e.target.value }))}
+                        placeholder="Nome"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="newLastName">Sobrenome *</Label>
+                      <Input
+                        id="newLastName"
+                        value={newGuestData.lastName}
+                        onChange={(e) => setNewGuestData(prev => ({ ...prev, lastName: e.target.value }))}
+                        placeholder="Sobrenome"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="newEmail">Email *</Label>
+                    <Input
+                      id="newEmail"
+                      type="email"
+                      value={newGuestData.email}
+                      onChange={(e) => setNewGuestData(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="email@exemplo.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="newPhone">Telefone *</Label>
+                    <Input
+                      id="newPhone"
+                      value={newGuestData.phone}
+                      onChange={(e) => setNewGuestData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="(11) 99999-9999"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="newCpf">CPF</Label>
+                      <Input
+                        id="newCpf"
+                        value={newGuestData.cpf}
+                        onChange={(e) => setNewGuestData(prev => ({ ...prev, cpf: e.target.value }))}
+                        placeholder="000.000.000-00"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="newNationality">Nacionalidade</Label>
+                      <Input
+                        id="newNationality"
+                        value={newGuestData.nationality}
+                        onChange={(e) => setNewGuestData(prev => ({ ...prev, nationality: e.target.value }))}
+                        placeholder="Brasileira"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="flex gap-4">
                 <Button
                   variant="outline"

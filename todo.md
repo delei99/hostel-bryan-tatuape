@@ -467,7 +467,9 @@
 
 ## Fase 53: Adicionar Opção "Salvar como Nova Reserva"
 - [x] Adicionar botão "Salvar como nova reserva" em AdminDashboard.tsx (página de editar reserva)
-- [x] Implementar modal para dados do novo hóspede
-- [x] Implementar lógica para criar nova reserva com dados da anterior
+- [x] Implementar modal com toggle para escolher entre usar dados do hóspede atual ou novo
+- [x] Mostrar dados do hóspede atual quando selecionado
+- [x] Mostrar campos vazios para novo hóspede quando selecionado
+- [x] Implementar lógica para criar nova reserva com dados selecionados
 - [x] Testar fluxo completo
 - [x] Todos os 47 testes continuam passando
