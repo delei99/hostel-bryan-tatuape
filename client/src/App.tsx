@@ -2,21 +2,42 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
+import { Suspense, lazy } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Booking from "./pages/Booking";
 import RoomGallery from "./pages/RoomGallery";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminRoomPhotos from "./pages/AdminRoomPhotos";
-import AdminRooms from "./pages/AdminRooms";
-import PhotoUpload from "./pages/admin/PhotoUpload";
-import BlockedDates from "./pages/BlockedDates";
-// import AuditLogs from "./pages/AuditLogs";
-// import AccessControl from "./pages/AccessControl";
-// import SecurityAlerts from "./pages/SecurityAlerts";
-import RoomPhotosUpload from "./pages/RoomPhotosUpload";
 import EditBooking from "./pages/EditBooking";
+
+// Lazy load admin pages to reduce initial bundle size
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminRoomPhotos = lazy(() => import("./pages/AdminRoomPhotos"));
+const AdminRooms = lazy(() => import("./pages/AdminRooms"));
+const PhotoUpload = lazy(() => import("./pages/admin/PhotoUpload"));
+const BlockedDates = lazy(() => import("./pages/BlockedDates"));
+const RoomPhotosUpload = lazy(() => import("./pages/RoomPhotosUpload"));
+
+// Loading fallback component
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">Carregando...</p>
+      </div>
+    </div>
+  );
+}
+
+// Wrapper component for lazy-loaded routes
+function LazyRoute({ component: Component }: { component: React.ComponentType<any> }) {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <Component />
+    </Suspense>
+  );
+}
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -25,16 +46,16 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/reservar" component={Booking} />
       <Route path="/galeria" component={RoomGallery} />
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/quartos" component={AdminRooms} />
-      <Route path="/admin/fotos" component={AdminRoomPhotos} />
-      <Route path="/admin/fotos/upload" component={PhotoUpload} />
-      <Route path="/admin/bloqueios" component={BlockedDates} />
-      <Route path="/admin/fotos-upload" component={RoomPhotosUpload} />
       <Route path="/edit-booking" component={EditBooking} />
-      {/* <Route path="/admin/logs" component={AuditLogs} />
-      <Route path="/admin/acesso" component={AccessControl} />
-      <Route path="/admin/alertas" component={SecurityAlerts} /> */}
+      
+      {/* Admin routes - lazy loaded */}
+      <Route path="/admin" component={() => <LazyRoute component={AdminDashboard} />} />
+      <Route path="/admin/quartos" component={() => <LazyRoute component={AdminRooms} />} />
+      <Route path="/admin/fotos" component={() => <LazyRoute component={AdminRoomPhotos} />} />
+      <Route path="/admin/fotos/upload" component={() => <LazyRoute component={PhotoUpload} />} />
+      <Route path="/admin/bloqueios" component={() => <LazyRoute component={BlockedDates} />} />
+      <Route path="/admin/fotos-upload" component={() => <LazyRoute component={RoomPhotosUpload} />} />
+      
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

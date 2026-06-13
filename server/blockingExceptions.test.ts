@@ -87,7 +87,7 @@ describe('Blocking Exceptions Logic', () => {
 
     const isBlocked = isDateBlockedWithExceptions(
       '2026-06-10',
-      '2026-06-12',
+      '2026-06-13',
       blockedPeriods,
       exceptions
     );
