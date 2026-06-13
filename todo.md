@@ -466,8 +466,8 @@
 - [x] Build otimizado e funcionando
 
 ## Fase 53: Adicionar Opção "Salvar como Nova Reserva"
-- [x] Adicionar botão "Salvar como nova reserva" em EditBooking
-- [x] Adicionar modal para dados do novo hóspede
+- [x] Adicionar botão "Salvar como nova reserva" em AdminDashboard.tsx (página de editar reserva)
+- [x] Implementar modal para dados do novo hóspede
 - [x] Implementar lógica para criar nova reserva com dados da anterior
 - [x] Testar fluxo completo
-- [x] Todos os 47 testes passando
+- [x] Todos os 47 testes continuam passando

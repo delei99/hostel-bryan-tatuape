@@ -46,6 +46,7 @@ export default function Booking() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<any>(null);
   const [reservationId, setReservationId] = useState<number | null>(null);
+
   
   // Atualizar roomId se vier da URL
   React.useEffect(() => {
@@ -259,6 +260,7 @@ export default function Booking() {
       setIsSubmitting(false);
     }
   };
+
 
   const generateMessage = () => {
     if (!bookingSuccess) return "";

@@ -26,6 +26,15 @@ export default function AdminDashboard() {
   const [isEditingSubmitting, setIsEditingSubmitting] = useState(false);
   const [deletingBookingId, setDeletingBookingId] = useState<number | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showSaveAsNewModal, setShowSaveAsNewModal] = useState(false);
+  const [newGuestData, setNewGuestData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    cpf: "",
+    nationality: "",
+  });
 
   const updateEditFormData = (field: string, value: any) => {
     setEditFormData((prev: any) => ({
@@ -108,6 +117,26 @@ export default function AdminDashboard() {
       `Obrigado!`;
   };
 
+  const createNewBooking = trpc.bookings.create.useMutation({
+    onSuccess: () => {
+      toast.success("Nova reserva criada com sucesso!");
+      setShowSaveAsNewModal(false);
+      setEditingBooking(null);
+      setNewGuestData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        cpf: "",
+        nationality: "",
+      });
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao criar nova reserva");
+    },
+  });
+
   const updateBooking = trpc.bookings.update.useMutation({
     onSuccess: async (result) => {
       toast.success("Reserva atualizada com sucesso!");
@@ -140,6 +169,54 @@ export default function AdminDashboard() {
   });
 
   // Nota: Atualização de status de reserva em desenvolvimento
+  const handleSaveAsNewBooking = async () => {
+    if (!newGuestData.firstName || !newGuestData.lastName || !newGuestData.email || !newGuestData.phone) {
+      toast.error("Por favor, preencha todos os campos obrigatórios");
+      return;
+    }
+
+    setIsEditingSubmitting(true);
+
+    try {
+      const [inYear, inMonth, inDay] = editFormData.checkInDate.split("-").map(Number);
+      const [outYear, outMonth, outDay] = editFormData.checkOutDate.split("-").map(Number);
+      const checkIn = new Date(inYear, inMonth - 1, inDay);
+      const checkOut = new Date(outYear, outMonth - 1, outDay);
+      const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+      
+      const PRICE_PER_NIGHT = 8000;
+      const CLEANING_FEE = 700;
+      const subtotal = nights * PRICE_PER_NIGHT;
+      const totalPrice = subtotal + CLEANING_FEE;
+
+      await createNewBooking.mutateAsync({
+        firstName: newGuestData.firstName,
+        lastName: newGuestData.lastName,
+        email: newGuestData.email,
+        phone: newGuestData.phone,
+        cpf: newGuestData.cpf,
+        nationality: newGuestData.nationality,
+        roomId: editFormData.roomId,
+        checkInDate: editFormData.checkInDate,
+        checkOutDate: editFormData.checkOutDate,
+        checkInTime: editFormData.checkInTime || "14:00",
+        checkOutTime: editFormData.checkOutTime || "12:00",
+        numberOfGuests: editFormData.numberOfGuests?.toString() || "1",
+        dailyType: "individual",
+        subtotal: subtotal,
+        discountPercentage: 0,
+        discountAmount: 0,
+        cleaningFee: CLEANING_FEE,
+        totalPrice: totalPrice,
+        specialRequests: editFormData.specialRequests || "",
+      });
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao criar nova reserva");
+    } finally {
+      setIsEditingSubmitting(false);
+    }
+  };
+
   const handleUpdateStatus = () => {
     toast.info("Atualização de status em desenvolvimento");
   };
@@ -736,6 +813,14 @@ export default function AdminDashboard() {
                     )}
                   </Button>
                   <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowSaveAsNewModal(true)}
+                    disabled={isEditingSubmitting || updateBooking.isPending}
+                  >
+                    Salvar como nova
+                  </Button>
+                  <Button
                     onClick={() => setEditingBooking(null)}
                     variant="outline"
                     disabled={isEditingSubmitting || updateBooking.isPending}
@@ -778,6 +863,91 @@ export default function AdminDashboard() {
                     Cancelar
                   </Button>
                 </div>
+              </div>
+            </Card>
+          </div>
+        )}
+        {/* Modal para salvar como nova reserva */}
+        {showSaveAsNewModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-md p-6">
+              <h2 className="text-2xl font-bold mb-4">Dados do Novo Hóspede</h2>
+              <div className="space-y-4 mb-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="newFirstName">Nome *</Label>
+                    <Input
+                      id="newFirstName"
+                      value={newGuestData.firstName}
+                      onChange={(e) => setNewGuestData(prev => ({ ...prev, firstName: e.target.value }))}
+                      placeholder="Nome"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="newLastName">Sobrenome *</Label>
+                    <Input
+                      id="newLastName"
+                      value={newGuestData.lastName}
+                      onChange={(e) => setNewGuestData(prev => ({ ...prev, lastName: e.target.value }))}
+                      placeholder="Sobrenome"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="newEmail">Email *</Label>
+                  <Input
+                    id="newEmail"
+                    type="email"
+                    value={newGuestData.email}
+                    onChange={(e) => setNewGuestData(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="newPhone">Telefone *</Label>
+                  <Input
+                    id="newPhone"
+                    value={newGuestData.phone}
+                    onChange={(e) => setNewGuestData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="(11) 99999-9999"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="newCpf">CPF</Label>
+                    <Input
+                      id="newCpf"
+                      value={newGuestData.cpf}
+                      onChange={(e) => setNewGuestData(prev => ({ ...prev, cpf: e.target.value }))}
+                      placeholder="000.000.000-00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="newNationality">Nacionalidade</Label>
+                    <Input
+                      id="newNationality"
+                      value={newGuestData.nationality}
+                      onChange={(e) => setNewGuestData(prev => ({ ...prev, nationality: e.target.value }))}
+                      placeholder="Brasileira"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowSaveAsNewModal(false)}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleSaveAsNewBooking}
+                  disabled={isEditingSubmitting}
+                  className="flex-1"
+                >
+                  {isEditingSubmitting ? "Criando..." : "Criar Nova Reserva"}
+                </Button>
               </div>
             </Card>
           </div>

@@ -103,16 +103,6 @@ export default function EditBooking() {
   };
 
   const updateBooking = trpc.bookings.update.useMutation();
-  const createBooking = trpc.bookings.create.useMutation();
-  const [showSaveAsNewModal, setShowSaveAsNewModal] = useState(false);
-  const [newGuestData, setNewGuestData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    cpf: "",
-    nationality: "",
-  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,62 +138,6 @@ export default function EditBooking() {
     }
   };
 
-  const handleSaveAsNewBooking = async () => {
-    if (!newGuestData.firstName || !newGuestData.lastName || !newGuestData.email || !newGuestData.phone) {
-      toast.error("Por favor, preencha todos os campos obrigatórios");
-      return;
-    }
-
-    if (isDateBlocked(formData.checkInDate, formData.checkOutDate)) {
-      toast.error("As datas selecionadas estão bloqueadas!");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const [inYear, inMonth, inDay] = formData.checkInDate.split('-').map(Number);
-      const [outYear, outMonth, outDay] = formData.checkOutDate.split('-').map(Number);
-      const checkIn = new Date(inYear, inMonth - 1, inDay);
-      const checkOut = new Date(outYear, outMonth - 1, outDay);
-      const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-      
-      const PRICE_PER_NIGHT = 8000;
-      const CLEANING_FEE = 700;
-      const subtotal = nights * PRICE_PER_NIGHT;
-      const totalPrice = subtotal + CLEANING_FEE;
-
-      await createBooking.mutateAsync({
-        firstName: newGuestData.firstName,
-        lastName: newGuestData.lastName,
-        email: newGuestData.email,
-        phone: newGuestData.phone,
-        cpf: newGuestData.cpf,
-        nationality: newGuestData.nationality,
-        roomId: parseInt(formData.roomId),
-        checkInDate: formData.checkInDate,
-        checkOutDate: formData.checkOutDate,
-        checkInTime: "14:00",
-        checkOutTime: "12:00",
-        numberOfGuests: formData.numberOfGuests,
-        dailyType: "individual",
-        subtotal: subtotal,
-        discountPercentage: 0,
-        discountAmount: 0,
-        cleaningFee: CLEANING_FEE,
-        totalPrice: totalPrice,
-        specialRequests: formData.specialRequests,
-      });
-
-      toast.success("Nova reserva criada com sucesso!");
-      setShowSaveAsNewModal(false);
-      setUpdateSuccess(true);
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao criar nova reserva");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   if (isLoadingBooking) {
     return (
@@ -369,104 +303,14 @@ export default function EditBooking() {
               <Link href="/">
                 <Button variant="outline">Cancelar</Button>
               </Link>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowSaveAsNewModal(true)}
-              >
-                Salvar como nova reserva
-              </Button>
+
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Atualizando..." : "Atualizar Reserva"}
               </Button>
             </div>
           </form>
 
-          {/* Modal para salvar como nova reserva */}
-          {showSaveAsNewModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <Card className="w-full max-w-md p-6">
-                <h2 className="text-2xl font-bold mb-4">Dados do Novo Hóspede</h2>
-                <div className="space-y-4 mb-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="newFirstName">Nome *</Label>
-                      <Input
-                        id="newFirstName"
-                        value={newGuestData.firstName}
-                        onChange={(e) => setNewGuestData(prev => ({ ...prev, firstName: e.target.value }))}
-                        placeholder="Nome"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="newLastName">Sobrenome *</Label>
-                      <Input
-                        id="newLastName"
-                        value={newGuestData.lastName}
-                        onChange={(e) => setNewGuestData(prev => ({ ...prev, lastName: e.target.value }))}
-                        placeholder="Sobrenome"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="newEmail">Email *</Label>
-                    <Input
-                      id="newEmail"
-                      type="email"
-                      value={newGuestData.email}
-                      onChange={(e) => setNewGuestData(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="email@exemplo.com"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="newPhone">Telefone *</Label>
-                    <Input
-                      id="newPhone"
-                      value={newGuestData.phone}
-                      onChange={(e) => setNewGuestData(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="(11) 99999-9999"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="newCpf">CPF</Label>
-                      <Input
-                        id="newCpf"
-                        value={newGuestData.cpf}
-                        onChange={(e) => setNewGuestData(prev => ({ ...prev, cpf: e.target.value }))}
-                        placeholder="000.000.000-00"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="newNationality">Nacionalidade</Label>
-                      <Input
-                        id="newNationality"
-                        value={newGuestData.nationality}
-                        onChange={(e) => setNewGuestData(prev => ({ ...prev, nationality: e.target.value }))}
-                        placeholder="Brasileira"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowSaveAsNewModal(false)}
-                    className="flex-1"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={handleSaveAsNewBooking}
-                    disabled={isSubmitting}
-                    className="flex-1"
-                  >
-                    {isSubmitting ? "Criando..." : "Criar Nova Reserva"}
-                  </Button>
-                </div>
-              </Card>
-            </div>
-          )}
+
         </Card>
       </div>
     </div>
