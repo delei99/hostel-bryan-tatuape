@@ -360,7 +360,61 @@ export const appRouter = router({
           });
         }
       }),
+    }),
+
+  homeImages: router({
+    list: publicProcedure.query(async () => {
+      const { getHomeImages } = await import("./db");
+      return getHomeImages();
+    }),
+    
+    getByPosition: publicProcedure
+      .input(z.object({ position: z.enum(["left", "right"]) }))
+      .query(async ({ input }) => {
+        const { getHomeImageByPosition } = await import("./db");
+        return getHomeImageByPosition(input.position);
+      }),
+    
+    create: adminProcedure
+      .input(z.object({
+        imageUrl: z.string(),
+        position: z.enum(["left", "right"]),
+        title: z.string().optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { createHomeImage } = await import("./db");
+        return createHomeImage({
+          imageUrl: input.imageUrl,
+          position: input.position,
+          title: input.title,
+          description: input.description,
+          uploadedBy: ctx.user.id,
+        });
+      }),
+    
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        imageUrl: z.string().optional(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { updateHomeImage } = await import("./db");
+        return updateHomeImage(input.id, {
+          imageUrl: input.imageUrl,
+          title: input.title,
+          description: input.description,
+        });
+      }),
+    
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteHomeImage } = await import("./db");
+        return deleteHomeImage(input.id);
+      }),
   }),
 });
-
 export type AppRouter = typeof appRouter;

@@ -491,3 +491,18 @@
 - [x] Incluir desconto e observações na mensagem
 - [x] Testar fluxo completo
 - [x] Todos os 47 testes continuam passando
+
+## Fase 56: Adicionar Upload de Imagens para Página Principal
+- [ ] Criar tabela no banco de dados para armazenar URLs de imagens da home
+- [ ] Implementar endpoint tRPC para upload de imagens
+- [ ] Adicionar interface de upload no painel administrativo
+- [ ] Exibir duas imagens lado a lado na página principal
+- [ ] Testar fluxo completo
+
+## Fase 56: Adicionar Upload de Imagens para Página Principal
+- [x] Criar tabela homeImages no banco de dados
+- [x] Implementar funções de CRUD em db.ts
+- [x] Adicionar procedures tRPC para homeImages
+- [x] Atualizar Home.tsx para exibir duas imagens lado a lado
+- [x] Testar fluxo completo
+- [x] Todos os 47 testes continuam passando

@@ -197,3 +197,20 @@ export const blockingExceptions = mysqlTable("blockingExceptions", {
 
 export type BlockingException = typeof blockingExceptions.$inferSelect;
 export type InsertBlockingException = typeof blockingExceptions.$inferInsert;
+
+/**
+ * Tabela de imagens da página principal
+ */
+export const homeImages = mysqlTable("homeImages", {
+  id: int("id").autoincrement().primaryKey(),
+  imageUrl: text("imageUrl").notNull(),
+  position: mysqlEnum("position", ["left", "right"]).notNull(),
+  title: varchar("title", { length: 255 }),
+  description: text("description"),
+  uploadedBy: int("uploadedBy").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type HomeImage = typeof homeImages.$inferSelect;
+export type InsertHomeImage = typeof homeImages.$inferInsert;

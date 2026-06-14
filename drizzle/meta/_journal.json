@@ -127,6 +127,13 @@
       "when": 1777894258740,
       "tag": "0017_confused_metal_master",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1781407338003,
+      "tag": "0018_white_marvel_zombies",
+      "breakpoints": true
     }
   ]
 }

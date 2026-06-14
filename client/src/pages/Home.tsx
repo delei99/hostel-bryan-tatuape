@@ -15,6 +15,9 @@ export default function Home() {
   // Buscar fotos reais dos quartos
   const { data: rooms } = trpc.rooms.list.useQuery();
   
+  // Buscar imagens da página principal
+  const { data: homeImagesList } = trpc.homeImages.list.useQuery();
+  
   // Fotos padrão de exemplo como fallback
   const defaultGalleryImages = [
     { id: 1, title: "Recepção", alt: "Recepção elegante do hostel" },
@@ -129,12 +132,35 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-accent/20 to-secondary/20 rounded-2xl p-8 h-screen md:h-96 flex items-center justify-center overflow-hidden">
-              <img 
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663547970962/iAcfZDXDNVkXabyqU5LtFN/IMG_20260416_154525_d0eaf8de.jpg" 
-                alt="Fachada do Hostel Bryan Tatuapé"
-                className="w-full h-full object-contain"
-              />
+            <div className="grid md:grid-cols-2 gap-4">
+              {homeImagesList && homeImagesList.length > 0 ? (
+                homeImagesList.map((img) => (
+                  <div key={img.id} className="bg-gradient-to-br from-accent/20 to-secondary/20 rounded-2xl p-4 h-48 md:h-64 flex items-center justify-center overflow-hidden">
+                    <img 
+                      src={img.imageUrl} 
+                      alt={img.title || "Imagem do hostel"}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="bg-gradient-to-br from-accent/20 to-secondary/20 rounded-2xl p-4 h-48 md:h-64 flex items-center justify-center overflow-hidden">
+                    <img 
+                      src="https://d2xsxph8kpxj0f.cloudfront.net/310519663547970962/iAcfZDXDNVkXabyqU5LtFN/IMG_20260416_154525_d0eaf8de.jpg" 
+                      alt="Fachada do Hostel Bryan Tatuapé"
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  </div>
+                  <div className="bg-gradient-to-br from-accent/20 to-secondary/20 rounded-2xl p-4 h-48 md:h-64 flex items-center justify-center overflow-hidden">
+                    <img 
+                      src="https://d2xsxph8kpxj0f.cloudfront.net/310519663547970962/iAcfZDXDNVkXabyqU5LtFN/IMG_20260416_154525_d0eaf8de.jpg" 
+                      alt="Fachada do Hostel Bryan Tatuapé"
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

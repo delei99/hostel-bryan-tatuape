@@ -1,6 +1,6 @@
 import { and, desc, eq, gt, lt, or, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog, failedUnblockAttempts, InsertFailedUnblockAttempt, FailedUnblockAttempt, blockingExceptions, InsertBlockingException, BlockingException } from "../drizzle/schema";
+import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog, failedUnblockAttempts, InsertFailedUnblockAttempt, FailedUnblockAttempt, blockingExceptions, InsertBlockingException, BlockingException, homeImages, InsertHomeImage, HomeImage } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -1090,4 +1090,69 @@ export async function getBlockingExceptionsByRoom(roomId: number): Promise<Block
     .select()
     .from(blockingExceptions)
     .where(inArray(blockingExceptions.blockedDateId, blockedDateIds));
+}
+
+
+// ============================================================================
+// Home Images Functions
+// ============================================================================
+
+export async function getHomeImages(): Promise<HomeImage[]> {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    return await db.select().from(homeImages).orderBy(homeImages.position);
+  } catch (error) {
+    console.error("[Database] Error fetching home images:", error);
+    return [];
+  }
+}
+
+export async function createHomeImage(data: InsertHomeImage): Promise<HomeImage | null> {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const result = await db.insert(homeImages).values(data);
+    const insertedId = result[0].insertId;
+    return await db.select().from(homeImages).where(eq(homeImages.id, Number(insertedId))).then(rows => rows[0] || null);
+  } catch (error) {
+    console.error("[Database] Error creating home image:", error);
+    return null;
+  }
+}
+
+export async function updateHomeImage(id: number, data: Partial<InsertHomeImage>): Promise<HomeImage | null> {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    await db.update(homeImages).set(data).where(eq(homeImages.id, id));
+    return await db.select().from(homeImages).where(eq(homeImages.id, id)).then(rows => rows[0] || null);
+  } catch (error) {
+    console.error("[Database] Error updating home image:", error);
+    return null;
+  }
+}
+
+export async function deleteHomeImage(id: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    await db.delete(homeImages).where(eq(homeImages.id, id));
+    return true;
+  } catch (error) {
+    console.error("[Database] Error deleting home image:", error);
+    return false;
+  }
+}
+
+export async function getHomeImageByPosition(position: "left" | "right"): Promise<HomeImage | null> {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const result = await db.select().from(homeImages).where(eq(homeImages.position, position));
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Database] Error fetching home image by position:", error);
+    return null;
+  }
 }
