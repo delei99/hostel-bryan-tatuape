@@ -1273,18 +1273,37 @@ export default function AdminDashboard() {
                       if (!homeImageFile) return;
                       setIsUploadingHomeImage(true);
                       try {
-                        const formData = new FormData();
-                        formData.append('file', homeImageFile);
-                        formData.append('position', homeImagePosition);
-                        // Aqui você pode fazer o upload para o servidor
-                        // Por enquanto, apenas limpar o estado
-                        setHomeImageFile(null);
-                        setHomeImagePreview(null);
-                        setShowHomeImagesModal(false);
-                        toast.success('Imagem enviada com sucesso!');
+                        // Converter arquivo para base64 para envio
+                        const reader = new FileReader();
+                        reader.readAsDataURL(homeImageFile);
+                        
+                        reader.onload = async () => {
+                          try {
+                            const base64Data = reader.result as string;
+                            
+                            // Salvar imagem no banco de dados via tRPC
+                            await trpc.homeImages.create.useMutation().mutateAsync({
+                              imageUrl: base64Data,
+                              position: homeImagePosition,
+                            });
+                            
+                            setHomeImageFile(null);
+                            setHomeImagePreview(null);
+                            setShowHomeImagesModal(false);
+                            toast.success('Imagem enviada com sucesso!');
+                            
+                            // Invalidar cache para atualizar Home
+                            await trpc.useUtils().homeImages.list.invalidate();
+                          } catch (error) {
+                            console.error('Erro ao enviar imagem:', error);
+                            toast.error('Erro ao enviar imagem');
+                          } finally {
+                            setIsUploadingHomeImage(false);
+                          }
+                        };
                       } catch (error) {
-                        toast.error('Erro ao enviar imagem');
-                      } finally {
+                        console.error('Erro ao processar imagem:', error);
+                        toast.error('Erro ao processar imagem');
                         setIsUploadingHomeImage(false);
                       }
                     }}
