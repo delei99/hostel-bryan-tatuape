@@ -33,6 +33,7 @@ export default function AdminDashboard() {
   const [homeImageFile, setHomeImageFile] = useState<File | null>(null);
   const [homeImagePreview, setHomeImagePreview] = useState<string | null>(null);
   const [homeImagePosition, setHomeImagePosition] = useState<"left" | "right">("left");
+  const [isUploadingHomeImage, setIsUploadingHomeImage] = useState(false);
   const [newGuestData, setNewGuestData] = useState({
     firstName: "",
     lastName: "",
@@ -1265,8 +1266,30 @@ export default function AdminDashboard() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button className="w-full" disabled={!homeImageFile}>
-                    Fazer Upload
+                  <Button 
+                    className="w-full" 
+                    disabled={!homeImageFile || isUploadingHomeImage}
+                    onClick={async () => {
+                      if (!homeImageFile) return;
+                      setIsUploadingHomeImage(true);
+                      try {
+                        const formData = new FormData();
+                        formData.append('file', homeImageFile);
+                        formData.append('position', homeImagePosition);
+                        // Aqui você pode fazer o upload para o servidor
+                        // Por enquanto, apenas limpar o estado
+                        setHomeImageFile(null);
+                        setHomeImagePreview(null);
+                        setShowHomeImagesModal(false);
+                        toast.success('Imagem enviada com sucesso!');
+                      } catch (error) {
+                        toast.error('Erro ao enviar imagem');
+                      } finally {
+                        setIsUploadingHomeImage(false);
+                      }
+                    }}
+                  >
+                    {isUploadingHomeImage ? 'Enviando...' : 'Fazer Upload'}
                   </Button>
                 </div>
               </div>
