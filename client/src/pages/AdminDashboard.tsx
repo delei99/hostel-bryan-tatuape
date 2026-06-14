@@ -226,62 +226,94 @@ export default function AdminDashboard() {
     }
   };
 
-  const generateReceiptPDF = (booking: any) => {
+    const generateReceiptPDF = (booking: any) => {
     try {
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      let yPosition = 20;
+      
+      // Fundo verde
+      doc.setFillColor(34, 139, 34);
+      doc.rect(0, 0, pageWidth, pageHeight, 'F');
+      
+      // Texto branco
+      doc.setTextColor(255, 255, 255);
+      
+      let yPosition = 15;
 
-      doc.setFontSize(20);
-      doc.text("COMPROVANTE DE RESERVA", pageWidth / 2, yPosition, { align: "center" });
-      yPosition += 15;
+      // Título
+      doc.setFontSize(16);
+      doc.setFont(undefined as any, 'bold');
+      doc.text("Reserva Confirmada - Hostel Bryan Tatuapé", 15, yPosition);
+      yPosition += 12;
 
-      doc.setFontSize(12);
-      doc.text(`Código: ${booking.booking.confirmationCode}`, 20, yPosition);
+      // Número e Código
+      doc.setFontSize(11);
+      doc.setFont(undefined as any, 'normal');
+      doc.text(`Número da Reserva: ${booking.booking.id}`, 15, yPosition);
+      yPosition += 6;
+      doc.text(`Código: ${booking.booking.confirmationCode}`, 15, yPosition);
       yPosition += 10;
 
-      doc.setFontSize(11);
-      doc.text("DADOS DO HÓSPEDE", 20, yPosition);
-      yPosition += 7;
+      // Hóspede
       doc.setFontSize(10);
-      doc.text(`Nome: ${booking.guest.firstName} ${booking.guest.lastName}`, 20, yPosition);
+      doc.text(`Hóspede: ${booking.guest.firstName} ${booking.guest.lastName}`, 15, yPosition);
       yPosition += 5;
-      doc.text(`Email: ${booking.guest.email}`, 20, yPosition);
+      doc.text(`Email: ${booking.guest.email}`, 15, yPosition);
       yPosition += 5;
-      doc.text(`Telefone: ${booking.guest.phone}`, 20, yPosition);
+      doc.text(`Telefone: ${booking.guest.phone}`, 15, yPosition);
+      yPosition += 5;
+      doc.text(`CPF: ${booking.guest.cpf || "N/A"}`, 15, yPosition);
+      yPosition += 5;
+      doc.text(`Nacionalidade: ${booking.guest.nationality || "N/A"}`, 15, yPosition);
       yPosition += 10;
 
-      doc.setFontSize(11);
-      doc.text("DADOS DA RESERVA", 20, yPosition);
-      yPosition += 7;
-      doc.setFontSize(10);
-      doc.text(`Check-in: ${new Date(booking.booking.checkInDate).toLocaleDateString('pt-BR')} às ${booking.booking.checkInTime}`, 20, yPosition);
+      // Quarto e Período
+      const checkInDate = new Date(booking.booking.checkInDate);
+      const checkOutDate = new Date(booking.booking.checkOutDate);
+      const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      doc.text(`Quarto: ${booking.booking.room?.number || "N/A"}`, 15, yPosition);
       yPosition += 5;
-      doc.text(`Check-out: ${new Date(booking.booking.checkOutDate).toLocaleDateString('pt-BR')} às ${booking.booking.checkOutTime}`, 20, yPosition);
+      doc.text(`Período: ${checkInDate.toLocaleDateString('pt-BR')} a ${checkOutDate.toLocaleDateString('pt-BR')} (${nights} ${nights === 1 ? 'dia' : 'dias'})`, 15, yPosition);
       yPosition += 5;
-      doc.text(`Quarto: ${booking.booking.room?.number || "N/A"}`, 20, yPosition);
+      doc.text(`Check-in: ${checkInDate.toLocaleDateString('pt-BR')} às ${booking.booking.checkInTime}`, 15, yPosition);
       yPosition += 5;
-      doc.text(`Hóspedes: ${booking.booking.numberOfGuests}`, 20, yPosition);
+      doc.text(`Check-out: ${checkOutDate.toLocaleDateString('pt-BR')} às ${booking.booking.checkOutTime}`, 15, yPosition);
+      yPosition += 5;
+      doc.text(`Hóspedes: ${booking.booking.numberOfGuests} ${booking.booking.numberOfGuests === 1 ? 'pessoa' : 'pessoas'}`, 15, yPosition);
       yPosition += 10;
 
-      doc.setFontSize(11);
-      doc.text("VALORES", 20, yPosition);
-      yPosition += 7;
-      doc.setFontSize(10);
+      // Valores
       const subtotal = booking.booking.subtotal / 100;
+      const discount = booking.booking.discountAmount / 100;
       const cleaningFee = booking.booking.cleaningFee / 100;
       const total = booking.booking.totalPrice / 100;
-      doc.text(`Subtotal: R$ ${subtotal.toFixed(2)}`, 20, yPosition);
+      
+      doc.text("Valores:", 15, yPosition);
       yPosition += 5;
-      doc.text(`Taxa de limpeza: R$ ${cleaningFee.toFixed(2)}`, 20, yPosition);
+      doc.text(`Subtotal: R$ ${subtotal.toFixed(2)}`, 15, yPosition);
       yPosition += 5;
-      doc.setFontSize(12);
-      doc.text(`TOTAL: R$ ${total.toFixed(2)}`, 20, yPosition);
-      yPosition += 15;
+      
+      if (discount > 0) {
+        doc.text(`Desconto (${booking.booking.discountPercentage}%): -R$ ${discount.toFixed(2)}`, 15, yPosition);
+        yPosition += 5;
+      }
+      
+      doc.text(`Limpeza: R$ ${cleaningFee.toFixed(2)}`, 15, yPosition);
+      yPosition += 5;
+      doc.setFont(undefined as any, 'bold');
+      doc.text(`Total: R$ ${total.toFixed(2)}`, 15, yPosition);
+      yPosition += 10;
 
-      doc.setFontSize(9);
-      doc.text("Obrigado por escolher o Hostel Bryan Tatuapé!", pageWidth / 2, pageHeight - 20, { align: "center" });
+      // Observações
+      if (booking.booking.specialRequests) {
+        doc.setFont(undefined as any, 'normal');
+        doc.text("Observações:", 15, yPosition);
+        yPosition += 5;
+        const splitText = doc.splitTextToSize(booking.booking.specialRequests, pageWidth - 30);
+        doc.text(splitText, 15, yPosition);
+      }
 
       return doc;
     } catch (error) {
@@ -292,9 +324,41 @@ export default function AdminDashboard() {
 
   const handleSendWhatsApp = (booking: any) => {
     try {
-      const message = `Olá ${booking.guest.firstName}!\n\nSua reserva foi confirmada!\n\nCódigo: ${booking.booking.confirmationCode}\nCheck-in: ${new Date(booking.booking.checkInDate).toLocaleDateString('pt-BR')}\nCheck-out: ${new Date(booking.booking.checkOutDate).toLocaleDateString('pt-BR')}\nTotal: R$ ${(booking.booking.totalPrice / 100).toFixed(2)}`;
+      const checkInDate = new Date(booking.booking.checkInDate);
+      const checkOutDate = new Date(booking.booking.checkOutDate);
+      const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+      const subtotal = booking.booking.subtotal / 100;
+      const discount = booking.booking.discountAmount / 100;
+      const cleaningFee = booking.booking.cleaningFee / 100;
+      const total = booking.booking.totalPrice / 100;
+      
+      let message = `*Reserva Confirmada - Hostel Bryan Tatuapé*\n\n`;
+      message += `*Número da Reserva:* ${booking.booking.id}\n`;
+      message += `*Código:* ${booking.booking.confirmationCode}\n\n`;
+      message += `*Hóspede:* ${booking.guest.firstName} ${booking.guest.lastName}\n`;
+      message += `*Email:* ${booking.guest.email}\n`;
+      message += `*Telefone:* ${booking.guest.phone}\n`;
+      message += `*CPF:* ${booking.guest.cpf || "N/A"}\n`;
+      message += `*Nacionalidade:* ${booking.guest.nationality || "N/A"}\n\n`;
+      message += `*Quarto:* ${booking.booking.room?.number || "N/A"}\n`;
+      message += `*Período:* ${checkInDate.toLocaleDateString('pt-BR')} a ${checkOutDate.toLocaleDateString('pt-BR')} (${nights} ${nights === 1 ? 'dia' : 'dias'})\n`;
+      message += `*Check-in:* ${checkInDate.toLocaleDateString('pt-BR')} às ${booking.booking.checkInTime}\n`;
+      message += `*Check-out:* ${checkOutDate.toLocaleDateString('pt-BR')} às ${booking.booking.checkOutTime}\n`;
+      message += `*Hóspedes:* ${booking.booking.numberOfGuests} ${booking.booking.numberOfGuests === 1 ? 'pessoa' : 'pessoas'}\n\n`;
+      message += `*Valores:*\n`;
+      message += `Subtotal: R$ ${subtotal.toFixed(2)}\n`;
+      if (discount > 0) {
+        message += `Desconto (${booking.booking.discountPercentage}%): -R$ ${discount.toFixed(2)}\n`;
+      }
+      message += `Limpeza: R$ ${cleaningFee.toFixed(2)}\n`;
+      message += `*Total: R$ ${total.toFixed(2)}*\n\n`;
+      if (booking.booking.specialRequests) {
+        message += `*Observações:* ${booking.booking.specialRequests}\n\n`;
+      }
+      message += `Aguardo confirmação!`;
+      
       const encodedMessage = encodeURIComponent(message);
-      const phoneNumber = booking.guest.phone.replace(/\D/g, '');
+      const phoneNumber = booking.guest.phone.replace(/[^0-9]/g, '');
       const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
       window.open(whatsappUrl, "_blank");
     } catch (error) {

@@ -483,3 +483,11 @@
 - [x] Implementar função de impressão
 - [x] Testar fluxo completo
 - [x] Todos os 47 testes continuam passando
+
+## Fase 55: Formatar Recibo com Fundo Verde e Mensagem WhatsApp
+- [x] Atualizar generateReceiptPDF com fundo verde e texto branco
+- [x] Adicionar todos os campos do recibo (número, código, hóspede, período, valores)
+- [x] Atualizar handleSendWhatsApp com mensagem formatada
+- [x] Incluir desconto e observações na mensagem
+- [x] Testar fluxo completo
+- [x] Todos os 47 testes continuam passando
