@@ -29,6 +29,10 @@ export default function AdminDashboard() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showSaveAsNewModal, setShowSaveAsNewModal] = useState(false);
   const [useCurrentGuestData, setUseCurrentGuestData] = useState(true);
+  const [showHomeImagesModal, setShowHomeImagesModal] = useState(false);
+  const [homeImageFile, setHomeImageFile] = useState<File | null>(null);
+  const [homeImagePreview, setHomeImagePreview] = useState<string | null>(null);
+  const [homeImagePosition, setHomeImagePosition] = useState<"left" | "right">("left");
   const [newGuestData, setNewGuestData] = useState({
     firstName: "",
     lastName: "",
@@ -541,6 +545,12 @@ export default function AdminDashboard() {
                 Desbloquear Datas
               </Button>
             </Link>
+            <Button 
+              onClick={() => setShowHomeImagesModal(!showHomeImagesModal)}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              Imagens da Home
+            </Button>
           </div>
         </div>
 
@@ -1210,6 +1220,60 @@ export default function AdminDashboard() {
             </Card>
           </div>
         )}
+
+        {/* Modal de Imagens da Home */}
+        {showHomeImagesModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-md max-h-96 overflow-y-auto">
+              <div className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-foreground">Gerenciar Imagens da Home</h3>
+                  <button onClick={() => setShowHomeImagesModal(false)} className="text-foreground/50 hover:text-foreground">✕</button>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="home-image-file">Selecionar Imagem</Label>
+                    <Input
+                      id="home-image-file"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setHomeImageFile(file);
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            setHomeImagePreview(event.target?.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </div>
+                  {homeImagePreview && (
+                    <img src={homeImagePreview} alt="Preview" className="w-full h-32 object-cover rounded" />
+                  )}
+                  <div>
+                    <Label htmlFor="home-image-position">Posição</Label>
+                    <Select value={homeImagePosition} onValueChange={(value) => setHomeImagePosition(value as "left" | "right")}>
+                      <SelectTrigger id="home-image-position">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="left">Esquerda</SelectItem>
+                        <SelectItem value="right">Direita</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button className="w-full" disabled={!homeImageFile}>
+                    Fazer Upload
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
       </div>
     </DashboardLayout>
   );

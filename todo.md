@@ -506,3 +506,18 @@
 - [x] Atualizar Home.tsx para exibir duas imagens lado a lado
 - [x] Testar fluxo completo
 - [x] Todos os 47 testes continuam passando
+
+## Fase 57: Criar Interface de Upload no Admin
+- [x] Adicionar botão "Imagens da Home" no AdminDashboard
+- [x] Implementar modal de upload com preview em tempo real
+- [x] Adicionar seleção de posição (left/right)
+- [x] Integrar com tRPC para salvar imagens
+- [x] Testar fluxo completo
+- [x] Todos os 47 testes continuam passando
+
+## Fase 58: Implementar Compressão de Imagens
+- [x] Instalar Sharp para otimização de imagens
+- [x] Criar função de compressão no backend (imageCompression.ts)
+- [x] Adicionar funções de compressão e metadata
+- [x] Pronto para integração com upload de imagens
+- [x] Todos os 47 testes continuam passando
