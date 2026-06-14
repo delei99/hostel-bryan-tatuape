@@ -473,3 +473,13 @@
 - [x] Implementar lógica para criar nova reserva com dados selecionados
 - [x] Testar fluxo completo
 - [x] Todos os 47 testes continuam passando
+
+## Fase 54: Adicionar Colunas de Ação na Tabela de Reservas (WhatsApp, Imprimir, PDF)
+- [x] Adicionar botão WhatsApp para enviar recibo e comprovante
+- [x] Adicionar botão Imprimir para imprimir recibo
+- [x] Adicionar botão PDF para gerar e baixar comprovante
+- [x] Implementar função de geração de PDF do comprovante
+- [x] Implementar função de envio via WhatsApp
+- [x] Implementar função de impressão
+- [x] Testar fluxo completo
+- [x] Todos os 47 testes continuam passando

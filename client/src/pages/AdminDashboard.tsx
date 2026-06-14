@@ -1,4 +1,3 @@
-import { useState, useMemo } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Calendar, Users, DollarSign, CheckCircle, Clock, X, Eye, Trash2 } from "lucide-react";
+import { Calendar, Users, DollarSign, CheckCircle, Clock, X, Eye, Trash2, MessageCircle, Printer, FileText } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
+import { useState, useMemo } from "react";
+import jsPDF from "jspdf";
 
 /**
  * Painel administrativo para gerenciar reservas
@@ -222,6 +223,106 @@ export default function AdminDashboard() {
       toast.error(error.message || "Erro ao criar nova reserva");
     } finally {
       setIsEditingSubmitting(false);
+    }
+  };
+
+  const generateReceiptPDF = (booking: any) => {
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      let yPosition = 20;
+
+      doc.setFontSize(20);
+      doc.text("COMPROVANTE DE RESERVA", pageWidth / 2, yPosition, { align: "center" });
+      yPosition += 15;
+
+      doc.setFontSize(12);
+      doc.text(`Código: ${booking.booking.confirmationCode}`, 20, yPosition);
+      yPosition += 10;
+
+      doc.setFontSize(11);
+      doc.text("DADOS DO HÓSPEDE", 20, yPosition);
+      yPosition += 7;
+      doc.setFontSize(10);
+      doc.text(`Nome: ${booking.guest.firstName} ${booking.guest.lastName}`, 20, yPosition);
+      yPosition += 5;
+      doc.text(`Email: ${booking.guest.email}`, 20, yPosition);
+      yPosition += 5;
+      doc.text(`Telefone: ${booking.guest.phone}`, 20, yPosition);
+      yPosition += 10;
+
+      doc.setFontSize(11);
+      doc.text("DADOS DA RESERVA", 20, yPosition);
+      yPosition += 7;
+      doc.setFontSize(10);
+      doc.text(`Check-in: ${new Date(booking.booking.checkInDate).toLocaleDateString('pt-BR')} às ${booking.booking.checkInTime}`, 20, yPosition);
+      yPosition += 5;
+      doc.text(`Check-out: ${new Date(booking.booking.checkOutDate).toLocaleDateString('pt-BR')} às ${booking.booking.checkOutTime}`, 20, yPosition);
+      yPosition += 5;
+      doc.text(`Quarto: ${booking.booking.room?.number || "N/A"}`, 20, yPosition);
+      yPosition += 5;
+      doc.text(`Hóspedes: ${booking.booking.numberOfGuests}`, 20, yPosition);
+      yPosition += 10;
+
+      doc.setFontSize(11);
+      doc.text("VALORES", 20, yPosition);
+      yPosition += 7;
+      doc.setFontSize(10);
+      const subtotal = booking.booking.subtotal / 100;
+      const cleaningFee = booking.booking.cleaningFee / 100;
+      const total = booking.booking.totalPrice / 100;
+      doc.text(`Subtotal: R$ ${subtotal.toFixed(2)}`, 20, yPosition);
+      yPosition += 5;
+      doc.text(`Taxa de limpeza: R$ ${cleaningFee.toFixed(2)}`, 20, yPosition);
+      yPosition += 5;
+      doc.setFontSize(12);
+      doc.text(`TOTAL: R$ ${total.toFixed(2)}`, 20, yPosition);
+      yPosition += 15;
+
+      doc.setFontSize(9);
+      doc.text("Obrigado por escolher o Hostel Bryan Tatuapé!", pageWidth / 2, pageHeight - 20, { align: "center" });
+
+      return doc;
+    } catch (error) {
+      toast.error("Erro ao gerar PDF");
+      return null;
+    }
+  };
+
+  const handleSendWhatsApp = (booking: any) => {
+    try {
+      const message = `Olá ${booking.guest.firstName}!\n\nSua reserva foi confirmada!\n\nCódigo: ${booking.booking.confirmationCode}\nCheck-in: ${new Date(booking.booking.checkInDate).toLocaleDateString('pt-BR')}\nCheck-out: ${new Date(booking.booking.checkOutDate).toLocaleDateString('pt-BR')}\nTotal: R$ ${(booking.booking.totalPrice / 100).toFixed(2)}`;
+      const encodedMessage = encodeURIComponent(message);
+      const phoneNumber = booking.guest.phone.replace(/\D/g, '');
+      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+      window.open(whatsappUrl, "_blank");
+    } catch (error) {
+      toast.error("Erro ao abrir WhatsApp");
+    }
+  };
+
+  const handlePrintReceipt = (booking: any) => {
+    try {
+      const doc = generateReceiptPDF(booking);
+      if (doc) {
+        doc.autoPrint();
+        window.open(doc.output("bloburi"));
+      }
+    } catch (error) {
+      toast.error("Erro ao imprimir");
+    }
+  };
+
+  const handleDownloadPDF = (booking: any) => {
+    try {
+      const doc = generateReceiptPDF(booking);
+      if (doc) {
+        doc.save(`comprovante-${booking.booking.confirmationCode}.pdf`);
+        toast.success("PDF baixado com sucesso");
+      }
+    } catch (error) {
+      toast.error("Erro ao baixar PDF");
     }
   };
 
@@ -516,6 +617,33 @@ export default function AdminDashboard() {
                           >
                             <Clock className="w-4 h-4" />
                             Editar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleSendWhatsApp(item)}
+                            className="flex items-center gap-1 text-green-600 hover:text-green-700"
+                            title="Enviar via WhatsApp"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePrintReceipt(item)}
+                            className="flex items-center gap-1"
+                            title="Imprimir recibo"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadPDF(item)}
+                            className="flex items-center gap-1"
+                            title="Baixar PDF"
+                          >
+                            <FileText className="w-4 h-4" />
                           </Button>
                           <Button
                             size="sm"
