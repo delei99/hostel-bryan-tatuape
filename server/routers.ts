@@ -186,7 +186,8 @@ export const appRouter = router({
       .input(z.object({ id: z.number(), password: z.string() }))
       .mutation(async ({ input }) => {
         const correctPassword = "Capacho@69";
-        if (input.password !== correctPassword) {
+        const inputPassword = input.password.trim();
+        if (inputPassword !== correctPassword) {
           throw new TRPCError({ code: "UNAUTHORIZED", message: "Senha incorreta" });
         }
 
@@ -207,7 +208,8 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const correctPassword = "Capacho@69";
-        if (input.password !== correctPassword) {
+        const inputPassword = input.password.trim();
+        if (inputPassword !== correctPassword) {
           throw new TRPCError({ code: "UNAUTHORIZED", message: "Senha incorreta" });
         }
 
