@@ -214,11 +214,36 @@ export async function createBooking(bookingData: any) {
   }
   if (!guestId || isNaN(guestId)) throw new Error("Failed to create guest: invalid guestId");
   
-  // Garantir que totalPrice sempre tem um valor válido
-  let finalTotalPrice = bookingData.totalPrice;
-  if (!Number.isFinite(finalTotalPrice) || finalTotalPrice <= 0) {
-    finalTotalPrice = bookingData.subtotal - (bookingData.discountAmount || 0) + (bookingData.cleaningFee || 700);
+  // Buscar o preço vigente do quarto do banco de dados
+  const roomResult = await db.select().from(rooms).where(eq(rooms.id, bookingData.roomId)).limit(1);
+  const room = roomResult.length > 0 ? roomResult[0] : null;
+  
+  if (!room) {
+    throw new Error(`Room with id ${bookingData.roomId} not found`);
   }
+  
+  // Calcular preço usando o preço vigente do quarto
+  const checkInDate = new Date(bookingData.checkInDate);
+  const checkOutDate = new Date(bookingData.checkOutDate);
+  const numberOfNights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Calcular subtotal com o preço atual do quarto
+  const currentRoomPrice = room.pricePerNight || 80; // Preço padrão de 80 se não houver
+  const baseSubtotal = currentRoomPrice * numberOfNights;
+  
+  // Aplicar desconto se for 1 pessoa (12%)
+  const numberOfGuests = parseInt(bookingData.numberOfGuests) || 1;
+  let discountAmount = 0;
+  let discountPercentage = 0;
+  
+  if (numberOfGuests === 1) {
+    discountPercentage = 12;
+    discountAmount = Math.round(baseSubtotal * 0.12);
+  }
+  
+  const subtotal = baseSubtotal - discountAmount;
+  const cleaningFee = bookingData.cleaningFee || 700;
+  const finalTotalPrice = subtotal + cleaningFee;
   
   const bookingToInsert = {
     guestId,
@@ -227,11 +252,11 @@ export async function createBooking(bookingData: any) {
     checkOutDate: bookingData.checkOutDate,
     numberOfGuests: bookingData.numberOfGuests,
     dailyType: bookingData.dailyType,
-    discountPercentage: bookingData.discountPercentage || 0,
-    discountAmount: bookingData.discountAmount || 0,
-    cleaningFee: bookingData.cleaningFee || 700,
-    subtotal: bookingData.subtotal,
-    totalPrice: finalTotalPrice || 0,
+    discountPercentage: discountPercentage,
+    discountAmount: discountAmount,
+    cleaningFee: cleaningFee,
+    subtotal: subtotal,
+    totalPrice: finalTotalPrice,
     specialRequests: bookingData.specialRequests,
     checkInTime: bookingData.checkInTime,
     checkOutTime: bookingData.checkOutTime,
@@ -252,7 +277,7 @@ export async function createBooking(bookingData: any) {
       ${bookingToInsert.checkInDate},
       ${bookingToInsert.checkOutDate},
       ${bookingToInsert.numberOfGuests},
-      ${bookingToInsert.dailyType},
+      ${bookingToInsert.dailyType || 'couple'},
       ${bookingToInsert.discountPercentage},
       ${bookingToInsert.discountAmount},
       ${bookingToInsert.cleaningFee},
@@ -340,14 +365,14 @@ export async function createBooking(bookingData: any) {
     checkInDate: bookingData.checkInDate,
     checkOutDate: bookingData.checkOutDate,
     numberOfGuests: bookingData.numberOfGuests,
-    dailyType: bookingData.dailyType,
-    subtotal: bookingData.subtotal,
-    totalPrice: bookingData.totalPrice,
+    dailyType: bookingData.dailyType || 'couple',
+    subtotal: subtotal,
+    totalPrice: finalTotalPrice,
     checkInTime: bookingData.checkInTime,
     checkOutTime: bookingData.checkOutTime,
-    discountPercentage: bookingData.discountPercentage || 0,
-    discountAmount: bookingData.discountAmount || 0,
-    cleaningFee: bookingData.cleaningFee || 700,
+    discountPercentage: discountPercentage,
+    discountAmount: discountAmount,
+    cleaningFee: cleaningFee,
     specialRequests: bookingData.specialRequests,
   };
 }
@@ -910,10 +935,54 @@ export async function updateBooking(bookingId: number, updateData: any, editedBy
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
+  // Buscar a reserva atual para ter os dados originais
+  const currentBooking = await getBookingById(bookingId);
+  if (!currentBooking) throw new Error("Booking not found");
+  
+  // Determinar o quarto a ser usado (novo ou atual)
+  const roomId = updateData.roomId !== undefined ? updateData.roomId : currentBooking.booking.roomId;
+  const checkInDate = updateData.checkInDate !== undefined ? updateData.checkInDate : currentBooking.booking.checkInDate;
+  const checkOutDate = updateData.checkOutDate !== undefined ? updateData.checkOutDate : currentBooking.booking.checkOutDate;
+  const numberOfGuestsStr = updateData.numberOfGuests !== undefined ? String(updateData.numberOfGuests) : String(currentBooking.booking.numberOfGuests);
+  const numberOfGuests = parseInt(numberOfGuestsStr);
+  
+  // Buscar o preço vigente do quarto
+  const roomResult = await db.select().from(rooms).where(eq(rooms.id, roomId)).limit(1);
+  const room = roomResult.length > 0 ? roomResult[0] : null;
+  
+  if (!room) {
+    throw new Error(`Room with id ${roomId} not found`);
+  }
+  
+  // Recalcular preço com o preço vigente
+  const checkInDateObj = new Date(checkInDate);
+  const checkOutDateObj = new Date(checkOutDate);
+  const numberOfNights = Math.ceil((checkOutDateObj.getTime() - checkInDateObj.getTime()) / (1000 * 60 * 60 * 24));
+  
+  const currentRoomPrice = room.pricePerNight || 80;
+  const baseSubtotal = currentRoomPrice * numberOfNights;
+  
+  // Aplicar desconto se for 1 pessoa (12%)
+  let discountAmount = 0;
+  let discountPercentage = 0;
+  
+  if (numberOfGuests === 1) {
+    discountPercentage = 12;
+    discountAmount = Math.round(baseSubtotal * 0.12);
+  }
+  
+  const subtotal = baseSubtotal - discountAmount;
+  const cleaningFee = currentBooking.booking.cleaningFee || 700;
+  const totalPrice = subtotal + cleaningFee;
+  
   // Atualizar dados da reserva
   const updateSet: any = {
     editedAt: new Date(),
     editedBy,
+    subtotal,
+    discountPercentage,
+    discountAmount,
+    totalPrice,
   };
   
   // Adicionar campos opcionais se fornecidos

@@ -521,3 +521,9 @@
 - [x] Adicionar funções de compressão e metadata
 - [x] Pronto para integração com upload de imagens
 - [x] Todos os 47 testes continuam passando
+
+## Fase 59: Usar Preço Vigente na Cobrança de Reservas
+- [x] Atualizar cálculo de preço na função de criar reserva para usar preço atual do quarto
+- [x] Atualizar cálculo de preço na função de editar reserva para usar preço atual
+- [x] Garantir que mudanças de preço não afetam reservas já confirmadas
+- [x] Testar fluxo completo com mudanças de preço
