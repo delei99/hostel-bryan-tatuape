@@ -71,8 +71,9 @@ export default function Booking() {
   
   const createBooking = trpc.bookings.create.useMutation();
 
-  // Constantes
-  const PRICE_PER_NIGHT = 8000;
+  // Obter o preço vigente do quarto selecionado
+  const selectedRoom = rooms.find(r => r.id === parseInt(formData.roomId));
+  const PRICE_PER_NIGHT = selectedRoom?.pricePerNight || 8000; // Usar preço vigente ou padrão
   const CLEANING_FEE = 700;
   const DISCOUNT_PERCENTAGE = 12;
 
@@ -110,7 +111,7 @@ export default function Booking() {
     const total = subtotal - totalDiscount + CLEANING_FEE;
 
     return { nights, subtotal, discount: totalDiscount, durationDiscount, durationDiscountPercent, cleaning: CLEANING_FEE, total };
-  }, [formData.checkInDate, formData.checkOutDate, formData.numberOfGuests]);
+  }, [formData.checkInDate, formData.checkOutDate, formData.numberOfGuests, formData.roomId, PRICE_PER_NIGHT, rooms]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
