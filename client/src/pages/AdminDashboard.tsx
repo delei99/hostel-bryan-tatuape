@@ -144,6 +144,20 @@ export default function AdminDashboard() {
     },
   });
 
+  // Mutation para upload de imagens da home
+  const uploadHomeImageMutation = trpc.homeImages.create.useMutation({
+    onSuccess: () => {
+      toast.success('Imagem enviada com sucesso!');
+      setHomeImageFile(null);
+      setHomeImagePreview(null);
+      setShowHomeImagesModal(false);
+      trpc.useUtils().homeImages.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error('Erro ao enviar imagem: ' + error.message);
+    },
+  });
+
   const updateBooking = trpc.bookings.update.useMutation({
     onSuccess: async (result) => {
       toast.success("Reserva atualizada com sucesso!");
@@ -1282,18 +1296,10 @@ export default function AdminDashboard() {
                             const base64Data = reader.result as string;
                             
                             // Salvar imagem no banco de dados via tRPC
-                            await trpc.homeImages.create.useMutation().mutateAsync({
+                            await uploadHomeImageMutation.mutateAsync({
                               imageUrl: base64Data,
                               position: homeImagePosition,
                             });
-                            
-                            setHomeImageFile(null);
-                            setHomeImagePreview(null);
-                            setShowHomeImagesModal(false);
-                            toast.success('Imagem enviada com sucesso!');
-                            
-                            // Invalidar cache para atualizar Home
-                            await trpc.useUtils().homeImages.list.invalidate();
                           } catch (error) {
                             console.error('Erro ao enviar imagem:', error);
                             toast.error('Erro ao enviar imagem');
