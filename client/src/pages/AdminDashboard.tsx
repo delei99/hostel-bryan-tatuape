@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Calendar, Users, DollarSign, CheckCircle, Clock, X, Eye, Trash2, MessageCircle, Printer, FileText } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import jsPDF from "jspdf";
 
 /**
@@ -157,6 +157,34 @@ export default function AdminDashboard() {
       toast.error('Erro ao enviar imagem: ' + error.message);
     },
   });
+
+  const handleHomeImageUpload = useCallback(async () => {
+    if (!homeImageFile) return;
+    setIsUploadingHomeImage(true);
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(homeImageFile);
+      
+      reader.onload = async () => {
+        try {
+          const base64Data = reader.result as string;
+          await uploadHomeImageMutation.mutateAsync({
+            imageUrl: base64Data,
+            position: homeImagePosition,
+          });
+        } catch (error) {
+          console.error('Erro ao enviar imagem:', error);
+          toast.error('Erro ao enviar imagem');
+        } finally {
+          setIsUploadingHomeImage(false);
+        }
+      };
+    } catch (error) {
+      console.error('Erro ao processar imagem:', error);
+      toast.error('Erro ao processar imagem');
+      setIsUploadingHomeImage(false);
+    }
+  }, [homeImageFile, homeImagePosition, uploadHomeImageMutation]);
 
   const updateBooking = trpc.bookings.update.useMutation({
     onSuccess: async (result) => {
@@ -1283,36 +1311,7 @@ export default function AdminDashboard() {
                   <Button 
                     className="w-full" 
                     disabled={!homeImageFile || isUploadingHomeImage}
-                    onClick={async () => {
-                      if (!homeImageFile) return;
-                      setIsUploadingHomeImage(true);
-                      try {
-                        // Converter arquivo para base64 para envio
-                        const reader = new FileReader();
-                        reader.readAsDataURL(homeImageFile);
-                        
-                        reader.onload = async () => {
-                          try {
-                            const base64Data = reader.result as string;
-                            
-                            // Salvar imagem no banco de dados via tRPC
-                            await uploadHomeImageMutation.mutateAsync({
-                              imageUrl: base64Data,
-                              position: homeImagePosition,
-                            });
-                          } catch (error) {
-                            console.error('Erro ao enviar imagem:', error);
-                            toast.error('Erro ao enviar imagem');
-                          } finally {
-                            setIsUploadingHomeImage(false);
-                          }
-                        };
-                      } catch (error) {
-                        console.error('Erro ao processar imagem:', error);
-                        toast.error('Erro ao processar imagem');
-                        setIsUploadingHomeImage(false);
-                      }
-                    }}
+                    onClick={handleHomeImageUpload}
                   >
                     {isUploadingHomeImage ? 'Enviando...' : 'Fazer Upload'}
                   </Button>
