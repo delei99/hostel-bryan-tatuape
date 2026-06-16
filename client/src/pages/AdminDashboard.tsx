@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Calendar, Users, DollarSign, CheckCircle, Clock, X, Eye, Trash2, MessageCircle, Printer, FileText } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import jsPDF from "jspdf";
 
 /**
@@ -36,6 +36,10 @@ export default function AdminDashboard() {
   const [homeImageTitle, setHomeImageTitle] = useState("");
   const [homeImageDescription, setHomeImageDescription] = useState("");
   const [isUploadingHomeImage, setIsUploadingHomeImage] = useState(false);
+  const [homeImages, setHomeImages] = useState<any[]>([]);
+  const [editingImageId, setEditingImageId] = useState<number | null>(null);
+  const [editingImageData, setEditingImageData] = useState<any>(null);
+  const [showEditImageModal, setShowEditImageModal] = useState(false);
   const [newGuestData, setNewGuestData] = useState({
     firstName: "",
     lastName: "",
@@ -162,6 +166,41 @@ export default function AdminDashboard() {
       toast.error('Erro ao enviar imagem: ' + error.message);
     },
   });
+
+  // Query para listar imagens
+  const homeImagesQuery = trpc.homeImages.list.useQuery();
+
+  // Mutation para atualizar imagem
+  const updateHomeImageMutation = trpc.homeImages.update.useMutation({
+    onSuccess: () => {
+      toast.success('Imagem atualizada com sucesso!');
+      setEditingImageId(null);
+      setEditingImageData(null);
+      setShowEditImageModal(false);
+      utils.homeImages.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error('Erro ao atualizar imagem: ' + error.message);
+    },
+  });
+
+  // Mutation para deletar imagem
+  const deleteHomeImageMutation = trpc.homeImages.delete.useMutation({
+    onSuccess: () => {
+      toast.success('Imagem deletada com sucesso!');
+      utils.homeImages.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error('Erro ao deletar imagem: ' + error.message);
+    },
+  });
+
+  // Atualizar estado de imagens quando query muda
+  useEffect(() => {
+    if (homeImagesQuery.data) {
+      setHomeImages(homeImagesQuery.data);
+    }
+  }, [homeImagesQuery.data]);
 
   const handleHomeImageUpload = useCallback(async () => {
     if (!homeImageFile) return;
@@ -1344,6 +1383,105 @@ export default function AdminDashboard() {
                   >
                     {isUploadingHomeImage ? 'Enviando...' : 'Fazer Upload'}
                   </Button>
+                  
+                  {/* Lista de Imagens Cadastradas */}
+                  {homeImages.length > 0 && (
+                    <div className="border-t pt-4 mt-4">
+                      <h4 className="font-semibold mb-3 text-foreground">Imagens Cadastradas</h4>
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {homeImages.map((image) => (
+                          <div key={image.id} className="flex items-center justify-between bg-muted p-2 rounded text-sm">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate text-foreground">{image.title || 'Sem título'}</p>
+                              <p className="text-xs text-muted-foreground truncate">{image.position === 'left' ? 'Esquerda' : image.position === 'right' ? 'Direita' : image.position === 'top' ? 'Topo' : 'Rodapé'}</p>
+                            </div>
+                            <div className="flex gap-1 ml-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingImageId(image.id);
+                                  setEditingImageData(image);
+                                  setShowEditImageModal(true);
+                                }}
+                              >
+                                Editar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => {
+                                  if (confirm('Tem certeza que deseja deletar esta imagem?')) {
+                                    deleteHomeImageMutation.mutate({ id: image.id });
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Modal de Edição de Imagem */}
+        {showEditImageModal && editingImageData && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-md max-h-96 overflow-y-auto">
+              <div className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-foreground">Editar Imagem</h3>
+                  <button onClick={() => setShowEditImageModal(false)} className="text-foreground/50 hover:text-foreground">✕</button>
+                </div>
+                <div className="space-y-4">
+                  {editingImageData.imageUrl && (
+                    <img src={editingImageData.imageUrl} alt="Preview" className="w-full h-32 object-cover rounded" />
+                  )}
+                  <div>
+                    <Label htmlFor="edit-image-title">Título</Label>
+                    <Input
+                      id="edit-image-title"
+                      type="text"
+                      value={editingImageData.title || ''}
+                      onChange={(e) => setEditingImageData({ ...editingImageData, title: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-image-description">Descrição</Label>
+                    <Input
+                      id="edit-image-description"
+                      type="text"
+                      value={editingImageData.description || ''}
+                      onChange={(e) => setEditingImageData({ ...editingImageData, description: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1"
+                      onClick={() => {
+                        updateHomeImageMutation.mutate({
+                          id: editingImageData.id,
+                          title: editingImageData.title,
+                          description: editingImageData.description,
+                        });
+                      }}
+                    >
+                      Salvar
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      variant="outline"
+                      onClick={() => setShowEditImageModal(false)}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Card>
