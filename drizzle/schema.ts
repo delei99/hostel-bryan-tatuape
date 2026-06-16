@@ -215,3 +215,21 @@ export const homeImages = mysqlTable("homeImages", {
 
 export type HomeImage = typeof homeImages.$inferSelect;
 export type InsertHomeImage = typeof homeImages.$inferInsert;
+
+/**
+ * Tabela de histórico de receita mensal
+ */
+export const monthlyRevenueHistory = mysqlTable("monthlyRevenueHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  year: int("year").notNull(),
+  month: int("month").notNull(), // 0-11 (janeiro=0, dezembro=11)
+  totalReservations: int("totalReservations").default(0).notNull(),
+  totalRevenue: int("totalRevenue").default(0).notNull(),
+  confirmedReservations: int("confirmedReservations").default(0).notNull(),
+  confirmedRevenue: int("confirmedRevenue").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MonthlyRevenueHistory = typeof monthlyRevenueHistory.$inferSelect;
+export type InsertMonthlyRevenueHistory = typeof monthlyRevenueHistory.$inferInsert;

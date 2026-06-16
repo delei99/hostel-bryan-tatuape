@@ -1,6 +1,6 @@
 import { and, desc, eq, gt, lt, or, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog, failedUnblockAttempts, InsertFailedUnblockAttempt, FailedUnblockAttempt, blockingExceptions, InsertBlockingException, BlockingException, homeImages, InsertHomeImage, HomeImage } from "../drizzle/schema";
+import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog, failedUnblockAttempts, InsertFailedUnblockAttempt, FailedUnblockAttempt, blockingExceptions, InsertBlockingException, BlockingException, homeImages, InsertHomeImage, HomeImage, monthlyRevenueHistory, InsertMonthlyRevenueHistory, MonthlyRevenueHistory } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -1237,5 +1237,55 @@ export async function reorderHomeImages(items: Array<{ id: number; displayOrder:
   } catch (error) {
     console.error("[Database] Error reordering home images:", error);
     return false;
+  }
+}
+
+// ============================================================================
+// Monthly Revenue History Functions
+// ============================================================================
+
+export async function getMonthlyRevenueHistory(year: number, month: number) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const result = await db.select().from(monthlyRevenueHistory).where(
+      and(eq(monthlyRevenueHistory.year, year), eq(monthlyRevenueHistory.month, month))
+    );
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Database] Error fetching monthly revenue history:", error);
+    return null;
+  }
+}
+
+export async function getAllMonthlyRevenueHistory() {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    return await db.select().from(monthlyRevenueHistory).orderBy(desc(monthlyRevenueHistory.year), desc(monthlyRevenueHistory.month));
+  } catch (error) {
+    console.error("[Database] Error fetching all monthly revenue history:", error);
+    return [];
+  }
+}
+
+export async function saveMonthlyRevenueHistory(data: InsertMonthlyRevenueHistory) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const existing = await getMonthlyRevenueHistory(data.year!, data.month!);
+    if (existing) {
+      await db.update(monthlyRevenueHistory)
+        .set(data)
+        .where(and(eq(monthlyRevenueHistory.year, data.year!), eq(monthlyRevenueHistory.month, data.month!)));
+      return existing;
+    } else {
+      await db.insert(monthlyRevenueHistory).values(data);
+      const saved = await getMonthlyRevenueHistory(data.year!, data.month!);
+      return saved;
+    }
+  } catch (error) {
+    console.error("[Database] Error saving monthly revenue history:", error);
+    return null;
   }
 }

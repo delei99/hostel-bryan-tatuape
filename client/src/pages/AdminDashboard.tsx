@@ -37,6 +37,8 @@ export default function AdminDashboard() {
   const [homeImageDescription, setHomeImageDescription] = useState("");
   const [isUploadingHomeImage, setIsUploadingHomeImage] = useState(false);
   const [homeImages, setHomeImages] = useState<any[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<{ year: number; month: number } | null>(null);
+  const [monthlyHistory, setMonthlyHistory] = useState<any[]>([]);
   const [editingImageId, setEditingImageId] = useState<number | null>(null);
   const [editingImageData, setEditingImageData] = useState<any>(null);
   const [showEditImageModal, setShowEditImageModal] = useState(false);
@@ -169,6 +171,27 @@ export default function AdminDashboard() {
 
   // Query para listar imagens
   const homeImagesQuery = trpc.homeImages.list.useQuery();
+
+  // Query para histórico mensal
+  const monthlyHistoryQuery = trpc.bookings.getMonthlyHistory.useQuery();
+
+  // Mutation para salvar histórico mensal
+  const saveMonthlyHistoryMutation = trpc.bookings.saveMonthlyHistory.useMutation({
+    onSuccess: () => {
+      toast.success('Histórico mensal salvo!');
+      monthlyHistoryQuery.refetch();
+    },
+    onError: (error) => {
+      toast.error('Erro ao salvar histórico: ' + error.message);
+    },
+  });
+
+  // Atualizar histórico quando query muda
+  useEffect(() => {
+    if (monthlyHistoryQuery.data) {
+      setMonthlyHistory(monthlyHistoryQuery.data);
+    }
+  }, [monthlyHistoryQuery.data]);
 
   // Mutation para atualizar imagem
   const updateHomeImageMutation = trpc.homeImages.update.useMutation({
@@ -587,6 +610,28 @@ export default function AdminDashboard() {
     };
   }, [bookings]);
 
+  // Salvar histórico do mês atual periodicamente
+  useEffect(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    const timer = setInterval(() => {
+      if (stats.total > 0 || stats.confirmed > 0) {
+        saveMonthlyHistoryMutation.mutate({
+          year: currentYear,
+          month: currentMonth,
+          totalReservations: stats.total,
+          totalRevenue: stats.revenue,
+          confirmedReservations: stats.confirmed,
+          confirmedRevenue: stats.confirmedRevenue,
+        });
+      }
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(timer);
+  }, [stats, saveMonthlyHistoryMutation]);
+
   // Cores de status
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -742,6 +787,61 @@ export default function AdminDashboard() {
             </div>
           </Card>
         </div>
+
+        {/* Dropdown para consultar histórico */}
+        <Card className="p-6">
+          <div className="flex items-center gap-4">
+            <Label htmlFor="month-select" className="text-foreground">Consultar Histórico Mensal:</Label>
+            <Select value={selectedMonth ? `${selectedMonth.year}-${selectedMonth.month}` : "current"} onValueChange={(value) => {
+              if (value === "current") {
+                setSelectedMonth(null);
+              } else {
+                const [year, month] = value.split("-");
+                setSelectedMonth({ year: parseInt(year), month: parseInt(month) });
+              }
+            }}>
+              <SelectTrigger id="month-select" className="w-64">
+                <SelectValue placeholder="Selecione um mês" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="current">Mês Atual</SelectItem>
+                {monthlyHistory.map((history) => {
+                  const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                  return (
+                    <SelectItem key={`${history.year}-${history.month}`} value={`${history.year}-${history.month}`}>
+                      {monthNames[history.month]} de {history.year}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+          {selectedMonth && monthlyHistory.find(h => h.year === selectedMonth.year && h.month === selectedMonth.month) && (
+            <div className="mt-4 p-4 bg-muted rounded">
+              {(() => {
+                const history = monthlyHistory.find(h => h.year === selectedMonth.year && h.month === selectedMonth.month);
+                const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                return (
+                  <div>
+                    <h3 className="font-bold text-foreground mb-2">{monthNames[history.month]} de {history.year}</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-foreground/70">Total de Reservas</p>
+                        <p className="text-lg font-bold text-foreground">{history.totalReservations}</p>
+                        <p className="text-foreground/70">R$ {(history.totalRevenue / 100).toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-foreground/70">Confirmadas</p>
+                        <p className="text-lg font-bold text-green-600">{history.confirmedReservations}</p>
+                        <p className="text-green-600">R$ {(history.confirmedRevenue / 100).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </Card>
 
         {/* Filtros e Busca */}
         <Card className="p-6">

@@ -153,6 +153,25 @@ export const appRouter = router({
         const { updateBookingStatus } = await import("./db");
         return updateBookingStatus(input.id, input.status);
       }),
+
+    getMonthlyHistory: adminProcedure.query(async () => {
+      const { getAllMonthlyRevenueHistory } = await import("./db");
+      return getAllMonthlyRevenueHistory();
+    }),
+
+    saveMonthlyHistory: adminProcedure
+      .input(z.object({
+        year: z.number(),
+        month: z.number(),
+        totalReservations: z.number(),
+        totalRevenue: z.number(),
+        confirmedReservations: z.number(),
+        confirmedRevenue: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { saveMonthlyRevenueHistory } = await import("./db");
+        return saveMonthlyRevenueHistory(input);
+      }),
   }),
 
   blockedDates: router({
