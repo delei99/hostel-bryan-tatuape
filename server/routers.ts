@@ -371,7 +371,7 @@ export const appRouter = router({
     }),
     
     getByPosition: publicProcedure
-      .input(z.object({ position: z.enum(["left", "right"]) }))
+      .input(z.object({ position: z.enum(["left", "right", "top", "bottom"]) }))
       .query(async ({ input }) => {
         const { getHomeImageByPosition } = await import("./db");
         return getHomeImageByPosition(input.position);
@@ -380,7 +380,7 @@ export const appRouter = router({
     create: adminProcedure
       .input(z.object({
         imageUrl: z.string(),
-        position: z.enum(["left", "right"]),
+        position: z.enum(["left", "right", "top", "bottom"]),
         title: z.string().optional(),
         description: z.string().optional(),
       }))

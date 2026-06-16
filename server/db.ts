@@ -1214,7 +1214,7 @@ export async function deleteHomeImage(id: number): Promise<boolean> {
   }
 }
 
-export async function getHomeImageByPosition(position: "left" | "right"): Promise<HomeImage | null> {
+export async function getHomeImageByPosition(position: "left" | "right" | "top" | "bottom"): Promise<HomeImage | null> {
   const db = await getDb();
   if (!db) return null;
   try {

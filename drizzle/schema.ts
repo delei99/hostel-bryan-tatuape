@@ -204,7 +204,7 @@ export type InsertBlockingException = typeof blockingExceptions.$inferInsert;
 export const homeImages = mysqlTable("homeImages", {
   id: int("id").autoincrement().primaryKey(),
   imageUrl: text("imageUrl").notNull(),
-  position: mysqlEnum("position", ["left", "right"]).notNull(),
+  position: mysqlEnum("position", ["left", "right", "top", "bottom"]).notNull(),
   title: varchar("title", { length: 255 }),
   description: text("description"),
   uploadedBy: int("uploadedBy").notNull().references(() => users.id, { onDelete: "cascade" }),

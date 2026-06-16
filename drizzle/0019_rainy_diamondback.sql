@@ -1,0 +1,1 @@
+ALTER TABLE `homeImages` MODIFY COLUMN `position` enum('left','right','top','bottom') NOT NULL;

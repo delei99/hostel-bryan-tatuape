@@ -32,7 +32,7 @@ export default function AdminDashboard() {
   const [showHomeImagesModal, setShowHomeImagesModal] = useState(false);
   const [homeImageFile, setHomeImageFile] = useState<File | null>(null);
   const [homeImagePreview, setHomeImagePreview] = useState<string | null>(null);
-  const [homeImagePosition, setHomeImagePosition] = useState<"left" | "right">("left");
+  const [homeImagePosition, setHomeImagePosition] = useState<"left" | "right" | "top" | "bottom">("left");
   const [isUploadingHomeImage, setIsUploadingHomeImage] = useState(false);
   const [newGuestData, setNewGuestData] = useState({
     firstName: "",
@@ -1299,13 +1299,15 @@ export default function AdminDashboard() {
                   )}
                   <div>
                     <Label htmlFor="home-image-position">Posição</Label>
-                    <Select value={homeImagePosition} onValueChange={(value) => setHomeImagePosition(value as "left" | "right")}>
+                    <Select value={homeImagePosition} onValueChange={(value) => setHomeImagePosition(value as "left" | "right" | "top" | "bottom")}>
                       <SelectTrigger id="home-image-position">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="left">Esquerda</SelectItem>
                         <SelectItem value="right">Direita</SelectItem>
+                        <SelectItem value="top">Topo</SelectItem>
+                        <SelectItem value="bottom">Rodapé</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
