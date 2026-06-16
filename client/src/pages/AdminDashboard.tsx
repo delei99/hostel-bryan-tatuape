@@ -145,13 +145,14 @@ export default function AdminDashboard() {
   });
 
   // Mutation para upload de imagens da home
+  const utils = trpc.useUtils();
   const uploadHomeImageMutation = trpc.homeImages.create.useMutation({
     onSuccess: () => {
       toast.success('Imagem enviada com sucesso!');
       setHomeImageFile(null);
       setHomeImagePreview(null);
       setShowHomeImagesModal(false);
-      trpc.useUtils().homeImages.list.invalidate();
+      utils.homeImages.list.invalidate();
     },
     onError: (error) => {
       toast.error('Erro ao enviar imagem: ' + error.message);

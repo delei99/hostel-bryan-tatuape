@@ -386,8 +386,24 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         const { createHomeImage } = await import("./db");
+        const { storagePut } = await import("./storage");
+        
+        let finalImageUrl = input.imageUrl;
+        if (input.imageUrl.startsWith('data:')) {
+          try {
+            const base64Data = input.imageUrl.split(',')[1];
+            const buffer = Buffer.from(base64Data, 'base64');
+            const fileKey = `home-images/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`;
+            const { url } = await storagePut(fileKey, buffer, 'image/png');
+            finalImageUrl = url;
+          } catch (error) {
+            console.error('Erro ao fazer upload:', error);
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Erro ao fazer upload da imagem' });
+          }
+        }
+        
         return createHomeImage({
-          imageUrl: input.imageUrl,
+          imageUrl: finalImageUrl,
           position: input.position,
           title: input.title,
           description: input.description,
