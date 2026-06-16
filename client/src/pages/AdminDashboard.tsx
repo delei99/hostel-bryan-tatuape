@@ -33,6 +33,8 @@ export default function AdminDashboard() {
   const [homeImageFile, setHomeImageFile] = useState<File | null>(null);
   const [homeImagePreview, setHomeImagePreview] = useState<string | null>(null);
   const [homeImagePosition, setHomeImagePosition] = useState<"left" | "right" | "top" | "bottom">("left");
+  const [homeImageTitle, setHomeImageTitle] = useState("");
+  const [homeImageDescription, setHomeImageDescription] = useState("");
   const [isUploadingHomeImage, setIsUploadingHomeImage] = useState(false);
   const [newGuestData, setNewGuestData] = useState({
     firstName: "",
@@ -151,6 +153,8 @@ export default function AdminDashboard() {
       toast.success('Imagem enviada com sucesso!');
       setHomeImageFile(null);
       setHomeImagePreview(null);
+      setHomeImageTitle('');
+      setHomeImageDescription('');
       setShowHomeImagesModal(false);
       utils.homeImages.list.invalidate();
     },
@@ -172,6 +176,8 @@ export default function AdminDashboard() {
           await uploadHomeImageMutation.mutateAsync({
             imageUrl: base64Data,
             position: homeImagePosition,
+            title: homeImageTitle || undefined,
+            description: homeImageDescription || undefined,
           });
         } catch (error) {
           console.error('Erro ao enviar imagem:', error);
@@ -185,7 +191,7 @@ export default function AdminDashboard() {
       toast.error('Erro ao processar imagem');
       setIsUploadingHomeImage(false);
     }
-  }, [homeImageFile, homeImagePosition, uploadHomeImageMutation]);
+  }, [homeImageFile, homeImagePosition, homeImageTitle, homeImageDescription, uploadHomeImageMutation]);
 
   const updateBooking = trpc.bookings.update.useMutation({
     onSuccess: async (result) => {
@@ -1310,6 +1316,26 @@ export default function AdminDashboard() {
                         <SelectItem value="bottom">Rodapé</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="home-image-title">Título</Label>
+                    <Input
+                      id="home-image-title"
+                      type="text"
+                      placeholder="Ex: Conforto e Elegância"
+                      value={homeImageTitle}
+                      onChange={(e) => setHomeImageTitle(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="home-image-description">Descrição</Label>
+                    <Input
+                      id="home-image-description"
+                      type="text"
+                      placeholder="Ex: Quartos espaçosos com vista para a cidade"
+                      value={homeImageDescription}
+                      onChange={(e) => setHomeImageDescription(e.target.value)}
+                    />
                   </div>
                   <Button 
                     className="w-full" 
