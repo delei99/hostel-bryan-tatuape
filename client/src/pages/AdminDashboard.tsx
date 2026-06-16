@@ -561,16 +561,28 @@ export default function AdminDashboard() {
 
   // Calcular estatísticas
   const stats = useMemo(() => {
-    if (!bookings) return { total: 0, confirmed: 0, revenue: 0, occupancy: 0 };
+    if (!bookings) return { total: 0, confirmed: 0, revenue: 0, confirmedRevenue: 0, occupancy: 0 };
 
-    const total = bookings.length;
-    const confirmed = bookings.filter((b: any) => b.booking.status === "confirmed").length;
-    const revenue = bookings.reduce((sum: number, b: any) => sum + b.booking.totalPrice, 0);
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const currentMonthBookings = bookings.filter((b: any) => {
+      const bookingDate = new Date(b.booking.createdAt);
+      return bookingDate.getMonth() === currentMonth && bookingDate.getFullYear() === currentYear;
+    });
+
+    const total = currentMonthBookings.length;
+    const confirmedBookings = currentMonthBookings.filter((b: any) => b.booking.status === "confirmed");
+    const confirmed = confirmedBookings.length;
+    const revenue = currentMonthBookings.reduce((sum: number, b: any) => sum + b.booking.totalPrice, 0);
+    const confirmedRevenue = confirmedBookings.reduce((sum: number, b: any) => sum + b.booking.totalPrice, 0);
 
     return {
       total,
       confirmed,
       revenue,
+      confirmedRevenue,
       occupancy: total > 0 ? Math.round((confirmed / total) * 100) : 0,
     };
   }, [bookings]);
@@ -693,6 +705,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-foreground/70 text-sm mb-2">Total de Reservas</p>
                 <p className="text-3xl font-bold text-foreground">{stats.total}</p>
+                <p className="text-sm text-foreground/70 mt-1">R$ {(stats.revenue / 100).toFixed(2)}</p>
               </div>
               <Calendar className="w-10 h-10 text-accent opacity-20" />
             </div>
@@ -703,6 +716,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-foreground/70 text-sm mb-2">Confirmadas</p>
                 <p className="text-3xl font-bold text-green-600">{stats.confirmed}</p>
+                <p className="text-sm text-green-600 mt-1">R$ {(stats.confirmedRevenue / 100).toFixed(2)}</p>
               </div>
               <CheckCircle className="w-10 h-10 text-green-600 opacity-20" />
             </div>
