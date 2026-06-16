@@ -433,6 +433,18 @@ export const appRouter = router({
         const { deleteHomeImage } = await import("./db");
         return deleteHomeImage(input.id);
       }),
+    
+    reorder: adminProcedure
+      .input(z.object({
+        items: z.array(z.object({
+          id: z.number(),
+          displayOrder: z.number(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const { reorderHomeImages } = await import("./db");
+        return reorderHomeImages(input.items);
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

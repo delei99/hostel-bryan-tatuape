@@ -205,6 +205,7 @@ export const homeImages = mysqlTable("homeImages", {
   id: int("id").autoincrement().primaryKey(),
   imageUrl: text("imageUrl").notNull(),
   position: mysqlEnum("position", ["left", "right", "top", "bottom"]).notNull(),
+  displayOrder: int("displayOrder").default(0).notNull(),
   title: varchar("title", { length: 255 }),
   description: text("description"),
   uploadedBy: int("uploadedBy").notNull().references(() => users.id, { onDelete: "cascade" }),

@@ -1170,7 +1170,7 @@ export async function getHomeImages(): Promise<HomeImage[]> {
   const db = await getDb();
   if (!db) return [];
   try {
-    return await db.select().from(homeImages).orderBy(homeImages.position);
+    return await db.select().from(homeImages).orderBy(homeImages.displayOrder, homeImages.position);
   } catch (error) {
     console.error("[Database] Error fetching home images:", error);
     return [];
@@ -1223,5 +1223,19 @@ export async function getHomeImageByPosition(position: "left" | "right" | "top" 
   } catch (error) {
     console.error("[Database] Error fetching home image by position:", error);
     return null;
+  }
+}
+
+export async function reorderHomeImages(items: Array<{ id: number; displayOrder: number }>): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    for (const item of items) {
+      await db.update(homeImages).set({ displayOrder: item.displayOrder }).where(eq(homeImages.id, item.id));
+    }
+    return true;
+  } catch (error) {
+    console.error("[Database] Error reordering home images:", error);
+    return false;
   }
 }

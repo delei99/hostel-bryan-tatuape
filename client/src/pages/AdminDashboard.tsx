@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Calendar, Users, DollarSign, CheckCircle, Clock, X, Eye, Trash2, MessageCircle, Printer, FileText } from "lucide-react";
+import { Calendar, Users, DollarSign, CheckCircle, Clock, X, Eye, Trash2, MessageCircle, Printer, FileText, GripVertical } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import { useState, useMemo, useCallback, useEffect } from "react";
@@ -195,12 +195,55 @@ export default function AdminDashboard() {
     },
   });
 
+  // Mutation para reordenar imagens
+  const reorderHomeImagesMutation = trpc.homeImages.reorder.useMutation({
+    onSuccess: () => {
+      toast.success('Ordem atualizada com sucesso!');
+      utils.homeImages.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error('Erro ao reordenar imagens: ' + error.message);
+    },
+  });
+
   // Atualizar estado de imagens quando query muda
   useEffect(() => {
     if (homeImagesQuery.data) {
       setHomeImages(homeImagesQuery.data);
     }
   }, [homeImagesQuery.data]);
+
+  // Handler para drag and drop
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('draggedIndex', index.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    const draggedIndex = parseInt(e.dataTransfer.getData('draggedIndex'));
+    
+    if (draggedIndex === dropIndex) return;
+    
+    const newImages = [...homeImages];
+    const draggedImage = newImages[draggedIndex];
+    newImages.splice(draggedIndex, 1);
+    newImages.splice(dropIndex, 0, draggedImage);
+    
+    // Atualizar displayOrder
+    const updatedItems = newImages.map((img, idx) => ({
+      id: img.id,
+      displayOrder: idx,
+    }));
+    
+    setHomeImages(newImages);
+    reorderHomeImagesMutation.mutate({ items: updatedItems });
+  };
 
   const handleHomeImageUpload = useCallback(async () => {
     if (!homeImageFile) return;
@@ -1389,11 +1432,21 @@ export default function AdminDashboard() {
                     <div className="border-t pt-4 mt-4">
                       <h4 className="font-semibold mb-3 text-foreground">Imagens Cadastradas</h4>
                       <div className="space-y-2 max-h-48 overflow-y-auto">
-                        {homeImages.map((image) => (
-                          <div key={image.id} className="flex items-center justify-between bg-muted p-2 rounded text-sm">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate text-foreground">{image.title || 'Sem título'}</p>
-                              <p className="text-xs text-muted-foreground truncate">{image.position === 'left' ? 'Esquerda' : image.position === 'right' ? 'Direita' : image.position === 'top' ? 'Topo' : 'Rodapé'}</p>
+                        {homeImages.map((image, index) => (
+                          <div 
+                            key={image.id} 
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, index)}
+                            onDragOver={handleDragOver}
+                            onDrop={(e) => handleDrop(e, index)}
+                            className="flex items-center justify-between bg-muted p-2 rounded text-sm cursor-move hover:bg-muted/80 transition"
+                          >
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate text-foreground">{image.title || 'Sem título'}</p>
+                                <p className="text-xs text-muted-foreground truncate">{image.position === 'left' ? 'Esquerda' : image.position === 'right' ? 'Direita' : image.position === 'top' ? 'Topo' : 'Rodapé'}</p>
+                              </div>
                             </div>
                             <div className="flex gap-1 ml-2">
                               <Button
