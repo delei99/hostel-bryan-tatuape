@@ -729,7 +729,7 @@ export default function AdminDashboard() {
                 Bloquear Datas
               </Button>
             </Link>
-            <Link href="/admin/bloqueios-excecoes">
+            <Link href="/admin/bloqueios">
               <Button className="bg-orange-600 hover:bg-orange-700">
                 Desbloquear Datas
               </Button>
