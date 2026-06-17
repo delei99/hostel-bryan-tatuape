@@ -533,3 +533,7 @@
 - [x] Identificar que editFormData estava sendo inicializado incorretamente
 - [x] Corrigir inicialização de editFormData para extrair booking.booking
 - [x] Testar que testes continuam passando
+
+## Bug: numberOfGuests como número em vez de string
+- [x] Corrigir conversão de numberOfGuests para string ao enviar para servidor
+- [x] Testar que testes continuam passando

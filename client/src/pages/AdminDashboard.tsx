@@ -1254,7 +1254,7 @@ export default function AdminDashboard() {
                         checkInDate: editFormData.checkInDate,
                         checkOutDate: editFormData.checkOutDate,
                         roomId: editFormData.roomId,
-                        numberOfGuests: editFormData.numberOfGuests,
+                        numberOfGuests: editFormData.numberOfGuests?.toString() || '1',
                         specialRequests: editFormData.specialRequests,
                       });
                     }}
