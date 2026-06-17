@@ -54,6 +54,7 @@ function Router() {
       <Route path="/admin/fotos" component={() => <LazyRoute component={AdminRoomPhotos} />} />
       <Route path="/admin/fotos/upload" component={() => <LazyRoute component={PhotoUpload} />} />
       <Route path="/admin/bloqueios" component={() => <LazyRoute component={BlockedDates} />} />
+      <Route path="/admin/bloqueios-excecoes" component={() => <LazyRoute component={BlockedDates} />} />
       <Route path="/admin/fotos-upload" component={() => <LazyRoute component={RoomPhotosUpload} />} />
       
       <Route path="/404" component={NotFound} />
