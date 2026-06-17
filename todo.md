@@ -537,3 +537,8 @@
 ## Bug: numberOfGuests como número em vez de string
 - [x] Corrigir conversão de numberOfGuests para string ao enviar para servidor
 - [x] Testar que testes continuam passando
+
+## Melhoria: Quebra de linha no dropdown de quarto
+- [x] Quebrar linha no dropdown de quarto para melhor visualização no celular
+- [x] Exibir tipo de quarto em linha separada com estilo reduzido
+- [x] Testar que testes continuam passando

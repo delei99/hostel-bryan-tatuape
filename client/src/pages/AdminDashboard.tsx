@@ -1195,11 +1195,17 @@ export default function AdminDashboard() {
                             <SelectValue placeholder="Selecione um quarto" />
                           </SelectTrigger>
                           <SelectContent>
-                            {rooms.map((room: any) => (
-                              <SelectItem key={room.id} value={room.id.toString()}>
-                                {room.name} - {room.type}
-                              </SelectItem>
-                            ))}
+                            {rooms.map((room: any) => {
+                              const typeLabel = room.type === 'private' ? 'Privado' : room.type === 'shared' ? 'Compartilhado' : 'Dormitório';
+                              return (
+                                <SelectItem key={room.id} value={room.id.toString()}>
+                                  <div className="flex flex-col">
+                                    <span>{room.name}</span>
+                                    <span className="text-xs text-muted-foreground">{typeLabel}</span>
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                       </div>
