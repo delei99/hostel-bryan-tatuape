@@ -60,7 +60,9 @@ export default function AdminDashboard() {
 
   const handleOpenEditModal = (booking: any) => {
     setEditingBooking(booking);
-    setEditFormData({ ...booking });
+    // Corrigir: booking é { booking: {...}, guest: {...}, room: {...} }
+    // Precisamos extrair apenas os dados da reserva
+    setEditFormData({ ...booking.booking });
     setEditPassword("");
   };
 

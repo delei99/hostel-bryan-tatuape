@@ -527,3 +527,9 @@
 - [x] Atualizar cálculo de preço na função de editar reserva para usar preço atual
 - [x] Garantir que mudanças de preço não afetam reservas já confirmadas
 - [x] Testar fluxo completo com mudanças de preço
+
+## Bug: Criação Automática de Reservas ao Atualizar Admin
+- [x] Investigar por que atualizações no admin criam reservas para Quarto 01
+- [x] Identificar que editFormData estava sendo inicializado incorretamente
+- [x] Corrigir inicialização de editFormData para extrair booking.booking
+- [x] Testar que testes continuam passando
