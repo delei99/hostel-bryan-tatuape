@@ -389,7 +389,10 @@ export default function Booking() {
                 <SelectContent>
                   {rooms.map(room => (
                     <SelectItem key={room.id} value={room.id.toString()}>
-                      {room.name} - R$ {(room.pricePerNight / 100).toFixed(2)}/noite - Banheiro: {room.bathroomType === "private" ? "Privado" : "Compartilhado"}
+                      <div className="flex flex-col">
+                        <span>{room.name} - R$ {(room.pricePerNight / 100).toFixed(2)}/noite</span>
+                        <span className="text-xs text-muted-foreground">Banheiro: {room.bathroomType === "private" ? "Privado" : "Compartilhado"}</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
