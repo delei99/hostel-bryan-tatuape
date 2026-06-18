@@ -551,3 +551,10 @@
 - [x] Corrigir imports nos arquivos de teste (auth.logout.test.ts e pricing.test.ts)
 - [x] Verificar que todos os 53 testes continuam passando
 - [x] Reiniciar servidor para aplicar mudanças
+
+## Bug: Preço do Quarto 01 Exibido Incorretamente
+- [x] Investigar por que preço 80,00 aparecia como 0,80 no admin
+- [x] Corrigir conversão de preço em AdminRooms.tsx
+- [x] Adicionar toFixed(2) para exibir preço corretamente
+- [x] Adicionar step="0.01" no input de preço
+- [x] Testar que todos os 53 testes continuam passando

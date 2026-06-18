@@ -1,4 +1,3 @@
-import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import RoomPhotoGallery from "@/components/RoomPhotoGallery";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Edit2, Save, X, Plus } from "lucide-react";
+import { useState } from "react";
 
 export default function AdminRooms() {
   const { data: rooms = [], isLoading, refetch } = trpc.rooms.list.useQuery();
@@ -62,6 +62,7 @@ export default function AdminRooms() {
 
   const handleEdit = (room: any) => {
     setEditingId(room.id);
+    // Armazenar preço em centavos no estado para evitar problemas de conversão
     setEditFormData({ ...room });
   };
 
@@ -77,7 +78,7 @@ export default function AdminRooms() {
       id: editFormData.id,
       name: editFormData.name,
       description: editFormData.description,
-      pricePerNight: parseInt(editFormData.pricePerNight),
+      pricePerNight: Math.round(editFormData.pricePerNight),
       capacity: parseInt(editFormData.capacity),
       type: editFormData.type,
       amenities: editFormData.amenities,
@@ -289,7 +290,8 @@ export default function AdminRooms() {
                       <Label className="text-sm font-medium">Preço por Noite (R$)</Label>
                       <Input
                         type="number"
-                        value={editFormData?.pricePerNight ? editFormData.pricePerNight / 100 : ""}
+                        step="0.01"
+                        value={editFormData?.pricePerNight ? (editFormData.pricePerNight / 100).toFixed(2) : ""}
                         onChange={(e) => handleFieldChange("pricePerNight", Math.round(parseFloat(e.target.value) * 100))}
                         className="mt-1"
                       />
