@@ -12,6 +12,7 @@ import { Link } from "wouter";
 import BlockedDatesCalendar from "@/components/BlockedDatesCalendar";
 
 export default function BlockedDates() {
+  const utils = trpc.useUtils();
   const [roomIds, setRoomIds] = useState<string[]>(["1"]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -361,7 +362,8 @@ export default function BlockedDates() {
         toast.success(`${successful} data(s) desbloqueada(s)!`);
         setSelectedBlockedIds([]);
         setSelectAll(false);
-        refetch();
+        // Invalidar cache em vez de refetch para evitar travamento
+        utils.blockedDates.list.invalidate({ roomId: roomIds.length > 0 ? parseInt(roomIds[0]) : 1 });
       }
 
       if (failed > 0) {
