@@ -563,3 +563,11 @@
 - [x] Corrigir número de telefone de (11) 99521-97283 para (11) 95219-7283 na seção "Sobre"
 - [x] Corrigir número de telefone no footer
 - [x] Testar que todos os 53 testes continuam passando
+
+## Bug: Desbloquear Múltiplas Datas Falhava
+- [x] Investigar por que desbloquear múltiplas datas marcadas dava erro
+- [x] Identificar que Promise.all abortava tudo se uma falha
+- [x] Trocar Promise.all por Promise.allSettled
+- [x] Adicionar contagem de sucessos e falhas
+- [x] Melhorar tratamento de erros com feedback granular
+- [x] Testar que todos os 53 testes continuam passando

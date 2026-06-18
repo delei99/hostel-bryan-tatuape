@@ -343,8 +343,8 @@ export default function BlockedDates() {
         return;
       }
 
-      // Usar Promise.all em vez de loop sequencial
-      await Promise.all(
+      // Usar Promise.allSettled para continuar mesmo se uma falhar
+      const results = await Promise.allSettled(
         validIds.map(id =>
           deleteBlockedDate.mutateAsync({
             id: id,
@@ -353,10 +353,28 @@ export default function BlockedDates() {
         )
       );
 
-      toast.success(`${validIds.length} data(s) desbloqueada(s)!`);
-      setSelectedBlockedIds([]);
-      setSelectAll(false);
-      refetch();
+      // Contar sucessos e falhas
+      const successful = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
+
+      if (successful > 0) {
+        toast.success(`${successful} data(s) desbloqueada(s)!`);
+        setSelectedBlockedIds([]);
+        setSelectAll(false);
+        refetch();
+      }
+
+      if (failed > 0) {
+        const firstError = results.find(r => r.status === 'rejected') as PromiseRejectedResult;
+        const errorMessage = (firstError?.reason as any)?.data?.zodError?.fieldErrors?.password?.[0] || 
+                           (firstError?.reason as any)?.message || 
+                           `${failed} data(s) falharam ao desbloquear`;
+        if (successful === 0) {
+          toast.error(errorMessage);
+        } else {
+          toast.warning(errorMessage);
+        }
+      }
     } catch (error: any) {
       console.error("Erro ao desbloquear múltiplas:", error);
       const errorMessage = error?.data?.zodError?.fieldErrors?.password?.[0] || error?.message || "Erro ao desbloquear datas";
