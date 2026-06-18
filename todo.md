@@ -542,3 +542,12 @@
 - [x] Quebrar linha no dropdown de quarto para melhor visualização no celular
 - [x] Exibir tipo de quarto em linha separada com estilo reduzido
 - [x] Testar que testes continuam passando
+
+## Bug: Criação Automática de Reservas ao Entrar no Admin
+- [x] Investigar por que reservas aleatórias eram criadas ao entrar no AdminDashboard
+- [x] Identificar que server/pricing.test.ts estava sendo importado e criando reservas
+- [x] Mover todos os arquivos .test.ts de server/ para tests/server/
+- [x] Atualizar vitest.config.ts para incluir testes da pasta tests/
+- [x] Corrigir imports nos arquivos de teste (auth.logout.test.ts e pricing.test.ts)
+- [x] Verificar que todos os 53 testes continuam passando
+- [x] Reiniciar servidor para aplicar mudanças

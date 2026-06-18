@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { createBooking, updateBooking, getRoomById, updateRoom } from "./db";
+import { createBooking, updateBooking, getRoomById, updateRoom } from "../../server/db";
 
 describe("Dynamic Pricing - Using Current Room Price", () => {
   const testRoomId = 1;
