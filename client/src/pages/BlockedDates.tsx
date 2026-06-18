@@ -46,6 +46,8 @@ export default function BlockedDates() {
   const [exceptionEndDate, setExceptionEndDate] = useState("");
   const [exceptionReason, setExceptionReason] = useState("");
   const [isCreatingException, setIsCreatingException] = useState(false);
+  const [unblockMultipleModalOpen, setUnblockMultipleModalOpen] = useState(false);
+  const [unblockMultiplePassword, setUnblockMultiplePassword] = useState("");
 
   // Carregar observações do localStorage
   useEffect(() => {
@@ -327,8 +329,10 @@ export default function BlockedDates() {
       return;
     }
 
-    const pwd = prompt("Digite a senha para desbloquear:");
-    if (!pwd) return;
+    if (!password) {
+      toast.error("Digite a senha primeiro!");
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -353,7 +357,7 @@ export default function BlockedDates() {
         try {
           await deleteBlockedDate.mutateAsync({
             id: id,
-            password: pwd,
+            password: password,
           });
           successful++;
         } catch (error: any) {
