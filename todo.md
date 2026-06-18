@@ -558,3 +558,8 @@
 - [x] Adicionar toFixed(2) para exibir preço corretamente
 - [x] Adicionar step="0.01" no input de preço
 - [x] Testar que todos os 53 testes continuam passando
+
+## Correção: Número de Telefone na Home
+- [x] Corrigir número de telefone de (11) 99521-97283 para (11) 95219-7283 na seção "Sobre"
+- [x] Corrigir número de telefone no footer
+- [x] Testar que todos os 53 testes continuam passando

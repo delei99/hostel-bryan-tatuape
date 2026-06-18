@@ -124,7 +124,7 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone className="w-5 h-5 text-accent" />
-                  <span className="text-foreground">(11) 99521-97283</span>
+                  <span className="text-foreground">(11) 95219-7283</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Mail className="w-5 h-5 text-accent" />
@@ -282,7 +282,7 @@ export default function Home() {
             </div>
             <div>
               <h4 className="font-bold mb-4">Contato</h4>
-              <p className="text-white/70 text-sm mb-2">(11) 99521-97283</p>
+              <p className="text-white/70 text-sm mb-2">(11) 95219-7283</p>
               <p className="text-white/70 text-sm">contato@hostelbryan.com.br</p>
             </div>
             <div>
