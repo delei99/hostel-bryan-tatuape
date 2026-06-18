@@ -344,32 +344,37 @@ export default function BlockedDates() {
         return;
       }
 
-      // Usar Promise.allSettled para continuar mesmo se uma falhar
-      const results = await Promise.allSettled(
-        validIds.map(id =>
-          deleteBlockedDate.mutateAsync({
+      // Executar deletions sequencialmente para evitar travamento
+      let successful = 0;
+      let failed = 0;
+      let lastError: any = null;
+
+      for (const id of validIds) {
+        try {
+          await deleteBlockedDate.mutateAsync({
             id: id,
             password: pwd,
-          })
-        )
-      );
+          });
+          successful++;
+        } catch (error: any) {
+          failed++;
+          lastError = error;
+          console.error(`Erro ao desbloquear ID ${id}:`, error);
+        }
+      }
 
-      // Contar sucessos e falhas
-      const successful = results.filter(r => r.status === 'fulfilled').length;
-      const failed = results.filter(r => r.status === 'rejected').length;
-
+      // Atualizar UI apenas uma vez no final
       if (successful > 0) {
         toast.success(`${successful} data(s) desbloqueada(s)!`);
         setSelectedBlockedIds([]);
         setSelectAll(false);
-        // Invalidar cache em vez de refetch para evitar travamento
+        // Invalidar cache apenas uma vez no final
         utils.blockedDates.list.invalidate({ roomId: roomIds.length > 0 ? parseInt(roomIds[0]) : 1 });
       }
 
       if (failed > 0) {
-        const firstError = results.find(r => r.status === 'rejected') as PromiseRejectedResult;
-        const errorMessage = (firstError?.reason as any)?.data?.zodError?.fieldErrors?.password?.[0] || 
-                           (firstError?.reason as any)?.message || 
+        const errorMessage = lastError?.data?.zodError?.fieldErrors?.password?.[0] || 
+                           lastError?.message || 
                            `${failed} data(s) falharam ao desbloquear`;
         if (successful === 0) {
           toast.error(errorMessage);
