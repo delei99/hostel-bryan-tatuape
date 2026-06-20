@@ -92,10 +92,15 @@ export async function sendGuestWhatsApp(
     }
 
     // Formatar número de telefone para WhatsApp (remover caracteres especiais)
-    const phoneNumber = payload.guestPhone.replace(/\D/g, "");
+    let phoneNumber = payload.guestPhone.replace(/\D/g, "");
 
-    if (phoneNumber.length < 11) {
-      console.warn("[GuestNotification] Invalid phone number format");
+    // Se o número não começar com 55 (código do Brasil), adicionar
+    if (!phoneNumber.startsWith("55")) {
+      phoneNumber = "55" + phoneNumber;
+    }
+
+    if (phoneNumber.length < 13) {
+      console.warn("[GuestNotification] Invalid phone number format: " + phoneNumber);
       return false;
     }
 
