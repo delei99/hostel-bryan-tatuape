@@ -671,3 +671,10 @@
 - [x] Adicionar mensagem em vermelho abaixo do campo de Passaporte
 - [x] Texto: "Atenção!!!! O numero do documento tem que ser o mesmo que vai ser apresentado no chek-in."
 - [x] Testar que mensagem aparece corretamente (58 testes passando)
+
+
+## Melhoria: Ícone de Confirmação Verde no Campo de CPF
+- [x] Adicionar ícone de confirmação verde quando CPF é válido
+- [x] Posicionar ícone ao lado do campo de CPF
+- [x] Usar ícone CheckCircle (lucide-react)
+- [x] Testar que ícone aparece apenas quando CPF é válido

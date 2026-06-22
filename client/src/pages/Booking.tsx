@@ -626,15 +626,20 @@ export default function Booking() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
+              <div className="relative">
                 <Label htmlFor="cpf">CPF *</Label>
-                <Input
-                  name="cpf"
-                  value={formData.cpf}
-                  onChange={handleInputChange}
-                  placeholder="123.456.789-00"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    name="cpf"
+                    value={formData.cpf}
+                    onChange={handleInputChange}
+                    placeholder="123.456.789-00"
+                    required
+                  />
+                  {formData.cpf.trim() !== "" && validateCPF(formData.cpf) && (
+                    <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500 w-5 h-5" />
+                  )}
+                </div>
                 {formData.cpf.trim() !== "" && !validateCPF(formData.cpf) && (
                   <p className="text-sm text-red-500 mt-1">CPF inválido. Verifique o número digitado.</p>
                 )}
