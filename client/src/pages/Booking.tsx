@@ -214,7 +214,11 @@ export default function Booking() {
   const canSubmit = () => {
     const isBlocked = isDateBlocked(formData.checkInDate, formData.checkOutDate);
     const cpfValid = validateCPF(formData.cpf);
-    const documentValid = formData.documentType === "rg" ? validateRG(formData.documentNumber) : validatePassport(formData.documentNumber);
+    
+    // RG ou Passaporte: um dos dois deve ser válido
+    const rgValid = validateRG(formData.documentNumber);
+    const passportValid = validatePassport(formData.documentNumberPassport || "");
+    const documentValid = rgValid || passportValid;
     
     return (
       !isBlocked &&
@@ -224,7 +228,6 @@ export default function Booking() {
       formData.phone.trim() !== "" &&
       cpfValid &&
       formData.nationality.trim() !== "" &&
-      formData.documentNumber.trim() !== "" &&
       documentValid &&
       formData.checkInDate !== "" &&
       formData.checkOutDate !== ""
@@ -239,11 +242,11 @@ export default function Booking() {
         toast.error("Desculpe, essas datas estão bloqueadas. Escolha outras datas.");
       } else if (!validateCPF(formData.cpf)) {
         toast.error("CPF inválido. Verifique o número digitado.");
-      } else if (formData.documentNumber.trim() === "") {
-        toast.error("Documento (RG ou Passaporte) é obrigatório.");
-      } else if (formData.documentType === "rg" && !validateRG(formData.documentNumber)) {
+      } else if (!validateRG(formData.documentNumber) && !validatePassport(formData.documentNumberPassport || "")) {
+        toast.error("Preencha RG ou Passaporte com números válidos.");
+      } else if (formData.documentNumber.trim() !== "" && !validateRG(formData.documentNumber)) {
         toast.error("RG inválido. Deve ter entre 7 e 9 dígitos.");
-      } else if (formData.documentType === "passport" && !validatePassport(formData.documentNumber)) {
+      } else if ((formData.documentNumberPassport || "").trim() !== "" && !validatePassport(formData.documentNumberPassport || "")) {
         toast.error("Passaporte inválido. Deve ter entre 6 e 9 caracteres alfanuméricos.");
       } else {
         toast.error("Por favor, preencha todos os campos corretamente!");

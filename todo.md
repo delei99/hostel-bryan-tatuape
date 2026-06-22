@@ -635,3 +635,10 @@
 - [x] Adicionar campo de Passaporte (em outra linha)
 - [x] Quebrar linha no texto "Banheiro Compartilhado" para melhor visualização no celular
 - [x] Testar que validações continuam funcionando (58 testes passando)
+
+
+## Melhoria: Lógica de RG/Passaporte Obrigatório (Um ou Outro)
+- [x] Implementar validação: RG preenchido → Passaporte opcional
+- [x] Implementar validação: RG vazio → Passaporte obrigatório
+- [x] Atualizar mensagens de erro para refletir a lógica
+- [x] Testar validações com diferentes cenários (58 testes passando)
