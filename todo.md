@@ -609,3 +609,13 @@
 - [x] Exibir campos antes do botão "Finalizar Reserva"
 - [x] Validar que pagamento no ato não exceda o total
 - [x] Testar fluxo completo (58 testes passando)
+
+
+## Melhoria: Validação de CPF e Documentos na Reserva
+- [x] Validar CPF (algoritmo de validação)
+- [x] Adicionar dropdown para tipo de documento (RG, Passaporte)
+- [x] Adicionar campo UF para RG
+- [x] Validar RG e Passaporte (números válidos)
+- [x] Tornar RG ou Passaporte obrigatório
+- [x] Posicionar antes do campo "Observações"
+- [x] Testar validações completas (58 testes passando)

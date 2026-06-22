@@ -23,6 +23,40 @@ export default function Booking() {
     return `${year}-${month}-${day}`;
   };
 
+  // Validar CPF
+  const validateCPF = (cpf: string) => {
+    const cleaned = cpf.replace(/[^0-9]/g, '');
+    if (cleaned.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(cleaned)) return false;
+    let sum = 0;
+    for (let i = 1; i <= 9; i++) {
+      sum += parseInt(cleaned.substring(i - 1, i)) * (11 - i);
+    }
+    let remainder = (sum * 10) % 11;
+    if (remainder === 10 || remainder === 11) remainder = 0;
+    if (remainder !== parseInt(cleaned.substring(9, 10))) return false;
+    sum = 0;
+    for (let i = 1; i <= 10; i++) {
+      sum += parseInt(cleaned.substring(i - 1, i)) * (12 - i);
+    }
+    remainder = (sum * 10) % 11;
+    if (remainder === 10 || remainder === 11) remainder = 0;
+    if (remainder !== parseInt(cleaned.substring(10, 11))) return false;
+    return true;
+  };
+
+  // Validar RG
+  const validateRG = (rg: string) => {
+    const cleaned = rg.replace(/[^0-9]/g, '');
+    return cleaned.length >= 7 && cleaned.length <= 9;
+  };
+
+  // Validar Passaporte
+  const validatePassport = (passport: string) => {
+    const cleaned = passport.replace(/[^a-zA-Z0-9]/g, '');
+    return cleaned.length >= 6 && cleaned.length <= 9;
+  };
+
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -34,6 +68,9 @@ export default function Booking() {
     phone: "",
     cpf: "",
     nationality: "",
+    documentType: "rg",
+    documentNumber: "",
+    documentUF: "SP",
     roomId: roomIdFromUrl || "1",
     checkInDate: getLocalDateString(today),
     checkOutDate: getLocalDateString(tomorrow),
@@ -175,6 +212,8 @@ export default function Booking() {
   // Validação simples
   const canSubmit = () => {
     const isBlocked = isDateBlocked(formData.checkInDate, formData.checkOutDate);
+    const cpfValid = validateCPF(formData.cpf);
+    const documentValid = formData.documentType === "rg" ? validateRG(formData.documentNumber) : validatePassport(formData.documentNumber);
     
     return (
       !isBlocked &&
@@ -182,8 +221,10 @@ export default function Booking() {
       formData.lastName.trim() !== "" &&
       formData.email.trim() !== "" &&
       formData.phone.trim() !== "" &&
-      formData.cpf.trim() !== "" &&
+      cpfValid &&
       formData.nationality.trim() !== "" &&
+      formData.documentNumber.trim() !== "" &&
+      documentValid &&
       formData.checkInDate !== "" &&
       formData.checkOutDate !== ""
     );
@@ -195,8 +236,16 @@ export default function Booking() {
     if (!canSubmit()) {
       if (isDateBlocked(formData.checkInDate, formData.checkOutDate)) {
         toast.error("Desculpe, essas datas estão bloqueadas. Escolha outras datas.");
+      } else if (!validateCPF(formData.cpf)) {
+        toast.error("CPF inválido. Verifique o número digitado.");
+      } else if (formData.documentNumber.trim() === "") {
+        toast.error("Documento (RG ou Passaporte) é obrigatório.");
+      } else if (formData.documentType === "rg" && !validateRG(formData.documentNumber)) {
+        toast.error("RG inválido. Deve ter entre 7 e 9 dígitos.");
+      } else if (formData.documentType === "passport" && !validatePassport(formData.documentNumber)) {
+        toast.error("Passaporte inválido. Deve ter entre 6 e 9 caracteres alfanuméricos.");
       } else {
-        toast.error("Por favor, preencha todos os campos!");
+        toast.error("Por favor, preencha todos os campos corretamente!");
       }
       return;
     }
@@ -576,6 +625,83 @@ export default function Booking() {
                 />
               </div>
             </div>
+
+            {/* Documentos */}
+            <div>
+              <Label htmlFor="documentType">Tipo de Documento *</Label>
+              <Select value={formData.documentType} onValueChange={(value) => setFormData({ ...formData, documentType: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo de documento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="rg">RG</SelectItem>
+                  <SelectItem value="passport">Passaporte</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {formData.documentType === "rg" ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="documentNumber">Número do RG *</Label>
+                  <Input
+                    name="documentNumber"
+                    value={formData.documentNumber}
+                    onChange={handleInputChange}
+                    placeholder="123456789"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="documentUF">UF *</Label>
+                  <Select value={formData.documentUF} onValueChange={(value) => setFormData({ ...formData, documentUF: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AC">AC</SelectItem>
+                      <SelectItem value="AL">AL</SelectItem>
+                      <SelectItem value="AP">AP</SelectItem>
+                      <SelectItem value="AM">AM</SelectItem>
+                      <SelectItem value="BA">BA</SelectItem>
+                      <SelectItem value="CE">CE</SelectItem>
+                      <SelectItem value="DF">DF</SelectItem>
+                      <SelectItem value="ES">ES</SelectItem>
+                      <SelectItem value="GO">GO</SelectItem>
+                      <SelectItem value="MA">MA</SelectItem>
+                      <SelectItem value="MT">MT</SelectItem>
+                      <SelectItem value="MS">MS</SelectItem>
+                      <SelectItem value="MG">MG</SelectItem>
+                      <SelectItem value="PA">PA</SelectItem>
+                      <SelectItem value="PB">PB</SelectItem>
+                      <SelectItem value="PR">PR</SelectItem>
+                      <SelectItem value="PE">PE</SelectItem>
+                      <SelectItem value="PI">PI</SelectItem>
+                      <SelectItem value="RJ">RJ</SelectItem>
+                      <SelectItem value="RN">RN</SelectItem>
+                      <SelectItem value="RS">RS</SelectItem>
+                      <SelectItem value="RO">RO</SelectItem>
+                      <SelectItem value="RR">RR</SelectItem>
+                      <SelectItem value="SC">SC</SelectItem>
+                      <SelectItem value="SP">SP</SelectItem>
+                      <SelectItem value="SE">SE</SelectItem>
+                      <SelectItem value="TO">TO</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <Label htmlFor="documentNumber">Número do Passaporte *</Label>
+                <Input
+                  name="documentNumber"
+                  value={formData.documentNumber}
+                  onChange={handleInputChange}
+                  placeholder="AB123456"
+                  required
+                />
+              </div>
+            )}
 
             {/* Observações */}
             <div>
