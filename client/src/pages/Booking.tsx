@@ -215,10 +215,9 @@ export default function Booking() {
     const isBlocked = isDateBlocked(formData.checkInDate, formData.checkOutDate);
     const cpfValid = validateCPF(formData.cpf);
     
-    // RG ou Passaporte: um dos dois deve ser válido
-    const rgValid = validateRG(formData.documentNumber);
-    const passportValid = validatePassport(formData.documentNumberPassport || "");
-    const documentValid = rgValid || passportValid;
+    // RG e Passaporte são opcionais, mas se preenchidos devem ser válidos
+    const rgValid = formData.documentNumber.trim() === "" || validateRG(formData.documentNumber);
+    const passportValid = (formData.documentNumberPassport || "").trim() === "" || validatePassport(formData.documentNumberPassport || "");
     
     return (
       !isBlocked &&
@@ -228,7 +227,8 @@ export default function Booking() {
       formData.phone.trim() !== "" &&
       cpfValid &&
       formData.nationality.trim() !== "" &&
-      documentValid &&
+      rgValid &&
+      passportValid &&
       formData.checkInDate !== "" &&
       formData.checkOutDate !== ""
     );
@@ -242,8 +242,6 @@ export default function Booking() {
         toast.error("Desculpe, essas datas estão bloqueadas. Escolha outras datas.");
       } else if (!validateCPF(formData.cpf)) {
         toast.error("CPF inválido. Verifique o número digitado.");
-      } else if (!validateRG(formData.documentNumber) && !validatePassport(formData.documentNumberPassport || "")) {
-        toast.error("Preencha RG ou Passaporte com números válidos.");
       } else if (formData.documentNumber.trim() !== "" && !validateRG(formData.documentNumber)) {
         toast.error("RG inválido. Deve ter entre 7 e 9 dígitos.");
       } else if ((formData.documentNumberPassport || "").trim() !== "" && !validatePassport(formData.documentNumberPassport || "")) {

@@ -637,8 +637,10 @@
 - [x] Testar que validações continuam funcionando (58 testes passando)
 
 
-## Melhoria: Lógica de RG/Passaporte Obrigatório (Um ou Outro)
-- [x] Implementar validação: RG preenchido → Passaporte opcional
-- [x] Implementar validação: RG vazio → Passaporte obrigatório
-- [x] Atualizar mensagens de erro para refletir a lógica
-- [x] Testar validações com diferentes cenários (58 testes passando)
+## Melhoria: RG e Passaporte Opcionais (Apenas CPF Obrigatório)
+- [x] Remover obrigatoriedade de preencher RG
+- [x] Remover obrigatoriedade de preencher Passaporte
+- [x] Manter CPF como obrigatório e válido
+- [x] Se RG ou Passaporte forem preenchidos, devem ser válidos
+- [x] Atualizar mensagens de erro
+- [x] Testar validações (58 testes passando)
