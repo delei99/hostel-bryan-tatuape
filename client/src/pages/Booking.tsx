@@ -71,6 +71,7 @@ export default function Booking() {
     documentType: "rg",
     documentNumber: "",
     documentUF: "SP",
+    documentNumberPassport: "",
     roomId: roomIdFromUrl || "1",
     checkInDate: getLocalDateString(today),
     checkOutDate: getLocalDateString(tomorrow),
@@ -446,7 +447,10 @@ export default function Booking() {
                 <SelectContent>
                   {rooms.map(room => (
                     <SelectItem key={room.id} value={room.id.toString()}>
-                      {room.name} - R$ {(room.pricePerNight / 100).toFixed(2)}/noite - Banheiro: {room.bathroomType === "private" ? "Privado" : "Compartilhado"}
+                      <div className="flex flex-col">
+                        <span>{room.name} - R$ {(room.pricePerNight / 100).toFixed(2)}/noite</span>
+                        <span className="text-sm">Banheiro: {room.bathroomType === "private" ? "Privado" : "Compartilhado"}</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -628,82 +632,68 @@ export default function Booking() {
               </div>
             </div>
 
-            {/* Documentos */}
-            <div>
-              <Label htmlFor="documentType">Tipo de Documento *</Label>
-              <Select value={formData.documentType} onValueChange={(value) => setFormData({ ...formData, documentType: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo de documento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="rg">RG</SelectItem>
-                  <SelectItem value="passport">Passaporte</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {formData.documentType === "rg" ? (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="documentNumber">Número do RG *</Label>
-                  <Input
-                    name="documentNumber"
-                    value={formData.documentNumber}
-                    onChange={handleInputChange}
-                    placeholder="123456789"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="documentUF">UF *</Label>
-                  <Select value={formData.documentUF} onValueChange={(value) => setFormData({ ...formData, documentUF: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="AC">AC</SelectItem>
-                      <SelectItem value="AL">AL</SelectItem>
-                      <SelectItem value="AP">AP</SelectItem>
-                      <SelectItem value="AM">AM</SelectItem>
-                      <SelectItem value="BA">BA</SelectItem>
-                      <SelectItem value="CE">CE</SelectItem>
-                      <SelectItem value="DF">DF</SelectItem>
-                      <SelectItem value="ES">ES</SelectItem>
-                      <SelectItem value="GO">GO</SelectItem>
-                      <SelectItem value="MA">MA</SelectItem>
-                      <SelectItem value="MT">MT</SelectItem>
-                      <SelectItem value="MS">MS</SelectItem>
-                      <SelectItem value="MG">MG</SelectItem>
-                      <SelectItem value="PA">PA</SelectItem>
-                      <SelectItem value="PB">PB</SelectItem>
-                      <SelectItem value="PR">PR</SelectItem>
-                      <SelectItem value="PE">PE</SelectItem>
-                      <SelectItem value="PI">PI</SelectItem>
-                      <SelectItem value="RJ">RJ</SelectItem>
-                      <SelectItem value="RN">RN</SelectItem>
-                      <SelectItem value="RS">RS</SelectItem>
-                      <SelectItem value="RO">RO</SelectItem>
-                      <SelectItem value="RR">RR</SelectItem>
-                      <SelectItem value="SC">SC</SelectItem>
-                      <SelectItem value="SP">SP</SelectItem>
-                      <SelectItem value="SE">SE</SelectItem>
-                      <SelectItem value="TO">TO</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            ) : (
+            {/* RG com UF */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="documentNumber">Número do Passaporte *</Label>
+                <Label htmlFor="documentNumber">Número do RG *</Label>
                 <Input
                   name="documentNumber"
                   value={formData.documentNumber}
                   onChange={handleInputChange}
-                  placeholder="AB123456"
+                  placeholder="123456789"
                   required
                 />
               </div>
-            )}
+              <div>
+                <Label htmlFor="documentUF">UF *</Label>
+                <Select value={formData.documentUF} onValueChange={(value) => setFormData({ ...formData, documentUF: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AC">AC</SelectItem>
+                    <SelectItem value="AL">AL</SelectItem>
+                    <SelectItem value="AP">AP</SelectItem>
+                    <SelectItem value="AM">AM</SelectItem>
+                    <SelectItem value="BA">BA</SelectItem>
+                    <SelectItem value="CE">CE</SelectItem>
+                    <SelectItem value="DF">DF</SelectItem>
+                    <SelectItem value="ES">ES</SelectItem>
+                    <SelectItem value="GO">GO</SelectItem>
+                    <SelectItem value="MA">MA</SelectItem>
+                    <SelectItem value="MT">MT</SelectItem>
+                    <SelectItem value="MS">MS</SelectItem>
+                    <SelectItem value="MG">MG</SelectItem>
+                    <SelectItem value="PA">PA</SelectItem>
+                    <SelectItem value="PB">PB</SelectItem>
+                    <SelectItem value="PR">PR</SelectItem>
+                    <SelectItem value="PE">PE</SelectItem>
+                    <SelectItem value="PI">PI</SelectItem>
+                    <SelectItem value="RJ">RJ</SelectItem>
+                    <SelectItem value="RN">RN</SelectItem>
+                    <SelectItem value="RS">RS</SelectItem>
+                    <SelectItem value="RO">RO</SelectItem>
+                    <SelectItem value="RR">RR</SelectItem>
+                    <SelectItem value="SC">SC</SelectItem>
+                    <SelectItem value="SP">SP</SelectItem>
+                    <SelectItem value="SE">SE</SelectItem>
+                    <SelectItem value="TO">TO</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Passaporte */}
+            <div>
+              <Label htmlFor="documentNumberPassport">Número do Passaporte</Label>
+              <Input
+                id="documentNumberPassport"
+                name="documentNumberPassport"
+                value={formData.documentNumberPassport || ""}
+                onChange={handleInputChange}
+                placeholder="AB123456"
+              />
+            </div>
 
             {/* Observações */}
             <div>

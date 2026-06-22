@@ -627,3 +627,11 @@
 - [x] Salvar RG/Passaporte quando a reserva é criada
 - [x] Exibir RG/Passaporte no recibo do WhatsApp (junto com CPF)
 - [x] Testar que recibo mostra todos os dados corretamente (58 testes passando)
+
+
+## Melhoria: Remover Dropdown e Adicionar Campos Separados de RG/Passaporte
+- [x] Remover dropdown de tipo de documento (RG/Passaporte)
+- [x] Adicionar campo de RG com UF (na mesma linha)
+- [x] Adicionar campo de Passaporte (em outra linha)
+- [x] Quebrar linha no texto "Banheiro Compartilhado" para melhor visualização no celular
+- [x] Testar que validações continuam funcionando (58 testes passando)
