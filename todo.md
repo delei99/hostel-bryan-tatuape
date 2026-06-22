@@ -665,3 +665,9 @@
 - [x] Exibir mensagem de erro abaixo do campo de CPF
 - [x] Mensagem desaparece quando CPF fica válido
 - [x] Testar com diferentes entradas de CPF (58 testes passando)
+
+
+## Melhoria: Mensagem de Aviso no Campo de Passaporte
+- [x] Adicionar mensagem em vermelho abaixo do campo de Passaporte
+- [x] Texto: "Atenção!!!! O numero do documento tem que ser o mesmo que vai ser apresentado no chek-in."
+- [x] Testar que mensagem aparece corretamente (58 testes passando)

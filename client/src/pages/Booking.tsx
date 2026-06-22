@@ -711,6 +711,7 @@ export default function Booking() {
                 onChange={handleInputChange}
                 placeholder="AB123456"
               />
+              <p className="text-sm text-red-500 mt-1">Atenção!!!! O numero do documento tem que ser o mesmo que vai ser apresentado no chek-in.</p>
             </div>
 
             {/* Observações */}
