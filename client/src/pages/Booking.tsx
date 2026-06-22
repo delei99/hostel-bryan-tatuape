@@ -85,10 +85,15 @@ export default function Booking() {
       const limited = onlyNumbers.slice(0, 20);
       
       // Se começa com 55 (Brasil), aplicar máscara brasileira
+      // Se tem 11 dígitos e começa com 1 (DDD brasileiro), também aplicar máscara brasileira
       // Senão, mostrar apenas os números com +
       let formatted = limited;
-      if (limited.startsWith('55') && limited.length >= 11) {
-        // Máscara brasileira: +55 (XX) XXXXX-XXXX
+      const isBrazilianWithCode = limited.startsWith('55') && limited.length >= 13;
+      // Um número é brasileiro se tem 11 dígitos, começa com 1-9 e o segundo dígito é 1-9 (DDD válido 11-99)
+      const isBrazilianWithoutCode = limited.length === 11 && /^[1-9][1-9]\d{9}$/.test(limited);
+      
+      if (isBrazilianWithCode) {
+        // Máscara brasileira com código de país: +55 (XX) XXXXX-XXXX
         const brazilianPart = limited.slice(2);
         if (brazilianPart.length <= 2) {
           formatted = `+55 (${brazilianPart}`;
@@ -97,6 +102,9 @@ export default function Booking() {
         } else {
           formatted = `+55 (${brazilianPart.slice(0, 2)}) ${brazilianPart.slice(2, 7)}-${brazilianPart.slice(7)}`;
         }
+      } else if (isBrazilianWithoutCode) {
+        // Máscara brasileira sem código de país: (XX) XXXXX-XXXX
+        formatted = `(${limited.slice(0, 2)}) ${limited.slice(2, 7)}-${limited.slice(7)}`;
       } else if (limited.length > 0) {
         // Para números internacionais, mostrar com + no início
         formatted = `+${limited}`;

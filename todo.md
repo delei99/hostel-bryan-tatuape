@@ -578,3 +578,6 @@
 - [x] Corrigir erros de TypeScript em Booking.tsx (useQuery, checkAvailability)
 - [x] Testar que todos os 53 testes continuam passando
 - [x] Validar que números brasileiros (13 dígitos) e internacionais funcionam
+- [x] Criar testes de validação de telefone (5 novos testes)
+- [x] Corrigir regex para detectar apenas DDDs válidos brasileiros (11-99)
+- [x] Validar que 58 testes passam (53 + 5 novos)
