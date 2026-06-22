@@ -260,6 +260,8 @@ export async function createBooking(bookingData: any) {
     specialRequests: bookingData.specialRequests,
     checkInTime: bookingData.checkInTime,
     checkOutTime: bookingData.checkOutTime,
+    documentType: bookingData.documentType || "rg",
+    documentNumber: bookingData.documentNumber || "",
   };
   
   console.log("[createBooking] bookingToInsert totalPrice:", bookingToInsert.totalPrice);
@@ -270,7 +272,7 @@ export async function createBooking(bookingData: any) {
     INSERT INTO bookings (
       guestId, roomId, checkInDate, checkOutDate, numberOfGuests, dailyType,
       discountPercentage, discountAmount, cleaningFee, subtotal, totalPrice,
-      specialRequests, checkInTime, checkOutTime
+      specialRequests, checkInTime, checkOutTime, documentType, documentNumber
     ) VALUES (
       ${bookingToInsert.guestId},
       ${bookingToInsert.roomId},
@@ -285,9 +287,11 @@ export async function createBooking(bookingData: any) {
       ${bookingToInsert.totalPrice || 0},
       ${bookingToInsert.specialRequests},
       ${bookingToInsert.checkInTime},
-      ${bookingToInsert.checkOutTime}
+      ${bookingToInsert.checkOutTime},
+      ${bookingToInsert.documentType},
+      ${bookingToInsert.documentNumber}
     )
-  `);
+  `)
   
   // Extrair bookingId com suporte a diferentes formatos de retorno do Drizzle
   let bookingId: number;
@@ -350,6 +354,9 @@ export async function createBooking(bookingData: any) {
         roomName: room.name,
         totalPrice: bookingData.totalPrice,
         message: 'Sua reserva foi confirmada com sucesso! Aqui estão os detalhes:',
+        cpf: bookingData.cpf,
+        documentType: bookingData.documentType,
+        documentNumber: bookingData.documentNumber,
       });
     }
   } catch (error) {

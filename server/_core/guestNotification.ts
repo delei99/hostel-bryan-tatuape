@@ -10,6 +10,9 @@ export type GuestNotificationPayload = {
   roomName: string;
   totalPrice: number;
   message: string;
+  cpf?: string;
+  documentType?: string;
+  documentNumber?: string;
 };
 
 /**
@@ -24,6 +27,10 @@ export async function sendGuestEmail(
       return false;
     }
 
+    const documentInfo = payload.cpf || payload.documentNumber ? `
+- CPF: ${payload.cpf || "N/A"}
+- ${payload.documentType === "rg" ? "RG" : "Passaporte"}: ${payload.documentNumber || "N/A"}` : "";
+    
     const emailContent = `
 Olá ${payload.guestName},
 
@@ -34,7 +41,7 @@ ${payload.message}
 - Quarto: ${payload.roomName}
 - Check-in: ${payload.checkInDate}
 - Check-out: ${payload.checkOutDate}
-- Total: R$ ${(payload.totalPrice / 100).toFixed(2)}
+- Total: R$ ${(payload.totalPrice / 100).toFixed(2)}${documentInfo}
 
 Obrigado por escolher o Hostel Bryan Tatuapé!
 
@@ -104,6 +111,10 @@ export async function sendGuestWhatsApp(
       return false;
     }
 
+    const documentInfoWhatsApp = payload.cpf || payload.documentNumber ? `
+🆔 CPF: ${payload.cpf || "N/A"}
+🆔 ${payload.documentType === "rg" ? "RG" : "Passaporte"}: ${payload.documentNumber || "N/A"}` : "";
+    
     const whatsappMessage = `
 *${payload.message}*
 
@@ -112,7 +123,7 @@ export async function sendGuestWhatsApp(
 🛏️ Quarto: ${payload.roomName}
 📅 Check-in: ${payload.checkInDate}
 📅 Check-out: ${payload.checkOutDate}
-💰 Total: R$ ${(payload.totalPrice / 100).toFixed(2)}
+💰 Total: R$ ${(payload.totalPrice / 100).toFixed(2)}${documentInfoWhatsApp}
 
 Obrigado por escolher o Hostel Bryan Tatuapé! 🙏
     `.trim();

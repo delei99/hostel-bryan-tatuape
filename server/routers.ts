@@ -107,6 +107,8 @@ export const appRouter = router({
         discountAmount: z.number().optional(),
         cleaningFee: z.number().optional(),
         totalPrice: z.number().optional(),
+        documentType: z.enum(["rg", "passport"]),
+        documentNumber: z.string(),
       }))
       .mutation(async ({ input }) => {
         const { createBooking } = await import("./db");

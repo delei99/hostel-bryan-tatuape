@@ -110,6 +110,8 @@ export const bookings = mysqlTable("bookings", {
   confirmationCode: varchar("confirmationCode", { length: 50 }).unique(),
   checkInTime: varchar("checkInTime", { length: 5 }).notNull(), // HH:mm format (14:00 ate 23:30)
   checkOutTime: varchar("checkOutTime", { length: 5 }).notNull(), // HH:mm format (ate 12:00)
+  documentType: mysqlEnum("documentType", ["rg", "passport"]).notNull(), // Tipo de documento
+  documentNumber: varchar("documentNumber", { length: 20 }).notNull(), // Número do RG ou Passaporte
   editedAt: timestamp("editedAt"), // Ultima edicao
   editedBy: varchar("editedBy", { length: 100 }), // Nome de quem editou
   createdAt: timestamp("createdAt").defaultNow().notNull(),

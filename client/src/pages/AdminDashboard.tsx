@@ -379,6 +379,8 @@ export default function AdminDashboard() {
         cleaningFee: CLEANING_FEE,
         totalPrice: totalPrice,
         specialRequests: editFormData.specialRequests || "",
+        documentType: "rg",
+        documentNumber: "",
       });
     } catch (error: any) {
       toast.error(error.message || "Erro ao criar nova reserva");

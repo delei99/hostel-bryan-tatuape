@@ -299,6 +299,8 @@ export default function Booking() {
         cleaningFee: CLEANING_FEE,
         totalPrice: finalTotal,
         specialRequests: formData.specialRequests.trim(),
+        documentType: formData.documentType as "rg" | "passport",
+        documentNumber: formData.documentNumber.trim(),
       });
 
       toast.success("Reserva criada com sucesso!");

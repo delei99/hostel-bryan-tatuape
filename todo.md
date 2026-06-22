@@ -619,3 +619,11 @@
 - [x] Tornar RG ou Passaporte obrigatório
 - [x] Posicionar antes do campo "Observações"
 - [x] Testar validações completas (58 testes passando)
+
+
+## Bug Fix: Exibir RG/Passaporte no Recibo do WhatsApp
+- [x] Adicionar documentNumber ao banco de dados na tabela bookings
+- [x] Adicionar documentType ao banco de dados na tabela bookings
+- [x] Salvar RG/Passaporte quando a reserva é criada
+- [x] Exibir RG/Passaporte no recibo do WhatsApp (junto com CPF)
+- [x] Testar que recibo mostra todos os dados corretamente (58 testes passando)
