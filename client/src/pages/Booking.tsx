@@ -115,7 +115,31 @@ export default function Booking() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Aplicar máscara de telefone
+    if (name === 'phone') {
+      // Remover caracteres não-numéricos
+      const onlyNumbers = value.replace(/\D/g, '');
+      
+      // Limitar a 11 dígitos
+      const limited = onlyNumbers.slice(0, 11);
+      
+      // Aplicar máscara: (XX) XXXXX-XXXX
+      let formatted = limited;
+      if (limited.length > 0) {
+        if (limited.length <= 2) {
+          formatted = `(${limited}`;
+        } else if (limited.length <= 7) {
+          formatted = `(${limited.slice(0, 2)}) ${limited.slice(2)}`;
+        } else {
+          formatted = `(${limited.slice(0, 2)}) ${limited.slice(2, 7)}-${limited.slice(7)}`;
+        }
+      }
+      
+      setFormData(prev => ({ ...prev, [name]: formatted }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSelectChange = (name: string, value: string) => {
