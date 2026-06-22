@@ -601,3 +601,11 @@
 - [x] Atualizar Booking.tsx para usar descontos dinâmicos do banco
 - [x] Testar que descontos são aplicados corretamente
 - [x] Validar que 58 testes continuam passando
+
+
+## Melhoria: Campo de Pagamento na Reserva
+- [x] Adicionar campo "Pagamento no ato da reserva" (editável)
+- [x] Adicionar campo "Pagamento no check-in" (automático = Total - Pagamento ato)
+- [x] Exibir campos antes do botão "Finalizar Reserva"
+- [x] Validar que pagamento no ato não exceda o total
+- [x] Testar fluxo completo (58 testes passando)

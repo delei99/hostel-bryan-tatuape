@@ -41,7 +41,10 @@ export default function Booking() {
     checkOutTime: "12:00",
     numberOfGuests: "1",
     specialRequests: "",
+    paymentAtBooking: 0, // Pagamento no ato da reserva (em centavos)
   });
+
+  const [paymentAtBooking, setPaymentAtBooking] = useState(0); // Pagamento no ato da reserva (em centavos)
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<any>(null);
@@ -616,6 +619,32 @@ export default function Booking() {
               <div className="flex justify-between text-lg font-bold border-t pt-2">
                 <span>Total:</span>
                 <span className="text-accent">R$ {(priceCalculation.total / 100).toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Campos de Pagamento */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="paymentAtBooking">Pagamento no ato da reserva (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max={(priceCalculation.total / 100).toFixed(2)}
+                  value={paymentAtBooking > 0 ? (paymentAtBooking / 100).toFixed(2) : ""}
+                  onChange={(e) => setPaymentAtBooking(Math.round(parseFloat(e.target.value || "0") * 100))}
+                  placeholder="0.00"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Pagamento no check-in (R$)</Label>
+                <Input
+                  type="text"
+                  value={((priceCalculation.total - paymentAtBooking) / 100).toFixed(2)}
+                  disabled
+                  className="mt-1 bg-muted"
+                />
               </div>
             </div>
 
