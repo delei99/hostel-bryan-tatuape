@@ -644,3 +644,10 @@
 - [x] Se RG ou Passaporte forem preenchidos, devem ser válidos
 - [x] Atualizar mensagens de erro
 - [x] Testar validações (58 testes passando)
+
+
+## Melhoria: Máscara de Formatação Automática no Campo de CPF
+- [x] Criar função de formatação de CPF (000.000.000-00)
+- [x] Aplicar máscara enquanto o usuário digita
+- [x] Permitir que validação funcione com ou sem máscara
+- [x] Testar formatação com diferentes entradas (58 testes passando)

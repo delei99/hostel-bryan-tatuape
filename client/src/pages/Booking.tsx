@@ -57,6 +57,15 @@ export default function Booking() {
     return cleaned.length >= 6 && cleaned.length <= 9;
   };
 
+  // Formatar CPF com máscara (000.000.000-00)
+  const formatCPF = (cpf: string) => {
+    const cleaned = cpf.replace(/[^0-9]/g, '');
+    if (cleaned.length <= 3) return cleaned;
+    if (cleaned.length <= 6) return `${cleaned.slice(0, 3)}.${cleaned.slice(3)}`;
+    if (cleaned.length <= 9) return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6)}`;
+    return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6, 9)}-${cleaned.slice(9, 11)}`;
+  };
+
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -158,7 +167,13 @@ export default function Booking() {
   }, [formData.checkInDate, formData.checkOutDate, formData.numberOfGuests, formData.roomId, PRICE_PER_NIGHT, CLEANING_FEE, DISCOUNT_7_DAYS, DISCOUNT_15_DAYS, DISCOUNT_30_DAYS, rooms]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    
+    // Aplicar máscara de CPF
+    if (name === "cpf") {
+      value = formatCPF(value);
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
