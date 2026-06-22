@@ -627,12 +627,13 @@ export default function Booking() {
               <div>
                 <Label htmlFor="paymentAtBooking">Pagamento no ato da reserva (R$)</Label>
                 <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max={(priceCalculation.total / 100).toFixed(2)}
+                  type="text"
+                  inputMode="decimal"
                   value={paymentAtBooking > 0 ? (paymentAtBooking / 100).toFixed(2) : ""}
-                  onChange={(e) => setPaymentAtBooking(Math.round(parseFloat(e.target.value || "0") * 100))}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9.]/g, '');
+                    setPaymentAtBooking(Math.round(parseFloat(value || "0") * 100));
+                  }}
                   placeholder="0.00"
                   className="mt-1"
                 />
