@@ -628,11 +628,16 @@ export default function Booking() {
                 <Label htmlFor="paymentAtBooking">Pagamento no ato da reserva (R$)</Label>
                 <Input
                   type="text"
-                  inputMode="decimal"
+                  inputMode="numeric"
                   value={paymentAtBooking > 0 ? (paymentAtBooking / 100).toFixed(2) : ""}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9.]/g, '');
-                    setPaymentAtBooking(Math.round(parseFloat(value || "0") * 100));
+                    let numericValue = e.target.value.replace(/[^0-9]/g, '');
+                    if (!numericValue) {
+                      setPaymentAtBooking(0);
+                      return;
+                    }
+                    const centavos = parseInt(numericValue, 10);
+                    setPaymentAtBooking(centavos);
                   }}
                   onFocus={(e) => {
                     if (paymentAtBooking > 0) {
