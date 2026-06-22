@@ -20,6 +20,7 @@ export default function AdminRooms() {
     type: "private",
     capacity: 1,
     pricePerNight: 0,
+    cleaningFee: 7,
     description: "",
     amenities: "",
     bathroomType: "shared",
@@ -48,6 +49,7 @@ export default function AdminRooms() {
         type: "private",
         capacity: 1,
         pricePerNight: 0,
+        cleaningFee: 7,
         description: "",
         amenities: "",
         bathroomType: "shared",
@@ -79,6 +81,7 @@ export default function AdminRooms() {
       name: editFormData.name,
       description: editFormData.description,
       pricePerNight: Math.round(editFormData.pricePerNight),
+      cleaningFee: Math.round(editFormData.cleaningFee),
       capacity: parseInt(editFormData.capacity),
       type: editFormData.type,
       amenities: editFormData.amenities,
@@ -111,6 +114,7 @@ export default function AdminRooms() {
       type: createFormData.type,
       capacity: parseInt(createFormData.capacity),
       pricePerNight: Math.round(parseFloat(createFormData.pricePerNight) * 100),
+      cleaningFee: Math.round(parseFloat(createFormData.cleaningFee) * 100),
       description: createFormData.description || undefined,
       amenities: createFormData.amenities || undefined,
       bathroomType: createFormData.bathroomType,
@@ -198,6 +202,17 @@ export default function AdminRooms() {
                     type="number"
                     value={createFormData.pricePerNight}
                     onChange={(e) => handleCreateFieldChange("pricePerNight", e.target.value)}
+                    min="0"
+                    step="0.01"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Taxa de Limpeza (R$)</Label>
+                  <Input
+                    type="number"
+                    value={createFormData.cleaningFee}
+                    onChange={(e) => handleCreateFieldChange("cleaningFee", e.target.value)}
                     min="0"
                     step="0.01"
                     className="mt-1"
@@ -296,6 +311,19 @@ export default function AdminRooms() {
                         className="mt-1"
                       />
                     </div>
+                    <div>
+                      <Label className="text-sm font-medium">Taxa de Limpeza (R$)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={editFormData?.cleaningFee ? (editFormData.cleaningFee / 100).toFixed(2) : ""}
+                        onChange={(e) => handleFieldChange("cleaningFee", Math.round(parseFloat(e.target.value) * 100))}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-medium">Capacidade (pessoas)</Label>
                       <Input

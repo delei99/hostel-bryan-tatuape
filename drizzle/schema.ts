@@ -39,6 +39,7 @@ export const rooms = mysqlTable("rooms", {
   imageUrl: text("imageUrl"), // URL principal da foto do quarto
   additionalImages: text("additionalImages"), // JSON array com URLs adicionais
   bathroomType: mysqlEnum("bathroomType", ["private", "shared"]).default("shared").notNull(),
+  cleaningFee: int("cleaningFee").default(700).notNull(), // em centavos (padrão R$ 7,00)
   status: mysqlEnum("status", ["available", "maintenance", "archived"]).default("available").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

@@ -581,3 +581,14 @@
 - [x] Criar testes de validação de telefone (5 novos testes)
 - [x] Corrigir regex para detectar apenas DDDs válidos brasileiros (11-99)
 - [x] Validar que 58 testes passam (53 + 5 novos)
+
+
+## Melhoria: Restaurar Página de Reserva com Taxa de Limpeza Editável
+- [x] Adicionar coluna cleaningFee ao schema de rooms
+- [x] Criar migration SQL para adicionar cleaningFee
+- [x] Atualizar AdminRooms.tsx com campo de taxa de limpeza
+- [x] Restaurar página de resumo de reserva (BookingSummary)
+- [x] Implementar desconto de 12% para uma pessoa
+- [x] Exibir taxa de limpeza dinâmica na reserva
+- [x] Adicionar botão "Enviar para WhatsApp" no resumo
+- [x] Testar fluxo completo de reserva

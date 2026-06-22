@@ -1,0 +1,1 @@
+ALTER TABLE `rooms` ADD `cleaningFee` int DEFAULT 700 NOT NULL;
