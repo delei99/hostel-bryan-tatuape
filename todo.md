@@ -592,3 +592,12 @@
 - [x] Exibir taxa de limpeza dinâmica na reserva
 - [x] Adicionar botão "Enviar para WhatsApp" no resumo
 - [x] Testar fluxo completo de reserva
+
+
+## Melhoria: Descontos por Duração Editáveis
+- [x] Adicionar colunas de desconto ao schema (discount7Days, discount15Days, discount30Days)
+- [x] Criar migration SQL para adicionar colunas
+- [x] Adicionar campos de desconto no painel AdminRooms (criar e editar)
+- [x] Atualizar Booking.tsx para usar descontos dinâmicos do banco
+- [x] Testar que descontos são aplicados corretamente
+- [x] Validar que 58 testes continuam passando

@@ -21,6 +21,9 @@ export default function AdminRooms() {
     capacity: 1,
     pricePerNight: 0,
     cleaningFee: 7,
+    discount7Days: 8,
+    discount15Days: 16,
+    discount30Days: 45,
     description: "",
     amenities: "",
     bathroomType: "shared",
@@ -50,6 +53,9 @@ export default function AdminRooms() {
         capacity: 1,
         pricePerNight: 0,
         cleaningFee: 7,
+        discount7Days: 8,
+        discount15Days: 16,
+        discount30Days: 45,
         description: "",
         amenities: "",
         bathroomType: "shared",
@@ -82,6 +88,9 @@ export default function AdminRooms() {
       description: editFormData.description,
       pricePerNight: Math.round(editFormData.pricePerNight),
       cleaningFee: Math.round(editFormData.cleaningFee),
+      discount7Days: parseInt(editFormData.discount7Days),
+      discount15Days: parseInt(editFormData.discount15Days),
+      discount30Days: parseInt(editFormData.discount30Days),
       capacity: parseInt(editFormData.capacity),
       type: editFormData.type,
       amenities: editFormData.amenities,
@@ -115,6 +124,9 @@ export default function AdminRooms() {
       capacity: parseInt(createFormData.capacity),
       pricePerNight: Math.round(parseFloat(createFormData.pricePerNight) * 100),
       cleaningFee: Math.round(parseFloat(createFormData.cleaningFee) * 100),
+      discount7Days: parseInt(createFormData.discount7Days),
+      discount15Days: parseInt(createFormData.discount15Days),
+      discount30Days: parseInt(createFormData.discount30Days),
       description: createFormData.description || undefined,
       amenities: createFormData.amenities || undefined,
       bathroomType: createFormData.bathroomType,
@@ -220,6 +232,42 @@ export default function AdminRooms() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label>Desconto 7+ Dias (%)</Label>
+                  <Input
+                    type="number"
+                    value={createFormData.discount7Days}
+                    onChange={(e) => handleCreateFieldChange("discount7Days", e.target.value)}
+                    min="0"
+                    max="100"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Desconto 15+ Dias (%)</Label>
+                  <Input
+                    type="number"
+                    value={createFormData.discount15Days}
+                    onChange={(e) => handleCreateFieldChange("discount15Days", e.target.value)}
+                    min="0"
+                    max="100"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Desconto 30+ Dias (%)</Label>
+                  <Input
+                    type="number"
+                    value={createFormData.discount30Days}
+                    onChange={(e) => handleCreateFieldChange("discount30Days", e.target.value)}
+                    min="0"
+                    max="100"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
               <div>
                 <Label>Descrição</Label>
                 <textarea
@@ -318,6 +366,42 @@ export default function AdminRooms() {
                         step="0.01"
                         value={editFormData?.cleaningFee ? (editFormData.cleaningFee / 100).toFixed(2) : ""}
                         onChange={(e) => handleFieldChange("cleaningFee", Math.round(parseFloat(e.target.value) * 100))}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium">Desconto 7+ Dias (%)</Label>
+                      <Input
+                        type="number"
+                        value={editFormData?.discount7Days || ""}
+                        onChange={(e) => handleFieldChange("discount7Days", parseInt(e.target.value))}
+                        min="0"
+                        max="100"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Desconto 15+ Dias (%)</Label>
+                      <Input
+                        type="number"
+                        value={editFormData?.discount15Days || ""}
+                        onChange={(e) => handleFieldChange("discount15Days", parseInt(e.target.value))}
+                        min="0"
+                        max="100"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Desconto 30+ Dias (%)</Label>
+                      <Input
+                        type="number"
+                        value={editFormData?.discount30Days || ""}
+                        onChange={(e) => handleFieldChange("discount30Days", parseInt(e.target.value))}
+                        min="0"
+                        max="100"
                         className="mt-1"
                       />
                     </div>

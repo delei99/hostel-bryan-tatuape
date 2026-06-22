@@ -40,6 +40,9 @@ export const rooms = mysqlTable("rooms", {
   additionalImages: text("additionalImages"), // JSON array com URLs adicionais
   bathroomType: mysqlEnum("bathroomType", ["private", "shared"]).default("shared").notNull(),
   cleaningFee: int("cleaningFee").default(700).notNull(), // em centavos (padrão R$ 7,00)
+  discount7Days: int("discount7Days").default(8).notNull(), // % de desconto para 7+ dias
+  discount15Days: int("discount15Days").default(16).notNull(), // % de desconto para 15+ dias
+  discount30Days: int("discount30Days").default(45).notNull(), // % de desconto para 30+ dias
   status: mysqlEnum("status", ["available", "maintenance", "archived"]).default("available").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

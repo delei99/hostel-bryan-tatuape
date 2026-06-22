@@ -76,6 +76,9 @@ export default function Booking() {
   const PRICE_PER_NIGHT = selectedRoom?.pricePerNight || 8000; // Usar preço vigente ou padrão
   const CLEANING_FEE = selectedRoom?.cleaningFee || 700; // Usar taxa de limpeza do banco ou padrão (R$ 7,00)
   const DISCOUNT_PERCENTAGE = 12;
+  const DISCOUNT_7_DAYS = selectedRoom?.discount7Days || 8; // % de desconto para 7+ dias
+  const DISCOUNT_15_DAYS = selectedRoom?.discount15Days || 16; // % de desconto para 15+ dias
+  const DISCOUNT_30_DAYS = selectedRoom?.discount30Days || 45; // % de desconto para 30+ dias
 
   // Calcular preço com desconto por duração
   const priceCalculation = useMemo(() => {
@@ -92,12 +95,12 @@ export default function Booking() {
     
     // Desconto por duração da reserva (tem prioridade)
     let durationDiscountPercent = 0;
-    if (nights >= 28) {
-      durationDiscountPercent = 35; // 35% para 28+ dias
-    } else if (nights >= 14) {
-      durationDiscountPercent = 20; // 20% para 14+ dias
+    if (nights >= 30) {
+      durationDiscountPercent = DISCOUNT_30_DAYS; // Desconto para 30+ dias (dinâmico)
+    } else if (nights >= 15) {
+      durationDiscountPercent = DISCOUNT_15_DAYS; // Desconto para 15+ dias (dinâmico)
     } else if (nights >= 7) {
-      durationDiscountPercent = 11; // 11% para 7+ dias
+      durationDiscountPercent = DISCOUNT_7_DAYS; // Desconto para 7+ dias (dinâmico)
     }
     
     // Aplicar desconto de duração sobre o subtótal
@@ -111,7 +114,7 @@ export default function Booking() {
     const total = subtotal - totalDiscount + CLEANING_FEE;
 
     return { nights, subtotal, discount: totalDiscount, durationDiscount, durationDiscountPercent, cleaning: CLEANING_FEE, total };
-  }, [formData.checkInDate, formData.checkOutDate, formData.numberOfGuests, formData.roomId, PRICE_PER_NIGHT, rooms]);
+  }, [formData.checkInDate, formData.checkOutDate, formData.numberOfGuests, formData.roomId, PRICE_PER_NIGHT, CLEANING_FEE, DISCOUNT_7_DAYS, DISCOUNT_15_DAYS, DISCOUNT_30_DAYS, rooms]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
