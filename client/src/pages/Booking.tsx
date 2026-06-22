@@ -634,6 +634,11 @@ export default function Booking() {
                     const value = e.target.value.replace(/[^0-9.]/g, '');
                     setPaymentAtBooking(Math.round(parseFloat(value || "0") * 100));
                   }}
+                  onFocus={(e) => {
+                    if (paymentAtBooking > 0) {
+                      e.target.select();
+                    }
+                  }}
                   placeholder="0.00"
                   className="mt-1"
                 />
