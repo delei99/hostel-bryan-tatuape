@@ -651,3 +651,10 @@
 - [x] Aplicar máscara enquanto o usuário digita
 - [x] Permitir que validação funcione com ou sem máscara
 - [x] Testar formatação com diferentes entradas (58 testes passando)
+
+
+## Melhoria: Remover Asteriscos de RG e UF (Indicar Opcionais)
+- [x] Remover asterisco (*) do label "Número do RG"
+- [x] Remover asterisco (*) do label "UF"
+- [x] Remover atributo required do input de RG
+- [x] Testar que validações continuam funcionando (58 testes passando)

@@ -651,17 +651,16 @@ export default function Booking() {
             {/* RG com UF */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="documentNumber">Número do RG *</Label>
+                <Label htmlFor="documentNumber">Número do RG</Label>
                 <Input
                   name="documentNumber"
                   value={formData.documentNumber}
                   onChange={handleInputChange}
                   placeholder="123456789"
-                  required
                 />
               </div>
               <div>
-                <Label htmlFor="documentUF">UF *</Label>
+                <Label htmlFor="documentUF">UF</Label>
                 <Select value={formData.documentUF} onValueChange={(value) => setFormData({ ...formData, documentUF: value })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o estado" />
