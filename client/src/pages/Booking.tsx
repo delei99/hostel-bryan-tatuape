@@ -635,6 +635,9 @@ export default function Booking() {
                   placeholder="123.456.789-00"
                   required
                 />
+                {formData.cpf.trim() !== "" && !validateCPF(formData.cpf) && (
+                  <p className="text-sm text-red-500 mt-1">CPF inválido. Verifique o número digitado.</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="nationality">Nacionalidade *</Label>

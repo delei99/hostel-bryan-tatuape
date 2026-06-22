@@ -658,3 +658,10 @@
 - [x] Remover asterisco (*) do label "UF"
 - [x] Remover atributo required do input de RG
 - [x] Testar que validações continuam funcionando (58 testes passando)
+
+
+## Melhoria: Mensagem de Erro Clara para CPF Inválido
+- [x] Adicionar validação em tempo real do CPF
+- [x] Exibir mensagem de erro abaixo do campo de CPF
+- [x] Mensagem desaparece quando CPF fica válido
+- [x] Testar com diferentes entradas de CPF (58 testes passando)
