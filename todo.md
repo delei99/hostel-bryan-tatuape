@@ -571,3 +571,10 @@
 - [x] Adicionar contagem de sucessos e falhas
 - [x] Melhorar tratamento de erros com feedback granular
 - [x] Testar que todos os 53 testes continuam passando
+
+## Melhoria: Aumentar Limite de Dígitos para Números Internacionais
+- [x] Aumentar limite de dígitos no campo de telefone de 15 para 20
+- [x] Suportar números internacionais completos (Brasil, EUA, Alemanha, etc.)
+- [x] Corrigir erros de TypeScript em Booking.tsx (useQuery, checkAvailability)
+- [x] Testar que todos os 53 testes continuam passando
+- [x] Validar que números brasileiros (13 dígitos) e internacionais funcionam

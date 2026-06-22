@@ -519,7 +519,11 @@ export default function AdminDashboard() {
       message += `Aguardo confirmação!`;
       
       const encodedMessage = encodeURIComponent(message);
-      const phoneNumber = booking.guest.phone.replace(/[^0-9]/g, '');
+      let phoneNumber = booking.guest.phone.replace(/[^0-9]/g, '');
+      // Adicionar código de país se não estiver presente
+      if (!phoneNumber.startsWith('55')) {
+        phoneNumber = '55' + phoneNumber;
+      }
       const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
       window.open(whatsappUrl, "_blank");
     } catch (error) {
