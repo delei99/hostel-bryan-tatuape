@@ -676,9 +676,24 @@ export async function getBlockedDates(roomId: number, startDate: Date, endDate: 
   const db = await getDb();
   if (!db) return [];
   
-  return db
-    .select()
+  const { sql } = await import('drizzle-orm');
+  
+  const result = await db
+    .select({
+      id: blockedDates.id,
+      roomId: blockedDates.roomId,
+      bookingId: blockedDates.bookingId,
+      startDate: blockedDates.startDate,
+      endDate: blockedDates.endDate,
+      reason: blockedDates.reason,
+      createdAt: blockedDates.createdAt,
+      updatedAt: blockedDates.updatedAt,
+      confirmationCode: bookings.confirmationCode,
+      guestName: sql`CONCAT(${guests.firstName}, ' ', ${guests.lastName})`,
+    })
     .from(blockedDates)
+    .leftJoin(bookings, eq(blockedDates.bookingId, bookings.id))
+    .leftJoin(guests, eq(bookings.guestId, guests.id))
     .where(
       and(
         eq(blockedDates.roomId, roomId),
@@ -686,6 +701,8 @@ export async function getBlockedDates(roomId: number, startDate: Date, endDate: 
         gt(blockedDates.endDate, startDate)
       )
     );
+  
+  return result;
 }
 
 export async function deleteBlockedDate(blockedDateId: number) {
