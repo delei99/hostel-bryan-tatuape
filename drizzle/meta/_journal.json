@@ -176,6 +176,13 @@
       "when": 1782156445518,
       "tag": "0024_sparkling_wrecker",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1782217543787,
+      "tag": "0025_clumsy_the_executioner",
+      "breakpoints": true
     }
   ]
 }

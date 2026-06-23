@@ -120,6 +120,8 @@ export default function EditBooking() {
     setIsSubmitting(true);
 
     try {
+      const utils = trpc.useUtils();
+      
       await updateBooking.mutateAsync({
         id: parseInt(bookingId),
         roomId: parseInt(formData.roomId),
@@ -128,6 +130,10 @@ export default function EditBooking() {
         numberOfGuests: formData.numberOfGuests,
         specialRequests: formData.specialRequests,
       });
+
+      // Invalidar cache para sincronizar automaticamente no painel administrativo
+      await utils.bookings.list.invalidate();
+      await utils.blockedDates.list.invalidate();
 
       toast.success("Reserva atualizada com sucesso!");
       setUpdateSuccess(true);

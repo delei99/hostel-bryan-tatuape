@@ -678,3 +678,11 @@
 - [x] Posicionar ícone ao lado do campo de CPF
 - [x] Usar ícone CheckCircle (lucide-react)
 - [x] Testar que ícone aparece apenas quando CPF é válido
+
+
+## Melhoria: Sincronização Automática de Edição de Reservas nas Datas Bloqueadas
+- [x] Implementar sincronização automática ao editar reserva
+- [x] Atualizar datas bloqueadas quando reserva é modificada
+- [x] Refletir mudanças no painel administrativo em tempo real
+- [x] Sem alteração de layout do projeto
+- [x] Testar fluxo completo de edição e sincronização

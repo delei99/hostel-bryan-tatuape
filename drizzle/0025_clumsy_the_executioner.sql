@@ -1,0 +1,2 @@
+ALTER TABLE `blockedDates` ADD `bookingId` int;--> statement-breakpoint
+ALTER TABLE `blockedDates` ADD CONSTRAINT `blockedDates_bookingId_bookings_id_fk` FOREIGN KEY (`bookingId`) REFERENCES `bookings`(`id`) ON DELETE cascade ON UPDATE no action;

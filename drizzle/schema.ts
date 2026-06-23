@@ -143,6 +143,7 @@ export type InsertRoomPhoto = typeof roomPhotos.$inferInsert;
 export const blockedDates = mysqlTable("blockedDates", {
   id: int("id").autoincrement().primaryKey(),
   roomId: int("roomId").notNull().references(() => rooms.id, { onDelete: "cascade" }),
+  bookingId: int("bookingId").references(() => bookings.id, { onDelete: "cascade" }), // Referência à reserva que criou este bloqueio
   startDate: timestamp("startDate").notNull(),
   endDate: timestamp("endDate").notNull(),
   reason: varchar("reason", { length: 255 }), // "booking" ou "manual"
