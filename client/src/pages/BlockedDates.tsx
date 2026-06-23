@@ -605,14 +605,6 @@ export default function BlockedDates() {
                       <p className="text-sm text-muted-foreground">
                         Motivo: {blocked.reason}
                       </p>
-                      {(blocked as any).confirmationCode && (
-                        <div className="text-sm text-foreground mt-2 bg-blue-100 p-2 rounded border border-blue-300">
-                          <p className="font-semibold">Código da Reserva: <span className="text-blue-700">{(blocked as any).confirmationCode}</span></p>
-                          {(blocked as any).guestName && (
-                            <p className="text-xs text-gray-700">Hóspede: {(blocked as any).guestName}</p>
-                          )}
-                        </div>
-                      )}
                       {(blocked as any).createdAt && (
                         <p className="text-xs text-gray-500">
                           Criado: {new Date((blocked as any).createdAt).toLocaleString('pt-BR')}
