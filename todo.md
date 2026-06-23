@@ -686,3 +686,11 @@
 - [x] Refletir mudanças no painel administrativo em tempo real
 - [x] Sem alteração de layout do projeto
 - [x] Testar fluxo completo de edição e sincronização
+
+
+## Melhoria: Adicionar Código de Confirmação nas Fichas de Datas Bloqueadas
+- [x] Adicionar código de confirmação no campo "Motivo:" das datas bloqueadas
+- [x] Atualizar todas as fichas existentes dos quartos 1-7 com código de confirmação
+- [x] Novas reservas incluem código de confirmação automaticamente
+- [x] Sem alteração de layout do projeto
+- [x] Todos os 58 testes passando

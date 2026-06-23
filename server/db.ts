@@ -307,6 +307,12 @@ export async function createBooking(bookingData: any) {
   }
   if (!bookingId || isNaN(bookingId)) throw new Error("Failed to create booking: invalid bookingId");
   
+  // Gerar codigo de confirmacao unico (formato: YYYYMMDD-XXXXX)
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
+  const confirmationCode = `${dateStr}-${randomStr}`;
+  
   // Bloquear automaticamente as datas da reserva
   try {
     // Usar timezone local para evitar problemas de conversão
@@ -322,18 +328,12 @@ export async function createBooking(bookingData: any) {
       bookingId: bookingId,
       startDate,
       endDate,
-      reason: `Reserva automática - Hóspede: ${bookingData.firstName} ${bookingData.lastName}`,
+      reason: `Reserva automática - Código: ${confirmationCode} - Hóspede: ${bookingData.firstName} ${bookingData.lastName}`,
     });
   } catch (error) {
     console.error("[Booking] Erro ao bloquear datas automaticamente:", error);
     // Não falhar a reserva se o bloqueio automático falhar
   }
-  
-  // Gerar código de confirmação único (formato: YYYYMMDD-XXXXX)
-  const now = new Date();
-  const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-  const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
-  const confirmationCode = `${dateStr}-${randomStr}`;
   
   // Atualizar booking com o código de confirmação
   await db.update(bookings).set({ confirmationCode }).where(eq(bookings.id, bookingId));
