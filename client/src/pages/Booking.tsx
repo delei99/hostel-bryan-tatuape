@@ -311,7 +311,7 @@ export default function Booking() {
         numberOfGuests: numberOfGuests.toString(),
         dailyType: numberOfGuests === 1 ? "individual" : "couple",
         subtotal: priceCalculation.subtotal,
-        discountPercentage: numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : 0,
+        discountPercentage: priceCalculation.durationDiscountPercent > 0 ? priceCalculation.durationDiscountPercent : (numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : 0),
         discountAmount: priceCalculation.discount,
         cleaningFee: CLEANING_FEE,
         totalPrice: finalTotal,

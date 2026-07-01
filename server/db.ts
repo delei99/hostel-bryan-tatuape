@@ -231,12 +231,23 @@ export async function createBooking(bookingData: any) {
   const currentRoomPrice = room.pricePerNight || 80; // Preço padrão de 80 se não houver
   const baseSubtotal = currentRoomPrice * numberOfNights;
   
-  // Aplicar desconto se for 1 pessoa (12%)
+  // Aplicar desconto por duração ou por número de hóspedes
   const numberOfGuests = parseInt(bookingData.numberOfGuests) || 1;
   let discountAmount = 0;
   let discountPercentage = 0;
   
-  if (numberOfGuests === 1) {
+  // Desconto por duração tem prioridade
+  if (numberOfNights >= 30) {
+    discountPercentage = room.discount30Days || 45;
+    discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
+  } else if (numberOfNights >= 15) {
+    discountPercentage = room.discount15Days || 16;
+    discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
+  } else if (numberOfNights >= 7) {
+    discountPercentage = room.discount7Days || 8;
+    discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
+  } else if (numberOfGuests === 1) {
+    // Desconto de 12% para 1 pessoa só se não houver desconto por duração
     discountPercentage = 12;
     discountAmount = Math.round(baseSubtotal * 0.12);
   }
@@ -983,11 +994,22 @@ export async function updateBooking(bookingId: number, updateData: any, editedBy
   const currentRoomPrice = room.pricePerNight || 80;
   const baseSubtotal = currentRoomPrice * numberOfNights;
   
-  // Aplicar desconto se for 1 pessoa (12%)
+  // Aplicar desconto por duração ou por número de hóspedes
   let discountAmount = 0;
   let discountPercentage = 0;
   
-  if (numberOfGuests === 1) {
+  // Desconto por duração tem prioridade
+  if (numberOfNights >= 30) {
+    discountPercentage = room.discount30Days || 45;
+    discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
+  } else if (numberOfNights >= 15) {
+    discountPercentage = room.discount15Days || 16;
+    discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
+  } else if (numberOfNights >= 7) {
+    discountPercentage = room.discount7Days || 8;
+    discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
+  } else if (numberOfGuests === 1) {
+    // Desconto de 12% para 1 pessoa só se não houver desconto por duração
     discountPercentage = 12;
     discountAmount = Math.round(baseSubtotal * 0.12);
   }

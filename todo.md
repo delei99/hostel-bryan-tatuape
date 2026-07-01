@@ -694,3 +694,11 @@
 - [x] Novas reservas incluem código de confirmação automaticamente
 - [x] Sem alteração de layout do projeto
 - [x] Todos os 58 testes passando
+
+
+## Correção: Desconto de 7, 15, 30 Dias Não Está Sendo Aplicado
+- [x] Verificar lógica de cálculo de desconto na função de preço
+- [x] Aplicar desconto automaticamente ao finalizar reserva
+- [x] Exibir desconto na mensagem do WhatsApp
+- [x] Testar desconto para 7, 15 e 30 dias
+- [x] Sem alteração de layout do projeto
