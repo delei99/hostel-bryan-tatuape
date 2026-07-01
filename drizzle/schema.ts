@@ -112,6 +112,8 @@ export const bookings = mysqlTable("bookings", {
   checkOutTime: varchar("checkOutTime", { length: 5 }).notNull(), // HH:mm format (ate 12:00)
   documentType: mysqlEnum("documentType", ["rg", "passport"]).notNull(), // Tipo de documento
   documentNumber: varchar("documentNumber", { length: 20 }).notNull(), // Número do RG ou Passaporte
+  paymentAtBooking: int("paymentAtBooking").default(0), // Valor a pagar no ato da reserva
+  paymentAtCheckIn: int("paymentAtCheckIn").default(0), // Valor a pagar no check-in
   editedAt: timestamp("editedAt"), // Ultima edicao
   editedBy: varchar("editedBy", { length: 100 }), // Nome de quem editou
   createdAt: timestamp("createdAt").defaultNow().notNull(),

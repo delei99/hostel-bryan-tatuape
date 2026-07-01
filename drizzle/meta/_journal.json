@@ -183,6 +183,13 @@
       "when": 1782217543787,
       "tag": "0025_clumsy_the_executioner",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1782902082655,
+      "tag": "0026_late_rumiko_fujikawa",
+      "breakpoints": true
     }
   ]
 }

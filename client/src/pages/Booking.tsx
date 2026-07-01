@@ -318,6 +318,8 @@ export default function Booking() {
         specialRequests: formData.specialRequests.trim(),
         documentType: formData.documentType as "rg" | "passport",
         documentNumber: formData.documentNumber.trim(),
+        paymentAtBooking: paymentAtBooking,
+        paymentAtCheckIn: finalTotal - paymentAtBooking,
       });
 
       toast.success("Reserva criada com sucesso!");

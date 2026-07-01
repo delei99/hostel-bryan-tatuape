@@ -709,3 +709,12 @@
 - [x] Corrigir atualização de cleaningFee no backend
 - [x] Testar atualização de taxa de limpeza
 - [x] Sem alteração de layout do projeto
+
+
+## Melhoria: Campos de Pagamento em Reservas
+- [x] Adicionar campos de pagamento no ato da reserva e check-in
+- [x] Exibir valores de pagamento na mensagem do WhatsApp ao finalizar
+- [x] Exibir campos de pagamento na ficha de detalhes da reserva
+- [x] Permitir editar valores de pagamento na ficha de editar reservas
+- [x] Enviar valores atualizados para WhatsApp ao salvar alterações
+- [x] Sem alteração de layout do projeto

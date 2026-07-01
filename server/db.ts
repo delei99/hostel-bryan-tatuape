@@ -255,6 +255,8 @@ export async function createBooking(bookingData: any) {
   const subtotal = baseSubtotal - discountAmount;
   const cleaningFee = bookingData.cleaningFee || 700;
   const finalTotalPrice = subtotal + cleaningFee;
+  const paymentAtBooking = bookingData.paymentAtBooking || 0;
+  const paymentAtCheckIn = bookingData.paymentAtCheckIn || (finalTotalPrice - paymentAtBooking);
   
   const bookingToInsert = {
     guestId,
@@ -273,6 +275,8 @@ export async function createBooking(bookingData: any) {
     checkOutTime: bookingData.checkOutTime,
     documentType: bookingData.documentType || "rg",
     documentNumber: bookingData.documentNumber || "",
+    paymentAtBooking: paymentAtBooking,
+    paymentAtCheckIn: paymentAtCheckIn,
   };
   
   console.log("[createBooking] bookingToInsert totalPrice:", bookingToInsert.totalPrice);
@@ -283,7 +287,8 @@ export async function createBooking(bookingData: any) {
     INSERT INTO bookings (
       guestId, roomId, checkInDate, checkOutDate, numberOfGuests, dailyType,
       discountPercentage, discountAmount, cleaningFee, subtotal, totalPrice,
-      specialRequests, checkInTime, checkOutTime, documentType, documentNumber
+      specialRequests, checkInTime, checkOutTime, documentType, documentNumber,
+      paymentAtBooking, paymentAtCheckIn
     ) VALUES (
       ${bookingToInsert.guestId},
       ${bookingToInsert.roomId},
@@ -300,7 +305,9 @@ export async function createBooking(bookingData: any) {
       ${bookingToInsert.checkInTime},
       ${bookingToInsert.checkOutTime},
       ${bookingToInsert.documentType},
-      ${bookingToInsert.documentNumber}
+      ${bookingToInsert.documentNumber},
+      ${bookingToInsert.paymentAtBooking},
+      ${bookingToInsert.paymentAtCheckIn}
     )
   `)
   
