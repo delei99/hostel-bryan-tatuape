@@ -247,9 +247,9 @@ export async function createBooking(bookingData: any) {
     discountPercentage = room.discount7Days || 8;
     discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
   } else if (numberOfGuests === 1) {
-    // Desconto de 12% para 1 pessoa só se não houver desconto por duração
-    discountPercentage = 12;
-    discountAmount = Math.round(baseSubtotal * 0.12);
+    // Desconto de 11% para 1 pessoa só se não houver desconto por duração
+    discountPercentage = 11;
+    discountAmount = Math.round(baseSubtotal * 0.11);
   }
   
   const subtotal = baseSubtotal - discountAmount;
@@ -1009,9 +1009,9 @@ export async function updateBooking(bookingId: number, updateData: any, editedBy
     discountPercentage = room.discount7Days || 8;
     discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
   } else if (numberOfGuests === 1) {
-    // Desconto de 12% para 1 pessoa só se não houver desconto por duração
-    discountPercentage = 12;
-    discountAmount = Math.round(baseSubtotal * 0.12);
+    // Desconto de 11% para 1 pessoa só se não houver desconto por duração
+    discountPercentage = 11;
+    discountAmount = Math.round(baseSubtotal * 0.11);
   }
   
   const subtotal = baseSubtotal - discountAmount;

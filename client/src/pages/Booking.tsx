@@ -125,7 +125,7 @@ export default function Booking() {
   const selectedRoom = rooms.find(r => r.id === parseInt(formData.roomId));
   const PRICE_PER_NIGHT = selectedRoom?.pricePerNight || 8000; // Usar preço vigente ou padrão
   const CLEANING_FEE = selectedRoom?.cleaningFee || 700; // Usar taxa de limpeza do banco ou padrão (R$ 7,00)
-  const DISCOUNT_PERCENTAGE = 12;
+  const DISCOUNT_PERCENTAGE = 11;
   const DISCOUNT_7_DAYS = selectedRoom?.discount7Days || 8; // % de desconto para 7+ dias
   const DISCOUNT_15_DAYS = selectedRoom?.discount15Days || 16; // % de desconto para 15+ dias
   const DISCOUNT_30_DAYS = selectedRoom?.discount30Days || 45; // % de desconto para 30+ dias
