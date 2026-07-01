@@ -702,3 +702,10 @@
 - [x] Exibir desconto na mensagem do WhatsApp
 - [x] Testar desconto para 7, 15 e 30 dias
 - [x] Sem alteração de layout do projeto
+
+
+## Correção: Taxa de Limpeza Não Atualiza ao Editar Quarto
+- [x] Verificar função updateRoom para taxa de limpeza
+- [x] Corrigir atualização de cleaningFee no backend
+- [x] Testar atualização de taxa de limpeza
+- [x] Sem alteração de layout do projeto

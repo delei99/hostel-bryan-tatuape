@@ -1128,7 +1128,7 @@ export async function updateRoom(roomId: number, updateData: any) {
   const updateSet: Record<string, any> = {};
 
   // Apenas campos permitidos
-  const allowedFields = ['name', 'description', 'pricePerNight', 'capacity', 'type', 'amenities', 'status'];
+  const allowedFields = ['name', 'description', 'pricePerNight', 'capacity', 'type', 'amenities', 'status', 'cleaningFee', 'discount7Days', 'discount15Days', 'discount30Days', 'bathroomType'];
   
   for (const field of allowedFields) {
     if (updateData[field] !== undefined) {
