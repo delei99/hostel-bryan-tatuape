@@ -1130,21 +1130,21 @@ export default function AdminDashboard() {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-foreground/70">Subtotal:</span>
-                        <span className="text-foreground">R$ {(selectedBooking.booking.subtotal / 100).toFixed(2)}</span>
+                        <span className="text-foreground">{(selectedBooking.booking.subtotal / 100).toFixed(2)} R$</span>
                       </div>
                       {selectedBooking.booking.discountPercentage > 0 && (
                         <div className="flex justify-between">
                           <span className="text-foreground/70">Desconto ({selectedBooking.booking.discountPercentage}%):</span>
-                          <span className="text-foreground">-R$ {(selectedBooking.booking.discountAmount / 100).toFixed(2)}</span>
+                          <span className="text-foreground">-{(selectedBooking.booking.discountAmount / 100).toFixed(2)} R$</span>
                         </div>
                       )}
                       <div className="flex justify-between">
                         <span className="text-foreground/70">Taxa de Limpeza:</span>
-                        <span className="text-foreground">R$ {(selectedBooking.booking.cleaningFee / 100).toFixed(2)}</span>
+                        <span className="text-foreground">{(selectedBooking.booking.cleaningFee / 100).toFixed(2)} R$</span>
                       </div>
                       <div className="flex justify-between font-semibold border-t border-border pt-2">
                         <span className="text-foreground">Total:</span>
-                        <span className="text-foreground">R$ {(selectedBooking.booking.totalPrice / 100).toFixed(2)}</span>
+                        <span className="text-foreground">{(selectedBooking.booking.totalPrice / 100).toFixed(2)} R$</span>
                       </div>
                     </div>
                   </div>
@@ -1154,11 +1154,11 @@ export default function AdminDashboard() {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-foreground/70">Pagamento no ato da reserva:</span>
-                        <span className="text-foreground">R$ {(selectedBooking.booking.paymentAtBooking / 100).toFixed(2)}</span>
+                        <span className="text-foreground">{(selectedBooking.booking.paymentAtBooking / 100).toFixed(2)} R$</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-foreground/70">Pagamento no check-in:</span>
-                        <span className="text-foreground">R$ {(selectedBooking.booking.paymentAtCheckIn / 100).toFixed(2)}</span>
+                        <span className="text-foreground">{(selectedBooking.booking.paymentAtCheckIn / 100).toFixed(2)} R$</span>
                       </div>
                     </div>
                   </div>
@@ -1287,6 +1287,7 @@ export default function AdminDashboard() {
                           step="0.01"
                           value={editFormData?.paymentAtBooking ? (editFormData.paymentAtBooking / 100).toFixed(2) : ''}
                           onChange={(e) => updateEditFormData('paymentAtBooking', Math.round(parseFloat(e.target.value) * 100) || 0)}
+                          className="text-right"
                         />
                       </div>
                       <div>
@@ -1296,7 +1297,7 @@ export default function AdminDashboard() {
                           step="0.01"
                           value={editFormData?.paymentAtCheckIn ? (editFormData.paymentAtCheckIn / 100).toFixed(2) : ''}
                           disabled
-                          className="bg-muted text-muted-foreground cursor-not-allowed"
+                          className="bg-muted text-muted-foreground cursor-not-allowed text-right"
                         />
                       </div>
                     </div>
