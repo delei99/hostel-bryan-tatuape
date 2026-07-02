@@ -137,6 +137,9 @@ export default function AdminDashboard() {
       (booking.discountPercentage > 0 ? `Desconto (${booking.discountPercentage}%): -R$ ${(booking.discountAmount / 100).toFixed(2)}\n` : '') +
       `Limpeza: R$ ${(booking.cleaningFee / 100).toFixed(2)}\n` +
       `*Total: R$ ${(booking.totalPrice / 100).toFixed(2)}*\n\n` +
+      `*Forma de Pagamento:*\n` +
+      `Pagamento no ato da reserva: R$ ${(booking.paymentAtBooking / 100).toFixed(2)}\n` +
+      `Pagamento no check-in: R$ ${((booking.totalPrice - booking.paymentAtBooking) / 100).toFixed(2)}\n\n` +
       `${booking.specialRequests ? `Observacoes: ${booking.specialRequests}\n\n` : ''}` +
       `*Editado em:* ${booking.editedAt ? new Date(booking.editedAt).toLocaleString('pt-BR') : 'Agora'}\n` +
       `*Editado por:* ${booking.editedBy}\n\n` +
