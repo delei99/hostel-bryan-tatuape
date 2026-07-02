@@ -60,7 +60,8 @@ export default function AdminDashboard() {
       // Se editou o pagamento na reserva, calcular automaticamente o saldo
       if (field === 'paymentAtBooking') {
         const totalPrice = updated.totalPrice || 0;
-        updated.paymentAtCheckIn = Math.max(0, totalPrice - value);
+        const paymentValue = typeof value === 'string' ? Math.round(parseFloat(value) * 100) : value;
+        updated.paymentAtCheckIn = Math.max(0, totalPrice - paymentValue);
       }
       return updated;
     });
