@@ -726,3 +726,10 @@
 - [x] Bloquear/desbloquear datas no calendário ao editar reserva
 - [x] Sincronizar automaticamente com o calendário
 - [x] Testar sincronização em tempo real
+
+
+## Correção: Taxa de Limpeza Lançando Valor Antigo ao Editar Quarto
+- [x] Corrigir taxa de limpeza no quarto 01
+- [x] Verificar e corrigir taxa de limpeza em todos os quartos 1-7
+- [x] Lançar valor correto da taxa de limpeza
+- [x] Sem alterar outras coisas no código

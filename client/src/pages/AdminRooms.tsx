@@ -87,7 +87,7 @@ export default function AdminRooms() {
       name: editFormData.name,
       description: editFormData.description,
       pricePerNight: Math.round(editFormData.pricePerNight),
-      cleaningFee: Math.round(editFormData.cleaningFee),
+      cleaningFee: Math.round(parseFloat(editFormData.cleaningFee) * 100),
       discount7Days: parseInt(editFormData.discount7Days),
       discount15Days: parseInt(editFormData.discount15Days),
       discount30Days: parseInt(editFormData.discount30Days),
