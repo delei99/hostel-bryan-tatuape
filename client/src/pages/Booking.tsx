@@ -336,6 +336,7 @@ export default function Booking() {
       // Calcular o desconto que foi aplicado
       // Se for 1 hóspede, sempre mostrar 11% (mesmo que não tenha desconto por duração)
       const appliedDiscountPercent = numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : (priceCalculation.durationDiscountPercent > 0 ? priceCalculation.durationDiscountPercent : 0);
+      const paymentAtCheckIn = finalTotal - paymentAtBooking;
       
       const message = `*CONFIRMACAO DE RESERVA - HOSTEL BRYAN TATUAPE*\n\n` +
         `*Codigo: ${result.confirmationCode}*\n\n` +
@@ -353,6 +354,9 @@ export default function Booking() {
         `${priceCalculation.discount > 0 ? `Desconto (${appliedDiscountPercent}%): -R$ ${(priceCalculation.discount / 100).toFixed(2)}\n` : ''}` +
         `Taxa de Limpeza: R$ ${(CLEANING_FEE / 100).toFixed(2)}\n` +
         `*Total: R$ ${(finalTotal / 100).toFixed(2)}*\n\n` +
+        `*Forma de Pagamento:*\n` +
+        `Pagamento na Reserva: R$ ${(paymentAtBooking / 100).toFixed(2)}\n` +
+        `Pagamento no Check-in: R$ ${(paymentAtCheckIn / 100).toFixed(2)}\n\n` +
         `${formData.specialRequests ? `Observacoes: ${formData.specialRequests}\n\n` : ''}` +
         `Aguardo confirmacao!`;
       
