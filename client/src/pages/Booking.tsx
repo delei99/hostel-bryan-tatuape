@@ -431,7 +431,15 @@ export default function Booking() {
         `${formData.specialRequests ? `Observacoes: ${formData.specialRequests}\n\n` : ''}` +
         `Aguardo confirmacao!`;
       
-      const phoneNumber = '5511952197283';
+      // Remover o sinal de + do telefone para WhatsApp
+      let phoneNumber = formData.phone.replace(/\D/g, '');
+      if (phoneNumber.startsWith('55')) {
+        // Já tem código do Brasil
+      } else if (phoneNumber.length === 10 || phoneNumber.length === 11) {
+        // Número brasileiro sem código, adicionar 55
+        phoneNumber = '55' + phoneNumber;
+      }
+      
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
       
