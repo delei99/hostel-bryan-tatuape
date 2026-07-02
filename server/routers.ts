@@ -137,6 +137,8 @@ export const appRouter = router({
         checkOutDate: z.string(),
         numberOfGuests: z.string(),
         specialRequests: z.string().optional(),
+        paymentAtBooking: z.number().optional(),
+        paymentAtCheckIn: z.number().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const { updateBooking } = await import("./db");
@@ -146,6 +148,8 @@ export const appRouter = router({
           checkOutDate: input.checkOutDate,
           numberOfGuests: parseInt(input.numberOfGuests),
           specialRequests: input.specialRequests,
+          paymentAtBooking: input.paymentAtBooking,
+          paymentAtCheckIn: input.paymentAtCheckIn,
         }, ctx.user?.email || 'system');
       }),
 

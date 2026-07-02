@@ -1044,6 +1044,8 @@ export async function updateBooking(bookingId: number, updateData: any, editedBy
   if (updateData.numberOfGuests !== undefined) updateSet.numberOfGuests = updateData.numberOfGuests;
   if (updateData.dailyType !== undefined) updateSet.dailyType = updateData.dailyType;
   if (updateData.specialRequests !== undefined) updateSet.specialRequests = updateData.specialRequests;
+  if (updateData.paymentAtBooking !== undefined) updateSet.paymentAtBooking = updateData.paymentAtBooking;
+  if (updateData.paymentAtCheckIn !== undefined) updateSet.paymentAtCheckIn = updateData.paymentAtCheckIn;
   
   // Atualizar dados do hóspede se fornecidos
   if (updateData.firstName || updateData.lastName || updateData.email || updateData.phone) {

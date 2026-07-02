@@ -376,6 +376,9 @@ export default function Booking() {
       `${priceCalculation.discount > 0 ? `Desconto (12%): -R$ ${(priceCalculation.discount / 100).toFixed(2)}\n` : ''}` +
       `Limpeza: R$ ${(priceCalculation.cleaning / 100).toFixed(2)}\n` +
       `*Total: R$ ${(priceCalculation.total / 100).toFixed(2)}*\n\n` +
+      `*Forma de Pagamento:*\n` +
+      `Pagamento no ato da reserva: R$ ${(paymentAtBooking / 100).toFixed(2)}\n` +
+      `Pagamento no check-in: R$ ${((priceCalculation.total - paymentAtBooking) / 100).toFixed(2)}\n\n` +
       `${formData.specialRequests ? `Observações: ${formData.specialRequests}\n\n` : ''}` +
       `Aguardo confirmação!`;
   };

@@ -515,6 +515,9 @@ export default function AdminDashboard() {
       }
       message += `Limpeza: R$ ${cleaningFee.toFixed(2)}\n`;
       message += `*Total: R$ ${total.toFixed(2)}*\n\n`;
+      message += `*Forma de Pagamento:*\n`;
+      message += `Pagamento no ato da reserva: R$ ${(booking.booking.paymentAtBooking / 100).toFixed(2)}\n`;
+      message += `Pagamento no check-in: R$ ${(booking.booking.paymentAtCheckIn / 100).toFixed(2)}\n\n`;
       if (booking.booking.specialRequests) {
         message += `*Observações:* ${booking.booking.specialRequests}\n\n`;
       }
@@ -1112,6 +1115,20 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
+                  <div className="border-t border-border pt-4">
+                    <h4 className="font-semibold text-foreground mb-3">Forma de Pagamento</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-foreground/70">Pagamento no ato da reserva:</span>
+                        <span className="text-foreground">R$ {(selectedBooking.booking.paymentAtBooking / 100).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-foreground/70">Pagamento no check-in:</span>
+                        <span className="text-foreground">R$ {(selectedBooking.booking.paymentAtCheckIn / 100).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+
                   {selectedBooking.booking.specialRequests && (
                     <div className="border-t border-border pt-4">
                       <h4 className="font-semibold text-foreground mb-3">Observações</h4>
@@ -1227,6 +1244,30 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="border-t border-border pt-4">
+                    <h4 className="font-semibold text-foreground mb-3">Forma de Pagamento</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Pagamento no ato da reserva (R$)</Label>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          value={editFormData?.paymentAtBooking ? (editFormData.paymentAtBooking / 100).toFixed(2) : ''}
+                          onChange={(e) => updateEditFormData('paymentAtBooking', Math.round(parseFloat(e.target.value) * 100) || 0)}
+                        />
+                      </div>
+                      <div>
+                        <Label>Pagamento no check-in (R$)</Label>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          value={editFormData?.paymentAtCheckIn ? (editFormData.paymentAtCheckIn / 100).toFixed(2) : ''}
+                          onChange={(e) => updateEditFormData('paymentAtCheckIn', Math.round(parseFloat(e.target.value) * 100) || 0)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-border pt-4">
                     <h4 className="font-semibold text-foreground mb-3">Observações</h4>
                     <Input 
                       placeholder="Observações especiais" 
@@ -1268,6 +1309,8 @@ export default function AdminDashboard() {
                         roomId: editFormData.roomId,
                         numberOfGuests: editFormData.numberOfGuests?.toString() || '1',
                         specialRequests: editFormData.specialRequests,
+                        paymentAtBooking: editFormData.paymentAtBooking || 0,
+                        paymentAtCheckIn: editFormData.paymentAtCheckIn || 0,
                       });
                     }}
                     disabled={isEditingSubmitting || updateBooking.isPending}
