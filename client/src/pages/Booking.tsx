@@ -57,28 +57,41 @@ export default function Booking() {
     return cleaned.length >= 6 && cleaned.length <= 9;
   };
 
-  // Validar e formatar telefone brasileiro
+  // Validar e formatar telefone (brasileiro ou internacional)
   const validateAndFormatPhone = (phone: string) => {
-    // Remover caracteres especiais
-    let cleaned = phone.replace(/\D/g, '');
+    // Remover espaços
+    let cleaned = phone.trim();
+    
+    // Se começar com +, é internacional
+    if (cleaned.startsWith('+')) {
+      // Número internacional: aceitar +XX XXXXXXXXX (mínimo 10 dígitos após o +)
+      const internationalCleaned = cleaned.replace(/\D/g, '');
+      if (internationalCleaned.length >= 10 && internationalCleaned.length <= 15) {
+        return cleaned; // Retornar no formato original com +
+      }
+      return null;
+    }
+    
+    // Se não começar com +, considerar como brasileiro
+    let brazilianCleaned = cleaned.replace(/\D/g, '');
     
     // Se começar com 55, remover (código do Brasil)
-    if (cleaned.startsWith('55')) {
-      cleaned = cleaned.substring(2);
+    if (brazilianCleaned.startsWith('55')) {
+      brazilianCleaned = brazilianCleaned.substring(2);
     }
     
     // Aceitar apenas números brasileiros válidos (10 ou 11 dígitos)
     // 10 dígitos: (XX) XXXX-XXXX
     // 11 dígitos: (XX) XXXXX-XXXX
-    if (cleaned.length !== 10 && cleaned.length !== 11) {
+    if (brazilianCleaned.length !== 10 && brazilianCleaned.length !== 11) {
       return null;
     }
     
     // Formatar com máscara
-    if (cleaned.length === 10) {
-      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`;
+    if (brazilianCleaned.length === 10) {
+      return `(${brazilianCleaned.slice(0, 2)}) ${brazilianCleaned.slice(2, 6)}-${brazilianCleaned.slice(6)}`;
     } else {
-      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+      return `(${brazilianCleaned.slice(0, 2)}) ${brazilianCleaned.slice(2, 7)}-${brazilianCleaned.slice(7)}`;
     }
   };
 
@@ -309,7 +322,7 @@ export default function Booking() {
       if (isDateBlocked(formData.checkInDate, formData.checkOutDate)) {
         toast.error("Desculpe, essas datas estão bloqueadas. Escolha outras datas.");
       } else if (!isPhoneValid(formData.phone)) {
-        toast.error("Telefone inválido. Digite um número brasileiro válido (10 ou 11 dígitos).");
+        toast.error("Telefone inválido. Digite um número brasileiro (10-11 dígitos) ou internacional (+XX XXXXXXXXX).");
       } else if (!validateCPF(formData.cpf)) {
         toast.error("CPF inválido. Verifique o número digitado.");
       } else if (formData.documentNumber.trim() !== "" && !validateRG(formData.documentNumber)) {
@@ -751,7 +764,7 @@ export default function Booking() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  placeholder="(11) 99999-9999"
+                  placeholder="(11) 99999-9999 ou +1 2025551234"
                   required
                 />
               </div>
