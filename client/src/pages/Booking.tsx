@@ -344,10 +344,10 @@ export default function Booking() {
         `*Hospedes:* ${numberOfGuests}\n` +
         `*Noites:* ${nights}\n\n` +
         `*Valores:*\n` +
-        `Diaria: R$ ${priceCalculation.subtotal.toFixed(2)}\n` +
-        `${priceCalculation.discount > 0 ? `Desconto (${priceCalculation.durationDiscountPercent > 0 ? priceCalculation.durationDiscountPercent : (numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : 0)}%): -R$ ${priceCalculation.discount.toFixed(2)}\n` : ''}` +
-        `Taxa de Limpeza: R$ ${CLEANING_FEE.toFixed(2)}\n` +
-        `*Total: R$ ${finalTotal.toFixed(2)}*\n\n` +
+        `Diaria: R$ ${(priceCalculation.subtotal / 100).toFixed(2)}\n` +
+        `${priceCalculation.discount > 0 ? `Desconto (${priceCalculation.durationDiscountPercent > 0 ? priceCalculation.durationDiscountPercent : (numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : 0)}%): -R$ ${(priceCalculation.discount / 100).toFixed(2)}\n` : ''}` +
+        `Taxa de Limpeza: R$ ${(CLEANING_FEE / 100).toFixed(2)}\n` +
+        `*Total: R$ ${(finalTotal / 100).toFixed(2)}*\n\n` +
         `${formData.specialRequests ? `Observacoes: ${formData.specialRequests}\n\n` : ''}` +
         `Aguardo confirmacao!`;
       
