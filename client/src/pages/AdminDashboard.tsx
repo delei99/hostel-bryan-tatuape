@@ -52,10 +52,18 @@ export default function AdminDashboard() {
   });
 
   const updateEditFormData = (field: string, value: any) => {
-    setEditFormData((prev: any) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setEditFormData((prev: any) => {
+      const updated = {
+        ...prev,
+        [field]: value,
+      };
+      // Se editou o pagamento na reserva, calcular automaticamente o saldo
+      if (field === 'paymentAtBooking') {
+        const totalPrice = updated.totalPrice || 0;
+        updated.paymentAtCheckIn = Math.max(0, totalPrice - value);
+      }
+      return updated;
+    });
   };
 
   const handleOpenEditModal = (booking: any) => {
@@ -1276,7 +1284,8 @@ export default function AdminDashboard() {
                           type="number" 
                           step="0.01"
                           value={editFormData?.paymentAtCheckIn ? (editFormData.paymentAtCheckIn / 100).toFixed(2) : ''}
-                          onChange={(e) => updateEditFormData('paymentAtCheckIn', Math.round(parseFloat(e.target.value) * 100) || 0)}
+                          disabled
+                          className="bg-muted text-muted-foreground cursor-not-allowed"
                         />
                       </div>
                     </div>
