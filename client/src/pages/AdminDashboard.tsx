@@ -430,7 +430,7 @@ export default function AdminDashboard() {
       // Título
       doc.setFontSize(16);
       doc.setFont(undefined as any, 'bold');
-      doc.text("Reserva Confirmada - Hostel Bryan Tatuapé", 15, yPosition);
+      doc.text("Pedido de Reserva - Hostel Bryan Tatuapé", 15, yPosition);
       yPosition += 12;
 
       // Número e Código
@@ -518,7 +518,7 @@ export default function AdminDashboard() {
       const cleaningFee = booking.booking.cleaningFee / 100;
       const total = booking.booking.totalPrice / 100;
       
-      let message = `*Reserva Confirmada - Hostel Bryan Tatuapé*\n\n`;
+      let message = `*Pedido de Reserva - Hostel Bryan Tatuapé*\n\n`;
       message += `*Número da Reserva:* ${booking.booking.id}\n`;
       message += `*Código:* ${booking.booking.confirmationCode}\n\n`;
       message += `*Hóspede:* ${booking.guest.firstName} ${booking.guest.lastName}\n`;

@@ -439,7 +439,7 @@ export default function Booking() {
     console.log('DEBUG: bookingSuccess =', bookingSuccess);
     console.log('DEBUG: bookingNumber =', bookingNumber);
     
-    return `*Reserva Confirmada - Hostel Bryan Tatuapé*\n\n` +
+    return `*Pedido de Reserva - Hostel Bryan Tatuapé*\n\n` +
       `*Número da Reserva: ${bookingNumber}*\n` +
       `*Código: ${bookingSuccess.confirmationCode}*\n\n` +
       `*Hóspede:* ${formData.firstName} ${formData.lastName}\n` +
