@@ -433,12 +433,12 @@ export default function Booking() {
       
       // Remover o sinal de + do telefone para WhatsApp
       let phoneNumber = formData.phone.replace(/\D/g, '');
-      if (phoneNumber.startsWith('55')) {
-        // Já tem código do Brasil
-      } else if (phoneNumber.length === 10 || phoneNumber.length === 11) {
-        // Número brasileiro sem código, adicionar 55
+      
+      // Se for número brasileiro (10 ou 11 dígitos), adicionar 55
+      if (phoneNumber.length === 10 || phoneNumber.length === 11) {
         phoneNumber = '55' + phoneNumber;
       }
+      // Senão, manter como está (já tem código de país)
       
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
