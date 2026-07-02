@@ -205,33 +205,28 @@ export default function AdminRooms() {
                 <div>
                   <Label>Capacidade</Label>
                   <Input
-                    type="number"
+                    type="text"
                     value={createFormData.capacity}
                     onChange={(e) => handleCreateFieldChange("capacity", e.target.value)}
-                    min="1"
                     className="mt-1"
                   />
                 </div>
                 <div>
                   <Label>Preço por Noite (R$)</Label>
                   <Input
-                    type="number"
+                    type="text"
                     value={createFormData.pricePerNight}
                     onChange={(e) => handleCreateFieldChange("pricePerNight", e.target.value)}
-                    min="0"
-                    step="0.01"
-                    className="mt-1"
+                    className="mt-1 text-right"
                   />
                 </div>
                 <div>
                   <Label>Taxa de Limpeza (R$)</Label>
                   <Input
-                    type="number"
+                    type="text"
                     value={createFormData.cleaningFee}
                     onChange={(e) => handleCreateFieldChange("cleaningFee", e.target.value)}
-                    min="0"
-                    step="0.01"
-                    className="mt-1"
+                    className="mt-1 text-right"
                   />
                 </div>
               </div>
@@ -240,34 +235,28 @@ export default function AdminRooms() {
                 <div>
                   <Label>Desconto 7+ Dias (%)</Label>
                   <Input
-                    type="number"
+                    type="text"
                     value={createFormData.discount7Days}
                     onChange={(e) => handleCreateFieldChange("discount7Days", e.target.value)}
-                    min="0"
-                    max="100"
-                    className="mt-1"
+                    className="mt-1 text-right"
                   />
                 </div>
                 <div>
                   <Label>Desconto 15+ Dias (%)</Label>
                   <Input
-                    type="number"
+                    type="text"
                     value={createFormData.discount15Days}
                     onChange={(e) => handleCreateFieldChange("discount15Days", e.target.value)}
-                    min="0"
-                    max="100"
-                    className="mt-1"
+                    className="mt-1 text-right"
                   />
                 </div>
                 <div>
                   <Label>Desconto 30+ Dias (%)</Label>
                   <Input
-                    type="number"
+                    type="text"
                     value={createFormData.discount30Days}
                     onChange={(e) => handleCreateFieldChange("discount30Days", e.target.value)}
-                    min="0"
-                    max="100"
-                    className="mt-1"
+                    className="mt-1 text-right"
                   />
                 </div>
               </div>
@@ -290,12 +279,10 @@ export default function AdminRooms() {
                     {createFormData.singleGuestDiscountType === "fixed" ? "Desconto para 1 Hóspede (R$)" : "Desconto para 1 Hóspede (%)"}
                   </Label>
                   <Input
-                    type="number"
-                    step={createFormData.singleGuestDiscountType === "fixed" ? "0.01" : "1"}
+                    type="text"
                     value={createFormData.singleGuestDiscountValue || 11}
                     onChange={(e) => handleCreateFieldChange("singleGuestDiscountValue", e.target.value)}
-                    min="0"
-                    className="mt-1"
+                    className="mt-1 text-right"
                   />
                 </div>
               </div>
@@ -384,21 +371,19 @@ export default function AdminRooms() {
                     <div>
                       <Label className="text-sm font-medium">Preço por Noite (R$)</Label>
                       <Input
-                        type="number"
-                        step="0.01"
+                        type="text"
                         value={editFormData?.pricePerNight ? (editFormData.pricePerNight / 100).toFixed(2) : ""}
                         onChange={(e) => handleFieldChange("pricePerNight", Math.round(parseFloat(e.target.value) * 100))}
-                        className="mt-1"
+                        className="mt-1 text-right"
                       />
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Taxa de Limpeza (R$)</Label>
                       <Input
-                        type="number"
-                        step="0.01"
+                        type="text"
                         value={editFormData?.cleaningFee ? (editFormData.cleaningFee / 100).toFixed(2) : ""}
                         onChange={(e) => handleFieldChange("cleaningFee", Math.round(parseFloat(e.target.value) * 100))}
-                        className="mt-1"
+                        className="mt-1 text-right"
                       />
                     </div>
                   </div>
@@ -407,34 +392,28 @@ export default function AdminRooms() {
                     <div>
                       <Label className="text-sm font-medium">Desconto 7+ Dias (%)</Label>
                       <Input
-                        type="number"
+                        type="text"
                         value={editFormData?.discount7Days || ""}
                         onChange={(e) => handleFieldChange("discount7Days", parseInt(e.target.value))}
-                        min="0"
-                        max="100"
-                        className="mt-1"
+                        className="mt-1 text-right"
                       />
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Desconto 15+ Dias (%)</Label>
                       <Input
-                        type="number"
+                        type="text"
                         value={editFormData?.discount15Days || ""}
                         onChange={(e) => handleFieldChange("discount15Days", parseInt(e.target.value))}
-                        min="0"
-                        max="100"
-                        className="mt-1"
+                        className="mt-1 text-right"
                       />
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Desconto 30+ Dias (%)</Label>
                       <Input
-                        type="number"
+                        type="text"
                         value={editFormData?.discount30Days || ""}
                         onChange={(e) => handleFieldChange("discount30Days", parseInt(e.target.value))}
-                        min="0"
-                        max="100"
-                        className="mt-1"
+                        className="mt-1 text-right"
                       />
                     </div>
                   </div>
@@ -457,15 +436,13 @@ export default function AdminRooms() {
                         {editFormData?.singleGuestDiscountType === "fixed" ? "Desconto para 1 Hóspede (R$)" : "Desconto para 1 Hóspede (%)"}
                       </Label>
                       <Input
-                        type="number"
-                        step={editFormData?.singleGuestDiscountType === "fixed" ? "0.01" : "1"}
+                        type="text"
                         value={editFormData?.singleGuestDiscountType === "fixed" ? (editFormData?.singleGuestDiscountValue ? (editFormData.singleGuestDiscountValue / 100).toFixed(2) : "") : (editFormData?.singleGuestDiscountValue || "")}
                         onChange={(e) => {
                           const val = editFormData?.singleGuestDiscountType === "fixed" ? Math.round(parseFloat(e.target.value) * 100) : parseInt(e.target.value);
                           handleFieldChange("singleGuestDiscountValue", val);
                         }}
-                        min="0"
-                        className="mt-1"
+                        className="mt-1 text-right"
                       />
                     </div>
                   </div>
