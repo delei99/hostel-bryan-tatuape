@@ -323,11 +323,68 @@ export default function Booking() {
       });
 
       toast.success("Reserva criada com sucesso!");
-      setBookingSuccess({
-        ...result,
-        roomId,
-        numberOfGuests: numberOfGuests.toString(),
+      
+      // Gerar mensagem e enviar para WhatsApp automaticamente
+      const room = rooms.find(r => r.id === roomId);
+      const [checkInYear, checkInMonth, checkInDay] = formData.checkInDate.split('-').map(Number);
+      const [checkOutYear, checkOutMonth, checkOutDay] = formData.checkOutDate.split('-').map(Number);
+      const checkInDateObj = new Date(checkInYear, checkInMonth - 1, checkInDay + 1);
+      const checkOutDateObj = new Date(checkOutYear, checkOutMonth - 1, checkOutDay + 1);
+      const nights = Math.ceil((checkOutDateObj.getTime() - checkInDateObj.getTime()) / (1000 * 60 * 60 * 24));
+      
+      const message = `*CONFIRMACAO DE RESERVA - HOSTEL BRYAN TATUAPE*\n\n` +
+        `*Codigo: ${result.confirmationCode}*\n\n` +
+        `*Hospede:* ${formData.firstName} ${formData.lastName}\n` +
+        `*Email:* ${formData.email}\n` +
+        `*Telefone:* ${formData.phone}\n` +
+        `*CPF/Passaporte:* ${formData.cpf || formData.documentNumber}\n\n` +
+        `*Quarto:* ${room?.name || 'N/A'}\n` +
+        `*Check-in:* ${checkInDateObj.toLocaleDateString('pt-BR')} as ${formData.checkInTime}\n` +
+        `*Check-out:* ${checkOutDateObj.toLocaleDateString('pt-BR')} as ${formData.checkOutTime}\n` +
+        `*Hospedes:* ${numberOfGuests}\n` +
+        `*Noites:* ${nights}\n\n` +
+        `*Valores:*\n` +
+        `Diaria: R$ ${priceCalculation.subtotal.toFixed(2)}\n` +
+        `${priceCalculation.discount > 0 ? `Desconto (${priceCalculation.durationDiscountPercent > 0 ? priceCalculation.durationDiscountPercent : (numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : 0)}%): -R$ ${priceCalculation.discount.toFixed(2)}\n` : ''}` +
+        `Taxa de Limpeza: R$ ${CLEANING_FEE.toFixed(2)}\n` +
+        `*Total: R$ ${finalTotal.toFixed(2)}*\n\n` +
+        `${formData.specialRequests ? `Observacoes: ${formData.specialRequests}\n\n` : ''}` +
+        `Aguardo confirmacao!`;
+      
+      const phoneNumber = '5511952197283';
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+      
+      // Abrir WhatsApp em nova aba
+      window.open(whatsappUrl, '_blank');
+      
+      // Limpar formulario
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        cpf: '',
+        nationality: '',
+        documentType: 'rg',
+        documentNumber: '',
+        documentUF: 'SP',
+        documentNumberPassport: '',
+        roomId: roomIdFromUrl || '1',
+        checkInDate: getLocalDateString(today),
+        checkOutDate: getLocalDateString(tomorrow),
+        checkInTime: '14:00',
+        checkOutTime: '12:00',
+        numberOfGuests: '1',
+        specialRequests: '',
+        paymentAtBooking: 0,
       });
+      setPaymentAtBooking(0);
+      setBookingSuccess(null);
 
     } catch (error) {
       console.error("Erro ao criar reserva:", error);
