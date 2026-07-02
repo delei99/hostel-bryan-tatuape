@@ -156,7 +156,7 @@ export default function Booking() {
     // Aplicar desconto de duração sobre o subtótal
     const durationDiscount = durationDiscountPercent > 0 ? Math.floor(subtotal * durationDiscountPercent / 100) : 0;
     
-    // Desconto por número de hóspedes (12%) - só aplica se não houver desconto por duração
+    // Desconto por número de hóspedes (11%) - só aplica se não houver desconto por duração
     const guestDiscount = (formData.numberOfGuests === "1" && durationDiscountPercent === 0) ? Math.floor(subtotal * DISCOUNT_PERCENTAGE / 100) : 0;
     
     // Usar o maior desconto entre hóspede e duração
@@ -812,7 +812,7 @@ export default function Booking() {
               )}
               {priceCalculation.discount > 0 && priceCalculation.durationDiscountPercent === 0 && (
                 <div className="flex justify-between mb-2 text-green-600">
-                  <span>Desconto (12%):</span>
+                  <span>Desconto (11%):</span>
                   <span>-R$ {(priceCalculation.discount / 100).toFixed(2)}</span>
                 </div>
               )}
