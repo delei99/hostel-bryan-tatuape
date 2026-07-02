@@ -1790,8 +1790,40 @@ export default function AdminDashboard() {
                     <p className="font-semibold mb-2">Resumo da Extensão:</p>
                     {extensionCheckOutDate && (
                       <>
-                        <p>Dias estendidos: {Math.ceil((new Date(extensionCheckOutDate).getTime() - new Date(editingBooking.booking.checkOutDate).getTime()) / (1000 * 60 * 60 * 24))}</p>
-                        <p>Preço por noite: R$ {(editingBooking.room.pricePerNight / 100).toFixed(2)}</p>
+                        {(() => {
+                          const days = Math.ceil((new Date(extensionCheckOutDate).getTime() - new Date(editingBooking.booking.checkOutDate).getTime()) / (1000 * 60 * 60 * 24));
+                          const subtotal = days * editingBooking.room.pricePerNight;
+                          const numberOfGuests = editingBooking.booking.numberOfGuests;
+                          const roomDiscountType = (editingBooking.room as any).singleGuestDiscountType || 'percentage';
+                          const roomDiscountValue = (editingBooking.room as any).singleGuestDiscountValue || 11;
+                          
+                          let discount = 0;
+                          if (numberOfGuests === 1) {
+                            if (roomDiscountType === 'percentage') {
+                              discount = Math.floor(subtotal * (roomDiscountValue / 100));
+                            } else {
+                              discount = roomDiscountValue;
+                            }
+                          }
+                          
+                          const roomCleaningFee = (editingBooking.room as any).cleaningFee || 0;
+                          const total = subtotal - discount + (extensionChargeCleaningFee ? roomCleaningFee : 0);
+                          
+                          return (
+                            <>
+                              <p>Dias: {days}</p>
+                              <p>Preço/noite: R$ {(editingBooking.room.pricePerNight / 100).toFixed(2)}</p>
+                              <p>Subtotal: R$ {(subtotal / 100).toFixed(2)}</p>
+                              {numberOfGuests === 1 && discount > 0 && (
+                                <p className="text-green-700 dark:text-green-400">Desconto 1 hóspede: -R$ {(discount / 100).toFixed(2)}</p>
+                              )}
+                              {extensionChargeCleaningFee && roomCleaningFee > 0 && (
+                                <p>Taxa limpeza: +R$ {(roomCleaningFee / 100).toFixed(2)}</p>
+                              )}
+                              <p className="font-bold border-t border-current mt-2 pt-2">Total: R$ {(total / 100).toFixed(2)}</p>
+                            </>
+                          );
+                        })()}
                       </>
                     )}
                   </div>
@@ -1803,12 +1835,13 @@ export default function AdminDashboard() {
                       checked={extensionChargeCleaningFee}
                       onChange={(e) => {
                         setExtensionChargeCleaningFee(e.target.checked);
-                        setExtensionCleaningFee(e.target.checked ? 700 : 0);
+                        const roomCleaningFee = (editingBooking.room as any).cleaningFee || 0;
+                        setExtensionCleaningFee(e.target.checked ? roomCleaningFee : 0);
                       }}
                       className="w-4 h-4 rounded border-border"
                     />
                     <Label htmlFor="chargeCleaningFee" className="cursor-pointer">
-                      Cobrar taxa de limpeza (R$ 7,00)
+                      Cobrar taxa de limpeza (R$ {(((editingBooking.room as any).cleaningFee || 0) / 100).toFixed(2)})
                     </Label>
                   </div>
                 </div>

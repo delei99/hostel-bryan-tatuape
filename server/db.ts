@@ -1410,16 +1410,29 @@ export async function extendBooking(
     const numberOfGuests = originalBooking.booking.numberOfGuests;
     const extensionSubtotal = extensionDays * pricePerNight;
 
-    // Aplicar desconto de 12% para 1 pessoa
+    // Aplicar desconto de 1 pessoa usando o valor configurado no quarto
     let extensionDiscountAmount = 0;
     let extensionDiscountPercentage = 0;
     if (numberOfGuests === 1) {
-      extensionDiscountPercentage = 12;
-      extensionDiscountAmount = Math.floor(extensionSubtotal * (12 / 100));
+      // Usar o desconto configurado no quarto
+      const roomSingleGuestDiscountType = (originalBooking.room as any).singleGuestDiscountType || 'percentage';
+      const roomSingleGuestDiscountValue = (originalBooking.room as any).singleGuestDiscountValue || 11;
+      
+      if (roomSingleGuestDiscountType === 'percentage') {
+        extensionDiscountPercentage = roomSingleGuestDiscountValue;
+        extensionDiscountAmount = Math.floor(extensionSubtotal * (roomSingleGuestDiscountValue / 100));
+      } else {
+        // Desconto em valor fixo
+        extensionDiscountAmount = roomSingleGuestDiscountValue;
+        extensionDiscountPercentage = Math.round((extensionDiscountAmount / extensionSubtotal) * 100);
+      }
     }
 
+    // Usar taxa de limpeza do quarto se não foi passada no parâmetro
+    const finalCleaningFee = extensionCleaningFee > 0 ? extensionCleaningFee : ((originalBooking.room as any).cleaningFee || 0);
+
     // Calcular total da extensão
-    const extensionTotalPrice = extensionSubtotal - extensionDiscountAmount + extensionCleaningFee;
+    const extensionTotalPrice = extensionSubtotal - extensionDiscountAmount + finalCleaningFee;
 
     // Calcular pagamentos (padrão: metade no ato, metade no check-in)
     const extensionPaymentAtBooking = Math.floor(extensionTotalPrice / 2);
@@ -1439,7 +1452,7 @@ export async function extendBooking(
       dailyType: originalBooking.booking.dailyType,
       discountPercentage: extensionDiscountPercentage,
       discountAmount: extensionDiscountAmount,
-      cleaningFee: extensionCleaningFee,
+      cleaningFee: finalCleaningFee,
       subtotal: extensionSubtotal,
       totalPrice: extensionTotalPrice,
       status: "pending",
@@ -1455,7 +1468,7 @@ export async function extendBooking(
       paymentAtCheckIn: extensionPaymentAtCheckIn,
       isExtension: 1, // Marcar como extensão
       parentBookingId: parentBookingId, // Referência à reserva original
-      extensionCleaningFee: extensionCleaningFee,
+      extensionCleaningFee: finalCleaningFee,
       editedAt: new Date(),
       editedBy: editedBy,
     });
