@@ -57,6 +57,36 @@ export default function Booking() {
     return cleaned.length >= 6 && cleaned.length <= 9;
   };
 
+  // Validar e formatar telefone brasileiro
+  const validateAndFormatPhone = (phone: string) => {
+    // Remover caracteres especiais
+    let cleaned = phone.replace(/\D/g, '');
+    
+    // Se começar com 55, remover (código do Brasil)
+    if (cleaned.startsWith('55')) {
+      cleaned = cleaned.substring(2);
+    }
+    
+    // Aceitar apenas números brasileiros válidos (10 ou 11 dígitos)
+    // 10 dígitos: (XX) XXXX-XXXX
+    // 11 dígitos: (XX) XXXXX-XXXX
+    if (cleaned.length !== 10 && cleaned.length !== 11) {
+      return null;
+    }
+    
+    // Formatar com máscara
+    if (cleaned.length === 10) {
+      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`;
+    } else {
+      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+    }
+  };
+
+  // Validar se telefone é válido
+  const isPhoneValid = (phone: string) => {
+    return validateAndFormatPhone(phone) !== null;
+  };
+
   // Formatar CPF com máscara (000.000.000-00)
   const formatCPF = (cpf: string) => {
     const cleaned = cpf.replace(/[^0-9]/g, '');
@@ -184,6 +214,17 @@ export default function Booking() {
       value = formatCPF(value);
     }
     
+    // Aplicar máscara de telefone
+    if (name === "phone") {
+      const formatted = validateAndFormatPhone(value);
+      if (formatted !== null) {
+        value = formatted;
+      } else {
+        // Se não for válido, manter apenas os dígitos
+        value = value.replace(/\D/g, '');
+      }
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -239,6 +280,7 @@ export default function Booking() {
   const canSubmit = () => {
     const isBlocked = isDateBlocked(formData.checkInDate, formData.checkOutDate);
     const cpfValid = validateCPF(formData.cpf);
+    const phoneValid = isPhoneValid(formData.phone);
     
     // RG e Passaporte são opcionais, mas se preenchidos devem ser válidos
     const rgValid = formData.documentNumber.trim() === "" || validateRG(formData.documentNumber);
@@ -250,6 +292,7 @@ export default function Booking() {
       formData.lastName.trim() !== "" &&
       formData.email.trim() !== "" &&
       formData.phone.trim() !== "" &&
+      phoneValid &&
       cpfValid &&
       formData.nationality.trim() !== "" &&
       rgValid &&
@@ -265,6 +308,8 @@ export default function Booking() {
     if (!canSubmit()) {
       if (isDateBlocked(formData.checkInDate, formData.checkOutDate)) {
         toast.error("Desculpe, essas datas estão bloqueadas. Escolha outras datas.");
+      } else if (!isPhoneValid(formData.phone)) {
+        toast.error("Telefone inválido. Digite um número brasileiro válido (10 ou 11 dígitos).");
       } else if (!validateCPF(formData.cpf)) {
         toast.error("CPF inválido. Verifique o número digitado.");
       } else if (formData.documentNumber.trim() !== "" && !validateRG(formData.documentNumber)) {
