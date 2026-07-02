@@ -430,7 +430,7 @@ export default function Booking() {
       `*Valores:*\n` +
       `Subtotal: R$ ${(priceCalculation.subtotal / 100).toFixed(2)}\n` +
       (priceCalculation.durationDiscountPercent > 0 ? `Desconto por Duração (${priceCalculation.durationDiscountPercent}%): -R$ ${(priceCalculation.durationDiscount / 100).toFixed(2)}\n` : '') +
-      `${priceCalculation.discount > 0 ? `Desconto (12%): -R$ ${(priceCalculation.discount / 100).toFixed(2)}\n` : ''}` +
+      `${priceCalculation.discount > 0 ? `Desconto (${numberOfGuests === 1 ? '11' : '0'}%): -R$ ${(priceCalculation.discount / 100).toFixed(2)}\n` : ''}` +
       `Limpeza: R$ ${(priceCalculation.cleaning / 100).toFixed(2)}\n` +
       `*Total: R$ ${(priceCalculation.total / 100).toFixed(2)}*\n\n` +
       `*Forma de Pagamento:*\n` +
