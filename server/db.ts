@@ -1374,3 +1374,126 @@ export async function saveMonthlyRevenueHistory(data: InsertMonthlyRevenueHistor
     return null;
   }
 }
+
+
+/**
+ * Estender uma reserva existente criando uma nova reserva para os dias adicionais
+ */
+export async function extendBooking(
+  parentBookingId: number,
+  newCheckOutDate: string,
+  extensionCleaningFee: number,
+  editedBy: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    // Buscar a reserva original
+    const originalBooking = await getBookingById(parentBookingId);
+    if (!originalBooking) throw new Error("Original booking not found");
+
+    const originalCheckOutDate = new Date(originalBooking.booking.checkOutDate);
+    const newCheckOutDateObj = new Date(newCheckOutDate);
+
+    // Calcular número de dias da extensão
+    const extensionDays = Math.ceil(
+      (newCheckOutDateObj.getTime() - originalCheckOutDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (extensionDays <= 0) {
+      throw new Error("Extension date must be after the original check-out date");
+    }
+
+    // Calcular preço da extensão
+    const pricePerNight = originalBooking.room.pricePerNight;
+    const numberOfGuests = originalBooking.booking.numberOfGuests;
+    const extensionSubtotal = extensionDays * pricePerNight;
+
+    // Aplicar desconto de 12% para 1 pessoa
+    let extensionDiscountAmount = 0;
+    let extensionDiscountPercentage = 0;
+    if (numberOfGuests === 1) {
+      extensionDiscountPercentage = 12;
+      extensionDiscountAmount = Math.floor(extensionSubtotal * (12 / 100));
+    }
+
+    // Calcular total da extensão
+    const extensionTotalPrice = extensionSubtotal - extensionDiscountAmount + extensionCleaningFee;
+
+    // Calcular pagamentos (padrão: metade no ato, metade no check-in)
+    const extensionPaymentAtBooking = Math.floor(extensionTotalPrice / 2);
+    const extensionPaymentAtCheckIn = extensionTotalPrice - extensionPaymentAtBooking;
+
+    // Gerar novo código de confirmação para a extensão
+    const confirmationCode = `EXT-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+    // Criar nova reserva de extensão
+    const result = await db.insert(bookings).values({
+      guestId: originalBooking.booking.guestId,
+      roomId: originalBooking.booking.roomId,
+      bedId: originalBooking.booking.bedId,
+      checkInDate: originalBooking.booking.checkOutDate, // Check-in é o check-out da original
+      checkOutDate: newCheckOutDate,
+      numberOfGuests: numberOfGuests,
+      dailyType: originalBooking.booking.dailyType,
+      discountPercentage: extensionDiscountPercentage,
+      discountAmount: extensionDiscountAmount,
+      cleaningFee: extensionCleaningFee,
+      subtotal: extensionSubtotal,
+      totalPrice: extensionTotalPrice,
+      status: "pending",
+      specialRequests: `Extensão da reserva #${originalBooking.booking.id}`,
+      paymentMethod: originalBooking.booking.paymentMethod,
+      paymentStatus: "pending",
+      confirmationCode: confirmationCode,
+      checkInTime: (originalBooking.booking as any).checkInTime || '14:00',
+      checkOutTime: (originalBooking.booking as any).checkOutTime || '12:00',
+      documentType: (originalBooking.booking as any).documentType || 'rg',
+      documentNumber: (originalBooking.booking as any).documentNumber || '',
+      paymentAtBooking: extensionPaymentAtBooking,
+      paymentAtCheckIn: extensionPaymentAtCheckIn,
+      isExtension: 1, // Marcar como extensão
+      parentBookingId: parentBookingId, // Referência à reserva original
+      extensionCleaningFee: extensionCleaningFee,
+      editedAt: new Date(),
+      editedBy: editedBy,
+    });
+
+    // Extrair o ID da nova reserva
+    let extensionBookingId: number;
+    if ((result as any).insertId) {
+      extensionBookingId = Number((result as any).insertId);
+    } else if (Array.isArray(result) && (result[0] as any)?.insertId) {
+      extensionBookingId = Number((result[0] as any).insertId);
+    } else {
+      throw new Error("Failed to create extension booking: could not extract insertId");
+    }
+
+    // Bloquear automaticamente as datas estendidas no calendário
+    const startDate = new Date(originalBooking.booking.checkOutDate);
+    const endDate = new Date(newCheckOutDate);
+    endDate.setHours(23, 59, 59, 999);
+
+    await createBlockedDate({
+      roomId: originalBooking.booking.roomId,
+      startDate,
+      endDate,
+      reason: `Extensão automática - Hóspede: ${originalBooking.guest.firstName} ${originalBooking.guest.lastName}`,
+      bookingId: extensionBookingId,
+    });
+
+    // Retornar a nova reserva de extensão
+    const extensionBooking = await getBookingById(extensionBookingId);
+    if (!extensionBooking) throw new Error("Extension booking not found after creation");
+
+    return {
+      booking: extensionBooking.booking,
+      guest: extensionBooking.guest,
+      room: extensionBooking.room,
+    };
+  } catch (error) {
+    console.error("[Database] Error extending booking:", error);
+    throw error;
+  }
+}

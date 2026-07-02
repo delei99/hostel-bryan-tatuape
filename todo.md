@@ -750,3 +750,16 @@
 - [x] Criar testes de validação de campos de pagamento
 - [x] Todos os 66 testes passando (58 originais + 8 novos)
 - [x] Sem alteração de layout do projeto
+
+
+## Fase 48: Extensão de Reserva
+- [x] Adicionar campo isExtension ao schema de bookings
+- [x] Adicionar campo parentBookingId para rastrear reserva original
+- [x] Criar tRPC procedure para estender reserva
+- [x] Implementar UI do modal de extensão no AdminDashboard
+- [x] Adicionar lógica de cálculo de preço para dias estendidos
+- [x] Exibir reservas estendidas com cor amarela na tabela
+- [x] Aplicar desconto de 12% na extensão se 1 pessoa
+- [x] Bloquear automaticamente datas estendidas no calendário
+- [x] Opção de taxa de limpeza apenas na extensão
+- [x] Testar fluxo completo de extensão (10 testes adicionados)

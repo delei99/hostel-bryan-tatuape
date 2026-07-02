@@ -116,6 +116,9 @@ export const bookings = mysqlTable("bookings", {
   documentNumber: varchar("documentNumber", { length: 20 }).notNull(), // Número do RG ou Passaporte
   paymentAtBooking: int("paymentAtBooking").default(0), // Valor a pagar no ato da reserva
   paymentAtCheckIn: int("paymentAtCheckIn").default(0), // Valor a pagar no check-in
+  isExtension: int("isExtension").default(0).notNull(), // 0 = false, 1 = true (reserva é uma extensão)
+  parentBookingId: int("parentBookingId"), // ID da reserva original (se for extensão)
+  extensionCleaningFee: int("extensionCleaningFee").default(0), // Taxa de limpeza da extensão (0 = sem taxa)
   editedAt: timestamp("editedAt"), // Ultima edicao
   editedBy: varchar("editedBy", { length: 100 }), // Nome de quem editou
   createdAt: timestamp("createdAt").defaultNow().notNull(),

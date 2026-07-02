@@ -192,6 +192,22 @@ export const appRouter = router({
         const { saveMonthlyRevenueHistory } = await import("./db");
         return saveMonthlyRevenueHistory(input);
       }),
+
+    extend: adminProcedure
+      .input(z.object({
+        parentBookingId: z.number(),
+        checkOutDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        extensionCleaningFee: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { extendBooking } = await import("./db");
+        return extendBooking(
+          input.parentBookingId,
+          input.checkOutDate,
+          input.extensionCleaningFee || 0,
+          ctx.user?.email || 'system'
+        );
+      }),
   }),
 
   blockedDates: router({

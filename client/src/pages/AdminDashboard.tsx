@@ -42,6 +42,10 @@ export default function AdminDashboard() {
   const [editingImageId, setEditingImageId] = useState<number | null>(null);
   const [editingImageData, setEditingImageData] = useState<any>(null);
   const [showEditImageModal, setShowEditImageModal] = useState(false);
+  const [showExtensionModal, setShowExtensionModal] = useState(false);
+  const [extensionCheckOutDate, setExtensionCheckOutDate] = useState("");
+  const [extensionCleaningFee, setExtensionCleaningFee] = useState(0);
+  const [extensionChargeCleaningFee, setExtensionChargeCleaningFee] = useState(false);
   const [newGuestData, setNewGuestData] = useState({
     firstName: "",
     lastName: "",
@@ -318,6 +322,27 @@ export default function AdminDashboard() {
       setIsUploadingHomeImage(false);
     }
   }, [homeImageFile, homeImagePosition, homeImageTitle, homeImageDescription, uploadHomeImageMutation]);
+
+  const extendBooking = trpc.bookings.extend.useMutation({
+    onSuccess: async (result) => {
+      toast.success("Reserva estendida com sucesso!");
+      setShowExtensionModal(false);
+      setExtensionCheckOutDate("");
+      setExtensionCleaningFee(0);
+      setExtensionChargeCleaningFee(false);
+      setEditingBooking(null);
+      
+      // Invalidar cache de datas bloqueadas
+      if (result?.booking?.roomId) {
+        await utils.blockedDates.list.invalidate({ roomId: result.booking.roomId });
+      }
+      
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao estender reserva");
+    },
+  });
 
   const updateBooking = trpc.bookings.update.useMutation({
     onSuccess: async (result) => {
@@ -968,11 +993,12 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {filteredBookings.map((item: any) => (
-                    <tr key={item.booking.id} className="border-b border-border hover:bg-accent/5">
+                    <tr key={item.booking.id} className={`border-b border-border hover:bg-accent/5 ${(item.booking as any).isExtension ? 'bg-yellow-50 dark:bg-yellow-950/30' : ''}`}>
                       <td className="py-3 px-4">
                         <div>
                           <p className="font-medium text-foreground">{item.guest.firstName} {item.guest.lastName}</p>
                           <p className="text-sm text-foreground/70">{item.guest.email}</p>
+                          {(item.booking as any).isExtension && <p className="text-xs text-yellow-700 dark:text-yellow-400 font-semibold">📅 Extensão</p>}
                         </div>
                       </td>
                       <td className="py-3 px-4 font-mono text-sm text-foreground">{item.booking.confirmationCode}</td>
@@ -1388,6 +1414,16 @@ export default function AdminDashboard() {
                   <Button
                     type="button"
                     variant="outline"
+                    onClick={() => setShowExtensionModal(true)}
+                    disabled={isEditingSubmitting || updateBooking.isPending || editingBooking?.booking?.isExtension}
+                    className="flex items-center gap-2"
+                    title={editingBooking?.booking?.isExtension ? "Não é possível estender uma extensão" : "Estender esta reserva"}
+                  >
+                    📅 Estender Reserva
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => setShowSaveAsNewModal(true)}
                     disabled={isEditingSubmitting || updateBooking.isPending}
                   >
@@ -1708,6 +1744,101 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Modal de Extensão de Reserva */}
+        {showExtensionModal && editingBooking && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-md">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-foreground">Estender Reserva</h2>
+                  <button
+                    onClick={() => setShowExtensionModal(false)}
+                    className="text-foreground/70 hover:text-foreground"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label>Check-out Atual</Label>
+                    <Input 
+                      type="text" 
+                      value={editingBooking.booking.checkOutDate}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Novo Check-out</Label>
+                    <Input 
+                      type="date" 
+                      value={extensionCheckOutDate}
+                      onChange={(e) => setExtensionCheckOutDate(e.target.value)}
+                      min={editingBooking.booking.checkOutDate}
+                    />
+                  </div>
+
+                  <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded text-sm text-foreground">
+                    <p className="font-semibold mb-2">Resumo da Extensão:</p>
+                    {extensionCheckOutDate && (
+                      <>
+                        <p>Dias estendidos: {Math.ceil((new Date(extensionCheckOutDate).getTime() - new Date(editingBooking.booking.checkOutDate).getTime()) / (1000 * 60 * 60 * 24))}</p>
+                        <p>Preço por noite: R$ {(editingBooking.room.pricePerNight / 100).toFixed(2)}</p>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="chargeCleaningFee"
+                      checked={extensionChargeCleaningFee}
+                      onChange={(e) => {
+                        setExtensionChargeCleaningFee(e.target.checked);
+                        setExtensionCleaningFee(e.target.checked ? 700 : 0);
+                      }}
+                      className="w-4 h-4 rounded border-border"
+                    />
+                    <Label htmlFor="chargeCleaningFee" className="cursor-pointer">
+                      Cobrar taxa de limpeza (R$ 7,00)
+                    </Label>
+                  </div>
+                </div>
+
+                <div className="border-t border-border pt-4 mt-6 flex gap-3">
+                  <Button
+                    onClick={() => {
+                      if (!extensionCheckOutDate) {
+                        toast.error("Selecione a data de check-out!");
+                        return;
+                      }
+                      extendBooking.mutate({
+                        parentBookingId: editingBooking.booking.id,
+                        checkOutDate: extensionCheckOutDate,
+                        extensionCleaningFee: extensionCleaningFee,
+                      });
+                    }}
+                    disabled={extendBooking.isPending}
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white flex-1"
+                  >
+                    {extendBooking.isPending ? "Estendendo..." : "Estender Reserva"}
+                  </Button>
+                  <Button
+                    onClick={() => setShowExtensionModal(false)}
+                    variant="outline"
+                    disabled={extendBooking.isPending}
+                    className="flex-1"
+                  >
+                    Cancelar
+                  </Button>
                 </div>
               </div>
             </Card>
