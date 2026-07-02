@@ -139,7 +139,8 @@ export default function AdminDashboard() {
       `*Total: R$ ${(booking.totalPrice / 100).toFixed(2)}*\n\n` +
       `*Forma de Pagamento:*\n` +
       `Pagamento no ato da reserva: R$ ${(booking.paymentAtBooking / 100).toFixed(2)}\n` +
-      `Pagamento no check-in: R$ ${((booking.totalPrice - booking.paymentAtBooking) / 100).toFixed(2)}\n\n` +
+      `Pagamento no check-in: R$ ${((booking.totalPrice - booking.paymentAtBooking) / 100).toFixed(2)}\n` +
+      (booking.paymentAtBooking < booking.totalPrice ? `\n*Saldo Devedor: R$ ${((booking.totalPrice - booking.paymentAtBooking) / 100).toFixed(2)}*\n` : '\n') +
       `${booking.specialRequests ? `Observacoes: ${booking.specialRequests}\n\n` : ''}` +
       `*Editado em:* ${booking.editedAt ? new Date(booking.editedAt).toLocaleString('pt-BR') : 'Agora'}\n` +
       `*Editado por:* ${booking.editedBy}\n\n` +
@@ -505,6 +506,16 @@ export default function AdminDashboard() {
       doc.text(`Pagamento no ato da reserva: R$ ${paymentAtBooking.toFixed(2)}`, 15, yPosition);
       yPosition += 5;
       doc.text(`Pagamento no check-in: R$ ${paymentAtCheckIn.toFixed(2)}`, 15, yPosition);
+      yPosition += 5;
+      
+      // Saldo Devedor
+      if (paymentAtBooking < total) {
+        doc.setFont(undefined as any, 'bold');
+        doc.setTextColor(255, 100, 100);
+        doc.text(`Saldo Devedor: R$ ${paymentAtCheckIn.toFixed(2)}`, 15, yPosition);
+        doc.setTextColor(255, 255, 255);
+        doc.setFont(undefined as any, 'normal');
+      }
       yPosition += 10;
 
       // Observações
