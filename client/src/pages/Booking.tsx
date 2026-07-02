@@ -119,6 +119,7 @@ export default function Booking() {
   // Na página de reserva, usamos apenas os bloqueios diretos
   const allExceptions: Array<{ exceptionDate: Date; blockedDateId: number }> = [];
   
+  const utils = trpc.useUtils();
   const createBooking = trpc.bookings.create.useMutation();
 
   // Obter o preço vigente do quarto selecionado
@@ -385,6 +386,9 @@ export default function Booking() {
       });
       setPaymentAtBooking(0);
       setBookingSuccess(null);
+      
+      // Invalidar cache para sincronizar automaticamente no calendário
+      await utils.blockedDates.list.invalidate();
 
     } catch (error) {
       console.error("Erro ao criar reserva:", error);

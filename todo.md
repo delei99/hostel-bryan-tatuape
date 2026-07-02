@@ -719,3 +719,10 @@
 - [x] Enviar valores atualizados para WhatsApp ao salvar alterações
 - [x] Sem alteração de layout do projeto
 - [x] Todos os 58 testes passando
+
+
+## Correção: Sincronização de Datas Bloqueadas no Calendário
+- [x] Bloquear/desbloquear datas no calendário ao criar reserva
+- [x] Bloquear/desbloquear datas no calendário ao editar reserva
+- [x] Sincronizar automaticamente com o calendário
+- [x] Testar sincronização em tempo real
