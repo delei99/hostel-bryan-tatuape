@@ -400,6 +400,11 @@ export default function Booking() {
     window.open(whatsappUrl, '_blank');
     
     toast.success('Abrindo WhatsApp...');
+    
+    // Voltar ao formulário após enviar
+    setTimeout(() => {
+      setBookingSuccess(null);
+    }, 500);
   };
 
   if (bookingSuccess) {
