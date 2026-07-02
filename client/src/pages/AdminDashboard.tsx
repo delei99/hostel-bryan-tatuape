@@ -1285,12 +1285,13 @@ export default function AdminDashboard() {
                         <Label>Pagamento no ato da reserva (R$)</Label>
                         <Input 
                           type="text" 
-                          value={editFormData?.paymentAtBooking ? (editFormData.paymentAtBooking / 100).toFixed(2).split('').reverse().join('') : ''}
+                          value={editFormData?.paymentAtBooking ? (editFormData.paymentAtBooking / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
                           onChange={(e) => {
-                            const reversed = e.target.value.split('').reverse().join('');
-                            updateEditFormData('paymentAtBooking', Math.round(parseFloat(reversed) * 100) || 0);
+                            const numericValue = e.target.value.replace(/\D/g, '');
+                            updateEditFormData('paymentAtBooking', parseInt(numericValue) || 0);
                           }}
                           className="text-right"
+                          placeholder="0,00"
                         />
                       </div>
                       <div>
