@@ -740,3 +740,13 @@
 - [x] Verificar bloqueio de calendário ao editar reserva no painel
 - [x] Sincronizar datas bloqueadas corretamente
 - [x] Testar bloqueio em tempo real
+
+
+## Correção: Campos de Pagamento Não Retornados no PDF e WhatsApp
+- [x] Adicionar paymentAtBooking e paymentAtCheckIn ao select de getAllBookings()
+- [x] Adicionar paymentAtBooking e paymentAtCheckIn ao select de getBookingById()
+- [x] Corrigir generateReceiptPDF para usar paymentAtCheckIn do banco em vez de calcular
+- [x] Adicionar seção de "Saldo Devedor" no WhatsApp quando há saldo pendente
+- [x] Criar testes de validação de campos de pagamento
+- [x] Todos os 66 testes passando (58 originais + 8 novos)
+- [x] Sem alteração de layout do projeto

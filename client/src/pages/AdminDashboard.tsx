@@ -502,7 +502,7 @@ export default function AdminDashboard() {
       doc.text("Forma de Pagamento:", 15, yPosition);
       yPosition += 5;
       const paymentAtBooking = booking.booking.paymentAtBooking / 100;
-      const paymentAtCheckIn = total - paymentAtBooking;
+      const paymentAtCheckIn = booking.booking.paymentAtCheckIn / 100;
       doc.text(`Pagamento no ato da reserva: R$ ${paymentAtBooking.toFixed(2)}`, 15, yPosition);
       yPosition += 5;
       doc.text(`Pagamento no check-in: R$ ${paymentAtCheckIn.toFixed(2)}`, 15, yPosition);
@@ -567,6 +567,13 @@ export default function AdminDashboard() {
       message += `*Forma de Pagamento:*\n`;
       message += `Pagamento no ato da reserva: R$ ${(booking.booking.paymentAtBooking / 100).toFixed(2)}\n`;
       message += `Pagamento no check-in: R$ ${(booking.booking.paymentAtCheckIn / 100).toFixed(2)}\n\n`;
+      
+      // Saldo Devedor
+      const paymentAtBookingValue = booking.booking.paymentAtBooking / 100;
+      if (paymentAtBookingValue < total) {
+        message += `*Saldo Devedor: R$ ${(booking.booking.paymentAtCheckIn / 100).toFixed(2)}*\n\n`;
+      }
+      
       if (booking.booking.specialRequests) {
         message += `*Observações:* ${booking.booking.specialRequests}\n\n`;
       }
