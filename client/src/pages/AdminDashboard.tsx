@@ -135,7 +135,7 @@ export default function AdminDashboard() {
   };
 
   const createNewBooking = trpc.bookings.create.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Nova reserva criada com sucesso!");
       setShowSaveAsNewModal(false);
       setEditingBooking(null);
@@ -147,6 +147,10 @@ export default function AdminDashboard() {
         cpf: "",
         nationality: "",
       });
+      
+      // Invalidar cache de datas bloqueadas para sincronizar calendário
+      await utils.blockedDates.list.invalidate();
+      
       refetch();
     },
     onError: (error) => {
@@ -321,6 +325,9 @@ export default function AdminDashboard() {
           toast.warning('Telefone do hospede nao disponivel para WhatsApp');
         }
       }
+      
+      // Invalidar cache de datas bloqueadas para sincronizar calendário
+      await utils.blockedDates.list.invalidate();
       
       setEditingBooking(null);
       setEditPassword("");

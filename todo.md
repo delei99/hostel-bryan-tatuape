@@ -733,3 +733,10 @@
 - [x] Verificar e corrigir taxa de limpeza em todos os quartos 1-7
 - [x] Lançar valor correto da taxa de limpeza
 - [x] Sem alterar outras coisas no código
+
+
+## Correção: Calendário Não Bloqueia ao Criar/Editar Reserva no Painel de Controle
+- [x] Verificar bloqueio de calendário ao criar reserva no painel
+- [x] Verificar bloqueio de calendário ao editar reserva no painel
+- [x] Sincronizar datas bloqueadas corretamente
+- [x] Testar bloqueio em tempo real
