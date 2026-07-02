@@ -334,7 +334,8 @@ export default function Booking() {
       const nights = Math.ceil((checkOutDateObj.getTime() - checkInDateObj.getTime()) / (1000 * 60 * 60 * 24));
       
       // Calcular o desconto que foi aplicado
-      const appliedDiscountPercent = priceCalculation.durationDiscountPercent > 0 ? priceCalculation.durationDiscountPercent : (numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : 0);
+      // Se for 1 hóspede, sempre mostrar 11% (mesmo que não tenha desconto por duração)
+      const appliedDiscountPercent = numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : (priceCalculation.durationDiscountPercent > 0 ? priceCalculation.durationDiscountPercent : 0);
       
       const message = `*CONFIRMACAO DE RESERVA - HOSTEL BRYAN TATUAPE*\n\n` +
         `*Codigo: ${result.confirmationCode}*\n\n` +
@@ -349,7 +350,7 @@ export default function Booking() {
         `*Noites:* ${nights}\n\n` +
         `*Valores:*\n` +
         `Diaria: R$ ${(priceCalculation.subtotal / 100).toFixed(2)}\n` +
-        `${appliedDiscountPercent > 0 ? `Desconto (${appliedDiscountPercent}%): -R$ ${(priceCalculation.discount / 100).toFixed(2)}\n` : ''}` +
+        `${priceCalculation.discount > 0 ? `Desconto (${appliedDiscountPercent}%): -R$ ${(priceCalculation.discount / 100).toFixed(2)}\n` : ''}` +
         `Taxa de Limpeza: R$ ${(CLEANING_FEE / 100).toFixed(2)}\n` +
         `*Total: R$ ${(finalTotal / 100).toFixed(2)}*\n\n` +
         `${formData.specialRequests ? `Observacoes: ${formData.specialRequests}\n\n` : ''}` +
@@ -819,7 +820,7 @@ export default function Booking() {
               )}
               {priceCalculation.discount > 0 && priceCalculation.durationDiscountPercent === 0 && (
                 <div className="flex justify-between mb-2 text-green-600">
-                  <span>Desconto (11%):</span>
+                  <span>Desconto para 1 Hóspede (11%):</span>
                   <span>-R$ {(priceCalculation.discount / 100).toFixed(2)}</span>
                 </div>
               )}
