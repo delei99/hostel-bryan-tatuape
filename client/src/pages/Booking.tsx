@@ -351,7 +351,7 @@ export default function Booking() {
       }
       const paymentAtCheckIn = finalTotal - paymentAtBooking;
       
-      const message = `*CONFIRMACAO DE RESERVA - HOSTEL BRYAN TATUAPE*\n\n` +
+      const message = `*PEDIDO DE RESERVA - HOSTEL BRYAN TATUAPE*\n\n` +
         `*Codigo: ${result.confirmationCode}*\n\n` +
         `*Hospede:* ${formData.firstName} ${formData.lastName}\n` +
         `*Email:* ${formData.email}\n` +
