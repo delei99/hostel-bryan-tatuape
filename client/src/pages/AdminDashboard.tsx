@@ -1283,8 +1283,7 @@ export default function AdminDashboard() {
                       <div>
                         <Label>Pagamento no ato da reserva (R$)</Label>
                         <Input 
-                          type="number" 
-                          step="0.01"
+                          type="text" 
                           value={editFormData?.paymentAtBooking ? (editFormData.paymentAtBooking / 100).toFixed(2) : ''}
                           onChange={(e) => updateEditFormData('paymentAtBooking', Math.round(parseFloat(e.target.value) * 100) || 0)}
                           className="text-right"
@@ -1293,8 +1292,7 @@ export default function AdminDashboard() {
                       <div>
                         <Label>Pagamento no check-in (R$)</Label>
                         <Input 
-                          type="number" 
-                          step="0.01"
+                          type="text" 
                           value={editFormData?.paymentAtCheckIn ? (editFormData.paymentAtCheckIn / 100).toFixed(2) : ''}
                           disabled
                           className="bg-muted text-muted-foreground cursor-not-allowed text-right"
