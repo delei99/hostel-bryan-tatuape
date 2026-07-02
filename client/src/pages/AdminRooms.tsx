@@ -96,6 +96,8 @@ export default function AdminRooms() {
       amenities: editFormData.amenities,
       bathroomType: editFormData.bathroomType,
       status: editFormData.status,
+      singleGuestDiscountType: editFormData.singleGuestDiscountType || "percentage",
+      singleGuestDiscountValue: parseInt(editFormData.singleGuestDiscountValue) || 11,
     });
   };
 
@@ -131,6 +133,8 @@ export default function AdminRooms() {
       amenities: createFormData.amenities || undefined,
       bathroomType: createFormData.bathroomType,
       status: createFormData.status,
+      singleGuestDiscountType: createFormData.singleGuestDiscountType || "percentage",
+      singleGuestDiscountValue: createFormData.singleGuestDiscountType === "fixed" ? Math.round(parseFloat(createFormData.singleGuestDiscountValue) * 100) : parseInt(createFormData.singleGuestDiscountValue) || 11,
     });
   };
 
@@ -263,6 +267,34 @@ export default function AdminRooms() {
                     onChange={(e) => handleCreateFieldChange("discount30Days", e.target.value)}
                     min="0"
                     max="100"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Tipo de Desconto para 1 Hóspede</Label>
+                  <Select value={createFormData.singleGuestDiscountType || "percentage"} onValueChange={(value) => handleCreateFieldChange("singleGuestDiscountType", value)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentual (%)</SelectItem>
+                      <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>
+                    {createFormData.singleGuestDiscountType === "fixed" ? "Desconto para 1 Hóspede (R$)" : "Desconto para 1 Hóspede (%)"}
+                  </Label>
+                  <Input
+                    type="number"
+                    step={createFormData.singleGuestDiscountType === "fixed" ? "0.01" : "1"}
+                    value={createFormData.singleGuestDiscountValue || 11}
+                    onChange={(e) => handleCreateFieldChange("singleGuestDiscountValue", e.target.value)}
+                    min="0"
                     className="mt-1"
                   />
                 </div>
@@ -402,6 +434,37 @@ export default function AdminRooms() {
                         onChange={(e) => handleFieldChange("discount30Days", parseInt(e.target.value))}
                         min="0"
                         max="100"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium">Tipo de Desconto para 1 Hóspede</Label>
+                      <Select value={editFormData?.singleGuestDiscountType || "percentage"} onValueChange={(value) => handleFieldChange("singleGuestDiscountType", value)}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="percentage">Percentual (%)</SelectItem>
+                          <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">
+                        {editFormData?.singleGuestDiscountType === "fixed" ? "Desconto para 1 Hóspede (R$)" : "Desconto para 1 Hóspede (%)"}
+                      </Label>
+                      <Input
+                        type="number"
+                        step={editFormData?.singleGuestDiscountType === "fixed" ? "0.01" : "1"}
+                        value={editFormData?.singleGuestDiscountType === "fixed" ? (editFormData?.singleGuestDiscountValue ? (editFormData.singleGuestDiscountValue / 100).toFixed(2) : "") : (editFormData?.singleGuestDiscountValue || "")}
+                        onChange={(e) => {
+                          const val = editFormData?.singleGuestDiscountType === "fixed" ? Math.round(parseFloat(e.target.value) * 100) : parseInt(e.target.value);
+                          handleFieldChange("singleGuestDiscountValue", val);
+                        }}
+                        min="0"
                         className="mt-1"
                       />
                     </div>

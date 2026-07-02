@@ -1,0 +1,2 @@
+ALTER TABLE `rooms` ADD `singleGuestDiscountType` enum('percentage','fixed') DEFAULT 'percentage' NOT NULL;--> statement-breakpoint
+ALTER TABLE `rooms` ADD `singleGuestDiscountValue` int DEFAULT 11 NOT NULL;

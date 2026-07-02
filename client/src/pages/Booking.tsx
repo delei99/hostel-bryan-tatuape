@@ -126,10 +126,12 @@ export default function Booking() {
   const selectedRoom = rooms.find(r => r.id === parseInt(formData.roomId));
   const PRICE_PER_NIGHT = selectedRoom?.pricePerNight || 8000; // Usar preço vigente ou padrão
   const CLEANING_FEE = selectedRoom?.cleaningFee || 700; // Usar taxa de limpeza do banco ou padrão (R$ 7,00)
-  const DISCOUNT_PERCENTAGE = 11;
   const DISCOUNT_7_DAYS = selectedRoom?.discount7Days || 8; // % de desconto para 7+ dias
   const DISCOUNT_15_DAYS = selectedRoom?.discount15Days || 16; // % de desconto para 15+ dias
   const DISCOUNT_30_DAYS = selectedRoom?.discount30Days || 45; // % de desconto para 30+ dias
+  // Desconto para 1 hóspede (dinâmico, pode ser % ou R$)
+  const SINGLE_GUEST_DISCOUNT_TYPE = selectedRoom?.singleGuestDiscountType || "percentage";
+  const SINGLE_GUEST_DISCOUNT_VALUE = selectedRoom?.singleGuestDiscountValue || 11;
 
   // Calcular preço com desconto por duração
   const priceCalculation = useMemo(() => {
@@ -157,8 +159,15 @@ export default function Booking() {
     // Aplicar desconto de duração sobre o subtótal
     const durationDiscount = durationDiscountPercent > 0 ? Math.floor(subtotal * durationDiscountPercent / 100) : 0;
     
-    // Desconto por número de hóspedes (11%) - só aplica se não houver desconto por duração
-    const guestDiscount = (formData.numberOfGuests === "1" && durationDiscountPercent === 0) ? Math.floor(subtotal * DISCOUNT_PERCENTAGE / 100) : 0;
+    // Desconto por número de hóspedes - só aplica se não houver desconto por duração
+    let guestDiscount = 0;
+    if (formData.numberOfGuests === "1" && durationDiscountPercent === 0) {
+      if (SINGLE_GUEST_DISCOUNT_TYPE === "percentage") {
+        guestDiscount = Math.floor(subtotal * SINGLE_GUEST_DISCOUNT_VALUE / 100);
+      } else {
+        guestDiscount = SINGLE_GUEST_DISCOUNT_VALUE; // Valor fixo em centavos
+      }
+    }
     
     // Usar o maior desconto entre hóspede e duração
     const totalDiscount = Math.max(guestDiscount, durationDiscount);
@@ -312,7 +321,7 @@ export default function Booking() {
         numberOfGuests: numberOfGuests.toString(),
         dailyType: numberOfGuests === 1 ? "individual" : "couple",
         subtotal: priceCalculation.subtotal,
-        discountPercentage: priceCalculation.durationDiscountPercent > 0 ? priceCalculation.durationDiscountPercent : (numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : 0),
+        discountPercentage: priceCalculation.durationDiscountPercent > 0 ? priceCalculation.durationDiscountPercent : (numberOfGuests === 1 && SINGLE_GUEST_DISCOUNT_TYPE === "percentage" ? SINGLE_GUEST_DISCOUNT_VALUE : 0),
         discountAmount: priceCalculation.discount,
         cleaningFee: CLEANING_FEE,
         totalPrice: finalTotal,
@@ -334,8 +343,12 @@ export default function Booking() {
       const nights = Math.ceil((checkOutDateObj.getTime() - checkInDateObj.getTime()) / (1000 * 60 * 60 * 24));
       
       // Calcular o desconto que foi aplicado
-      // Se for 1 hóspede, sempre mostrar 11% (mesmo que não tenha desconto por duração)
-      const appliedDiscountPercent = numberOfGuests === 1 ? DISCOUNT_PERCENTAGE : (priceCalculation.durationDiscountPercent > 0 ? priceCalculation.durationDiscountPercent : 0);
+      let appliedDiscountPercent = 0;
+      if (numberOfGuests === 1) {
+        appliedDiscountPercent = SINGLE_GUEST_DISCOUNT_TYPE === "percentage" ? SINGLE_GUEST_DISCOUNT_VALUE : 0;
+      } else if (priceCalculation.durationDiscountPercent > 0) {
+        appliedDiscountPercent = priceCalculation.durationDiscountPercent;
+      }
       const paymentAtCheckIn = finalTotal - paymentAtBooking;
       
       const message = `*CONFIRMACAO DE RESERVA - HOSTEL BRYAN TATUAPE*\n\n` +
@@ -351,7 +364,7 @@ export default function Booking() {
         `*Noites:* ${nights}\n\n` +
         `*Valores:*\n` +
         `Diaria: R$ ${(priceCalculation.subtotal / 100).toFixed(2)}\n` +
-        `${priceCalculation.discount > 0 ? `Desconto (${appliedDiscountPercent}%): -R$ ${(priceCalculation.discount / 100).toFixed(2)}\n` : ''}` +
+        `${priceCalculation.discount > 0 ? `Desconto ${numberOfGuests === 1 && SINGLE_GUEST_DISCOUNT_TYPE === "fixed" ? "para 1 Hóspede" : `(${appliedDiscountPercent}%)`}: -R$ ${(priceCalculation.discount / 100).toFixed(2)}\n` : ''}` +
         `Taxa de Limpeza: R$ ${(CLEANING_FEE / 100).toFixed(2)}\n` +
         `*Total: R$ ${(finalTotal / 100).toFixed(2)}*\n\n` +
         `*Forma de Pagamento:*\n` +

@@ -43,6 +43,8 @@ export const rooms = mysqlTable("rooms", {
   discount7Days: int("discount7Days").default(8).notNull(), // % de desconto para 7+ dias
   discount15Days: int("discount15Days").default(16).notNull(), // % de desconto para 15+ dias
   discount30Days: int("discount30Days").default(45).notNull(), // % de desconto para 30+ dias
+  singleGuestDiscountType: mysqlEnum("singleGuestDiscountType", ["percentage", "fixed"]).default("percentage").notNull(), // Tipo de desconto: % ou R$
+  singleGuestDiscountValue: int("singleGuestDiscountValue").default(11).notNull(), // Valor do desconto (em % ou centavos)
   status: mysqlEnum("status", ["available", "maintenance", "archived"]).default("available").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

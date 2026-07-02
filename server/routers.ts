@@ -57,6 +57,8 @@ export const appRouter = router({
         amenities: z.string().optional(),
         bathroomType: z.enum(["private", "shared"]).optional(),
         status: z.enum(["available", "maintenance", "archived"]).optional(),
+        singleGuestDiscountType: z.enum(["percentage", "fixed"]).optional(),
+        singleGuestDiscountValue: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const { createRoom } = await import("./db");
@@ -78,6 +80,8 @@ export const appRouter = router({
         amenities: z.string().optional(),
         bathroomType: z.enum(["private", "shared"]).optional(),
         status: z.enum(["available", "maintenance", "archived"]).optional(),
+        singleGuestDiscountType: z.enum(["percentage", "fixed"]).optional(),
+        singleGuestDiscountValue: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const { updateRoom } = await import("./db");
