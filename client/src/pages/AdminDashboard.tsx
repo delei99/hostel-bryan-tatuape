@@ -492,6 +492,17 @@ export default function AdminDashboard() {
       doc.text(`Total: R$ ${total.toFixed(2)}`, 15, yPosition);
       yPosition += 10;
 
+      // Forma de Pagamento
+      doc.setFont(undefined as any, 'normal');
+      doc.text("Forma de Pagamento:", 15, yPosition);
+      yPosition += 5;
+      const paymentAtBooking = booking.booking.paymentAtBooking / 100;
+      const paymentAtCheckIn = total - paymentAtBooking;
+      doc.text(`Pagamento no ato da reserva: R$ ${paymentAtBooking.toFixed(2)}`, 15, yPosition);
+      yPosition += 5;
+      doc.text(`Pagamento no check-in: R$ ${paymentAtCheckIn.toFixed(2)}`, 15, yPosition);
+      yPosition += 10;
+
       // Observações
       if (booking.booking.specialRequests) {
         doc.setFont(undefined as any, 'normal');
