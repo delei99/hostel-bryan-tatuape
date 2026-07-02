@@ -149,7 +149,9 @@ export default function AdminDashboard() {
       });
       
       // Invalidar cache de datas bloqueadas para sincronizar calendário
-      await utils.blockedDates.list.invalidate();
+      if (editFormData?.roomId) {
+        await utils.blockedDates.list.invalidate({ roomId: editFormData.roomId });
+      }
       
       refetch();
     },
@@ -327,7 +329,13 @@ export default function AdminDashboard() {
       }
       
       // Invalidar cache de datas bloqueadas para sincronizar calendário
-      await utils.blockedDates.list.invalidate();
+      // Invalidar para o quarto antigo e novo (em caso de mudança de quarto)
+      if (editingBooking?.booking?.roomId) {
+        await utils.blockedDates.list.invalidate({ roomId: editingBooking.booking.roomId });
+      }
+      if (result?.booking?.roomId) {
+        await utils.blockedDates.list.invalidate({ roomId: result.booking.roomId });
+      }
       
       setEditingBooking(null);
       setEditPassword("");
