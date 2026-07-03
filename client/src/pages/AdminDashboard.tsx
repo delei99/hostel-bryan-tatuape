@@ -1828,8 +1828,9 @@ export default function AdminDashboard() {
                             }
                           }
                           
-                          const roomCleaningFee = (editingBooking.room as any).cleaningFee || 0;
-                          const total = subtotal - discount + (extensionChargeCleaningFee ? roomCleaningFee : 0);
+                          const roomCleaningFeeValue = (editingBooking.room as any).cleaningFee || 0;
+                          const cleaningFeeToAdd = extensionChargeCleaningFee ? roomCleaningFeeValue : 0;
+                          const total = subtotal - discount + cleaningFeeToAdd;
                           
                           return (
                             <>
@@ -1839,8 +1840,8 @@ export default function AdminDashboard() {
                               {numberOfGuests === 1 && discount > 0 && (
                                 <p className="text-green-700 dark:text-green-400">Desconto 1 hóspede: -R$ {(discount / 100).toFixed(2)}</p>
                               )}
-                              {extensionChargeCleaningFee && roomCleaningFee > 0 && (
-                                <p>Taxa limpeza: +R$ {(roomCleaningFee / 100).toFixed(2)}</p>
+                              {extensionChargeCleaningFee && roomCleaningFeeValue > 0 && (
+                                <p>Taxa limpeza: +R$ {(roomCleaningFeeValue / 100).toFixed(2)}</p>
                               )}
                               <p className="font-bold border-t border-current mt-2 pt-2">Total: R$ {(total / 100).toFixed(2)}</p>
                             </>
