@@ -678,10 +678,9 @@ export default function Booking() {
               </div>
 
               {/* Aviso de Horários */}
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800 font-semibold">⏰ Horários de Check-in e Check-out</p>
-                <p className="text-sm text-blue-700">Check-in: 14h00 às 23h30</p>
-                <p className="text-sm text-blue-700">Check-out: até 12h00</p>
+                <p className="text-sm text-blue-700 mt-2">Check-in: 14h00 às 23h30 | Check-out: até 12h00</p>
               </div>
 
               {/* Check-in Time */}
