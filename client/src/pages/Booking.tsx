@@ -814,11 +814,6 @@ export default function Booking() {
               </div>
             </div>
 
-            {/* Aviso de Documento */}
-            <div className="p-4 bg-red-50 border border-red-500 rounded-lg mb-4">
-              <p className="text-sm text-black font-bold">Atenção!!!! O numero do documento tem que ser o mesmo que vai ser apresentado no chek-in.</p>
-            </div>
-
             {/* RG com UF */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -879,7 +874,11 @@ export default function Booking() {
                 onChange={handleInputChange}
                 placeholder="AB123456"
               />
-              <p className="text-sm text-red-500 mt-1">Atenção!!!! O numero do documento tem que ser o mesmo que vai ser apresentado no chek-in.</p>
+            </div>
+
+            {/* Aviso de Documento */}
+            <div className="p-4 bg-red-50 border border-red-500 rounded-lg">
+              <p className="text-sm text-black font-bold">Atenção!!!! O numero do documento tem que ser o mesmo que vai ser apresentado no chek-in.</p>
             </div>
 
             {/* Observações */}
