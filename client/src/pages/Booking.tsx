@@ -684,10 +684,10 @@ export default function Booking() {
               </div>
 
               {/* Check-in Time */}
-              <div>
+              <div className="w-full">
                 <Label htmlFor="checkInTime">Horário de Check-in *</Label>
                 <Select value={formData.checkInTime} onValueChange={(value) => handleSelectChange('checkInTime', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -701,10 +701,10 @@ export default function Booking() {
               </div>
 
               {/* Check-out Time */}
-              <div>
+              <div className="w-full">
                 <Label htmlFor="checkOutTime">Horário de Check-out *</Label>
                 <Select value={formData.checkOutTime} onValueChange={(value) => handleSelectChange('checkOutTime', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
