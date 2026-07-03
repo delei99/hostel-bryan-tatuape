@@ -676,15 +676,18 @@ export default function Booking() {
                   <p className="text-red-600 text-sm mt-2">⚠️ Data bloqueada!</p>
                 )}
               </div>
+            </div>
 
-              {/* Aviso de Horários */}
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800 font-semibold">⏰ Horários de Check-in e Check-out</p>
-                <p className="text-sm text-blue-700 mt-2">Check-in: 14h00 às 23h30 | Check-out: até 12h00</p>
-              </div>
+            {/* Aviso de Horários */}
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800 font-semibold">⏰ Horários de Check-in e Check-out</p>
+              <p className="text-sm text-blue-700 mt-2">Check-in: 14h00 às 23h30 | Check-out: até 12h00</p>
+            </div>
 
+            {/* Check-in e Check-out Times */}
+            <div className="grid grid-cols-2 gap-4">
               {/* Check-in Time */}
-              <div className="w-full">
+              <div>
                 <Label htmlFor="checkInTime">Horário de Check-in *</Label>
                 <Select value={formData.checkInTime} onValueChange={(value) => handleSelectChange('checkInTime', value)}>
                   <SelectTrigger className="h-9">
@@ -701,7 +704,7 @@ export default function Booking() {
               </div>
 
               {/* Check-out Time */}
-              <div className="w-full">
+              <div>
                 <Label htmlFor="checkOutTime">Horário de Check-out *</Label>
                 <Select value={formData.checkOutTime} onValueChange={(value) => handleSelectChange('checkOutTime', value)}>
                   <SelectTrigger className="h-9">
