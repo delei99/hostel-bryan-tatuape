@@ -608,9 +608,12 @@ export default function Booking() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Seleção de Quarto */}
             <div>
-              <Label htmlFor="roomId">Quarto *</Label>
+              <Label htmlFor="roomId" className="block mb-2">
+                <span className="font-bold text-black">Clique abaixo para escolher seu quarto de </span>
+                <span className="font-bold text-black bg-yellow-300 px-1 rounded">01 a 07</span>
+              </Label>
               <Select value={formData.roomId} onValueChange={(value) => handleSelectChange('roomId', value)}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-green-50 border-green-300">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
