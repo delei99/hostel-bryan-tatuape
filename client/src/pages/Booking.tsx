@@ -612,7 +612,7 @@ export default function Booking() {
                 <span className="font-bold text-black bg-yellow-300 px-2 py-1 rounded inline-block border border-red-600">Clique abaixo para escolher seu quarto de 01 a 07</span>
               </Label>
               <Select value={formData.roomId} onValueChange={(value) => handleSelectChange('roomId', value)}>
-                <SelectTrigger className="bg-green-50 border-green-300">
+                <SelectTrigger className="bg-green-50 border-green-300 font-bold">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -680,8 +680,8 @@ export default function Booking() {
 
             {/* Aviso de Horários */}
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800 font-semibold">⏰ Horários de Check-in e Check-out</p>
-              <p className="text-sm text-blue-700 mt-2">Check-in: 14h00 às 23h30 | Check-out: até 12h00</p>
+              <p className="text-sm text-blue-800 font-bold">⏰ Horários de Check-in e Check-out</p>
+              <p className="text-sm text-blue-700 mt-2 font-bold">Check-in: 14h00 às 23h30 | Check-out: até 12h00</p>
             </div>
 
             {/* Check-in e Check-out Times */}
