@@ -609,7 +609,7 @@ export default function Booking() {
             {/* Seleção de Quarto */}
             <div>
               <Label htmlFor="roomId" className="block mb-2">
-                <span className="font-bold text-black bg-yellow-300 px-2 py-1 rounded inline-block">Clique abaixo para escolher seu quarto de 01 a 07</span>
+                <span className="font-bold text-black bg-yellow-300 px-2 py-1 rounded inline-block border border-red-600">Clique abaixo para escolher seu quarto de 01 a 07</span>
               </Label>
               <Select value={formData.roomId} onValueChange={(value) => handleSelectChange('roomId', value)}>
                 <SelectTrigger className="bg-green-50 border-green-300">
