@@ -500,6 +500,22 @@ export default function AdminDashboard() {
       doc.text(`Hóspedes: ${booking.booking.numberOfGuests} ${booking.booking.numberOfGuests === 1 ? 'pessoa' : 'pessoas'}`, 15, yPosition);
       yPosition += 10;
 
+      // Informações do Quarto
+      doc.setFont(undefined as any, 'bold');
+      doc.text("Informações do Quarto:", 15, yPosition);
+      yPosition += 5;
+      doc.setFont(undefined as any, 'normal');
+      doc.text(`Taxa de Limpeza: R$ ${(((booking.room as any).cleaningFee || 0) / 100).toFixed(2)}`, 15, yPosition);
+      yPosition += 5;
+      doc.text(`Desconto 7+ Dias: ${(booking.room as any).discount7Days || 0}%`, 15, yPosition);
+      yPosition += 5;
+      doc.text(`Desconto 15+ Dias: ${(booking.room as any).discount15Days || 0}%`, 15, yPosition);
+      yPosition += 5;
+      doc.text(`Desconto 30+ Dias: ${(booking.room as any).discount30Days || 0}%`, 15, yPosition);
+      yPosition += 5;
+      doc.text(`Desconto 1 Hóspede: ${(booking.room as any).singleGuestDiscountValue || 0}${(booking.room as any).singleGuestDiscountType === 'percentage' ? '%' : ' R$'}`, 15, yPosition);
+      yPosition += 10;
+
       // Valores
       const subtotal = booking.booking.subtotal / 100;
       const discount = booking.booking.discountAmount / 100;
@@ -582,6 +598,12 @@ export default function AdminDashboard() {
       message += `*Check-in:* ${checkInDate.toLocaleDateString('pt-BR')} às ${booking.booking.checkInTime}\n`;
       message += `*Check-out:* ${checkOutDate.toLocaleDateString('pt-BR')} às ${booking.booking.checkOutTime}\n`;
       message += `*Hóspedes:* ${booking.booking.numberOfGuests} ${booking.booking.numberOfGuests === 1 ? 'pessoa' : 'pessoas'}\n\n`;
+      message += `*Informações do Quarto:*\n`;
+      message += `Taxa de Limpeza: R$ ${((booking.room as any).cleaningFee || 0 / 100).toFixed(2)}\n`;
+      message += `Desconto 7+ Dias: ${(booking.room as any).discount7Days || 0}%\n`;
+      message += `Desconto 15+ Dias: ${(booking.room as any).discount15Days || 0}%\n`;
+      message += `Desconto 30+ Dias: ${(booking.room as any).discount30Days || 0}%\n`;
+      message += `Desconto 1 Hóspede: ${(booking.room as any).singleGuestDiscountValue || 0}${(booking.room as any).singleGuestDiscountType === 'percentage' ? '%' : ' R$'}\n\n`;
       message += `*Valores:*\n`;
       message += `Subtotal: R$ ${subtotal.toFixed(2)}\n`;
       if (discount > 0) {
