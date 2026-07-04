@@ -140,7 +140,23 @@ export default function Booking() {
   const [bookingSuccess, setBookingSuccess] = useState<any>(null);
   const [reservationId, setReservationId] = useState<number | null>(null);
 
+  // Autocomplete de hospedes
+  const [guestSuggestions, setGuestSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchGuestsQuery = trpc.bookings.searchByName.useQuery(
+    { name: formData.firstName },
+    { enabled: formData.firstName.length >= 2 }
+  );
+
   
+  // Atualizar sugestoes de hospedes
+  React.useEffect(() => {
+    if (searchGuestsQuery.data) {
+      setGuestSuggestions(searchGuestsQuery.data);
+      setShowSuggestions(searchGuestsQuery.data.length > 0);
+    }
+  }, [searchGuestsQuery.data]);
+
   // Atualizar roomId se vier da URL
   React.useEffect(() => {
     if (roomIdFromUrl && roomIdFromUrl !== formData.roomId) {
@@ -243,6 +259,22 @@ export default function Booking() {
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectGuest = (guest: any) => {
+    setFormData(prev => ({
+      ...prev,
+      firstName: guest.firstName,
+      lastName: guest.lastName,
+      email: guest.email || '',
+      phone: guest.phone || '',
+      cpf: guest.cpf || '',
+      nationality: guest.nationality || '',
+      documentNumber: guest.documentNumber || '',
+      documentUF: guest.documentUF || 'SP',
+      documentNumberPassport: guest.documentNumberPassport || '',
+    }));
+    setShowSuggestions(false);
   };
 
   // Verificar se a data está bloqueada
@@ -737,15 +769,29 @@ export default function Booking() {
 
             {/* Dados Pessoais */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
+              <div className="relative">
                 <Label htmlFor="firstName">Primeiro Nome *</Label>
                 <Input
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
+                  onFocus={() => formData.firstName.length >= 2 && setShowSuggestions(true)}
                   placeholder="João"
                   required
                 />
+                {showSuggestions && guestSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-border rounded-md shadow-lg max-h-48 overflow-y-auto dark:bg-slate-900">
+                    {guestSuggestions.map((guest) => (
+                      <button
+                        key={guest.id}
+                        onClick={() => handleSelectGuest(guest)}
+                        className="w-full text-left px-3 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer text-sm border-b border-border last:border-b-0"
+                      >
+                        {guest.fullName}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div>
                 <Label htmlFor="lastName">Sobrenome *</Label>

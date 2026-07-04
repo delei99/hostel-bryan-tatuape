@@ -208,6 +208,15 @@ export const appRouter = router({
           ctx.user?.email || 'system'
         );
       }),
+
+    searchByName: publicProcedure
+      .input(z.object({
+        name: z.string().min(1),
+      }))
+      .query(async ({ input }) => {
+        const { searchGuestsByName } = await import("./db");
+        return searchGuestsByName(input.name);
+      }),
   }),
 
   blockedDates: router({

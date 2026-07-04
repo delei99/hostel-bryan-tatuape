@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, lt, or, inArray } from "drizzle-orm";
+import { and, desc, eq, gt, lt, or, inArray, like, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog, failedUnblockAttempts, InsertFailedUnblockAttempt, FailedUnblockAttempt, blockingExceptions, InsertBlockingException, BlockingException, homeImages, InsertHomeImage, HomeImage, monthlyRevenueHistory, InsertMonthlyRevenueHistory, MonthlyRevenueHistory } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -1520,5 +1520,46 @@ export async function extendBooking(
   } catch (error) {
     console.error("[Database] Error extending booking:", error);
     throw error;
+  }
+}
+
+
+/**
+ * Buscar hóspedes por nome (para autocomplete)
+ */
+export async function searchGuestsByName(name: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    // Buscar hóspedes com nome similar
+    const searchTerm = `%${name}%`;
+    const results = await db
+      .select({
+        id: guests.id,
+        firstName: guests.firstName,
+        lastName: guests.lastName,
+        email: guests.email,
+        phone: guests.phone,
+        cpf: guests.cpf,
+        nationality: guests.nationality,
+      })
+      .from(guests)
+      .where(
+        or(
+          like(guests.firstName, searchTerm),
+          like(guests.lastName, searchTerm),
+          like(sql`CONCAT(${guests.firstName}, ' ', ${guests.lastName})`, searchTerm)
+        )
+      )
+      .limit(10);
+
+    return results.map(guest => ({
+      ...guest,
+      fullName: `${guest.firstName} ${guest.lastName}`,
+    }));
+  } catch (error) {
+    console.error("[Database] Error searching guests by name:", error);
+    return [];
   }
 }
