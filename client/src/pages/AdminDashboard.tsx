@@ -712,8 +712,17 @@ export default function AdminDashboard() {
     const total = currentMonthBookings.length;
     const confirmedBookings = currentMonthBookings.filter((b: any) => b.booking.status === "confirmed");
     const confirmed = confirmedBookings.length;
-    const revenue = currentMonthBookings.reduce((sum: number, b: any) => sum + b.booking.totalPrice, 0);
-    const confirmedRevenue = confirmedBookings.reduce((sum: number, b: any) => sum + b.booking.totalPrice, 0);
+    
+    // Calcular receita: paymentAtBooking + paymentAtCheckIn
+    const revenue = currentMonthBookings.reduce((sum: number, b: any) => {
+      const bookingPayment = (b.booking.paymentAtBooking || 0) + (b.booking.paymentAtCheckIn || 0);
+      return sum + bookingPayment;
+    }, 0);
+    
+    const confirmedRevenue = confirmedBookings.reduce((sum: number, b: any) => {
+      const bookingPayment = (b.booking.paymentAtBooking || 0) + (b.booking.paymentAtCheckIn || 0);
+      return sum + bookingPayment;
+    }, 0);
 
     return {
       total,
