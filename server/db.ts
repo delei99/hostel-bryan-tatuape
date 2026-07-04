@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, lt, or, inArray, like, sql } from "drizzle-orm";
+import { and, desc, eq, gt, lt, or, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog, failedUnblockAttempts, InsertFailedUnblockAttempt, FailedUnblockAttempt, blockingExceptions, InsertBlockingException, BlockingException, homeImages, InsertHomeImage, HomeImage, monthlyRevenueHistory, InsertMonthlyRevenueHistory, MonthlyRevenueHistory } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -30,190 +30,383 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 
   try {
-    const existing = await db
-      .select()
-      .from(users)
-      .where(eq(users.openId, user.openId))
-      .limit(1);
+    const values: InsertUser = {
+      openId: user.openId,
+    };
+    const updateSet: Record<string, unknown> = {};
 
-    if (existing.length === 0) {
-      await db.insert(users).values(user);
-    } else {
-      await db
-        .update(users)
-        .set(user)
-        .where(eq(users.openId, user.openId));
+    const textFields = ["name", "email", "loginMethod"] as const;
+    type TextField = (typeof textFields)[number];
+
+    const assignNullable = (field: TextField) => {
+      const value = user[field];
+      if (value === undefined) return;
+      const normalized = value ?? null;
+      values[field] = normalized;
+      updateSet[field] = normalized;
+    };
+
+    textFields.forEach(assignNullable);
+
+    if (user.lastSignedIn !== undefined) {
+      values.lastSignedIn = user.lastSignedIn;
+      updateSet.lastSignedIn = user.lastSignedIn;
     }
+    if (user.role !== undefined) {
+      values.role = user.role;
+      updateSet.role = user.role;
+    } else if (user.openId === ENV.ownerOpenId) {
+      values.role = 'admin';
+      updateSet.role = 'admin';
+    }
+
+    if (!values.lastSignedIn) {
+      values.lastSignedIn = new Date();
+    }
+
+    if (Object.keys(updateSet).length === 0) {
+      updateSet.lastSignedIn = new Date();
+    }
+
+    await db.insert(users).values(values).onDuplicateKeyUpdate({
+      set: updateSet,
+    });
   } catch (error) {
-    console.error("[Database] Error upserting user:", error);
+    console.error("[Database] Failed to upsert user:", error);
     throw error;
   }
 }
 
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
-  if (!db) return null;
-
-  try {
-    const result = await db
-      .select()
-      .from(users)
-      .where(eq(users.openId, openId))
-      .limit(1);
-
-    return result[0] || null;
-  } catch (error) {
-    console.error("[Database] Error getting user by openId:", error);
-    return null;
-  }
-}
-
-export async function createGuest(guest: InsertGuest) {
-  const db = await getDb();
   if (!db) {
-    throw new Error("Database not available");
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
   }
 
-  try {
-    const result = await db.insert(guests).values(guest);
-    return result;
-  } catch (error) {
-    console.error("[Database] Error creating guest:", error);
-    throw error;
-  }
+  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
 }
 
-export async function getGuestById(id: number) {
+export async function getUserById(userId: number) {
   const db = await getDb();
-  if (!db) return null;
-
-  try {
-    const result = await db
-      .select()
-      .from(guests)
-      .where(eq(guests.id, id))
-      .limit(1);
-
-    return result[0] || null;
-  } catch (error) {
-    console.error("[Database] Error getting guest by id:", error);
-    return null;
-  }
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
 }
 
-export async function getAllGuests() {
-  const db = await getDb();
-  if (!db) return [];
-
-  try {
-    const result = await db.select().from(guests);
-    return result;
-  } catch (error) {
-    console.error("[Database] Error getting all guests:", error);
-    return [];
-  }
-}
-
-export async function createRoom(room: any) {
-  const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
-  }
-
-  try {
-    const result = await db.insert(rooms).values(room);
-    return result;
-  } catch (error) {
-    console.error("[Database] Error creating room:", error);
-    throw error;
-  }
-}
-
-export async function getRoomById(id: number) {
-  const db = await getDb();
-  if (!db) return null;
-
-  try {
-    const result = await db
-      .select()
-      .from(rooms)
-      .where(eq(rooms.id, id))
-      .limit(1);
-
-    return result[0] || null;
-  } catch (error) {
-    console.error("[Database] Error getting room by id:", error);
-    return null;
-  }
-}
-
+/**
+ * Query helpers para quartos
+ */
 export async function getAllRooms() {
   const db = await getDb();
   if (!db) return [];
+  return db.select().from(rooms);
+}
 
-  try {
-    const result = await db.select().from(rooms);
-    return result;
-  } catch (error) {
-    console.error("[Database] Error getting all rooms:", error);
-    return [];
+export async function getRoomById(roomId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(rooms).where(eq(rooms.id, roomId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getRoomAvailability(roomId: number, checkInDate: Date, checkOutDate: Date) {
+  const db = await getDb();
+  if (!db) return { available: false, bookedDates: [] };
+  
+  // Converter datas para formato YYYY-MM-DD para comparação
+  const formatDate = (d: Date) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const checkInStr = formatDate(checkInDate);
+  const checkOutStr = formatDate(checkOutDate);
+  
+  // Buscar reservas confirmadas que conflitem com as datas
+  const conflictingBookings = await db
+    .select()
+    .from(bookings)
+    .where(
+      and(
+        eq(bookings.roomId, roomId),
+        or(
+          eq(bookings.status, "confirmed"),
+          eq(bookings.status, "checked_in")
+        ),
+        // Verificar conflito de datas (comparar como strings)
+        and(
+          lt(bookings.checkInDate, checkOutStr),
+          gt(bookings.checkOutDate, checkInStr)
+        )
+      )
+    );
+
+  return {
+    available: conflictingBookings.length === 0,
+    bookedDates: conflictingBookings.map(b => ({
+      checkIn: b.checkInDate,
+      checkOut: b.checkOutDate
+    }))
+  };
+}
+
+/**
+ * Query helpers para hóspedes
+ */
+export async function createOrUpdateGuest(guestData: InsertGuest) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Verificar se o hóspede já existe pelo email
+  const existing = await db
+    .select()
+    .from(guests)
+    .where(eq(guests.email, guestData.email))
+    .limit(1);
+  
+  if (existing.length > 0) {
+    // Atualizar hóspede existente
+    await db
+      .update(guests)
+      .set(guestData)
+      .where(eq(guests.id, existing[0].id));
+    return existing[0].id;
+  } else {
+    // Criar novo hóspede
+    const result = await db.insert(guests).values(guestData);
+    return result[0].insertId;
   }
 }
 
-export async function updateRoom(id: number, updates: any) {
+/**
+ * Query helpers para reservas
+ */
+export async function createBooking(bookingData: any) {
   const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
+  if (!db) throw new Error("Database not available");
+  
+  const { guests } = await import("../drizzle/schema");
+  const guestResult = await db.insert(guests).values({
+    firstName: bookingData.firstName,
+    lastName: bookingData.lastName,
+    email: bookingData.email,
+    phone: bookingData.phone,
+    cpf: bookingData.cpf,
+    nationality: bookingData.nationality,
+  });
+  
+  // Extrair guestId com suporte a diferentes formatos de retorno do Drizzle
+  let guestId: number;
+  if ((guestResult as any).insertId) {
+    guestId = Number((guestResult as any).insertId);
+  } else if (Array.isArray(guestResult) && (guestResult[0] as any)?.insertId) {
+    guestId = Number((guestResult[0] as any).insertId);
+  } else if ((guestResult as any)[0]?.insertId) {
+    guestId = Number((guestResult as any)[0].insertId);
+  } else {
+    console.error('[createBooking] guestResult:', guestResult);
+    throw new Error("Failed to create guest: could not extract insertId");
   }
-
+  if (!guestId || isNaN(guestId)) throw new Error("Failed to create guest: invalid guestId");
+  
+  // Buscar o preço vigente do quarto do banco de dados
+  const roomResult = await db.select().from(rooms).where(eq(rooms.id, bookingData.roomId)).limit(1);
+  const room = roomResult.length > 0 ? roomResult[0] : null;
+  
+  if (!room) {
+    throw new Error(`Room with id ${bookingData.roomId} not found`);
+  }
+  
+  // Calcular preço usando o preço vigente do quarto
+  const checkInDate = new Date(bookingData.checkInDate);
+  const checkOutDate = new Date(bookingData.checkOutDate);
+  const numberOfNights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Calcular subtotal com o preço atual do quarto
+  const currentRoomPrice = room.pricePerNight || 80; // Preço padrão de 80 se não houver
+  const baseSubtotal = currentRoomPrice * numberOfNights;
+  
+  // Aplicar desconto por duração ou por número de hóspedes
+  const numberOfGuests = parseInt(bookingData.numberOfGuests) || 1;
+  let discountAmount = 0;
+  let discountPercentage = 0;
+  
+  // Desconto por duração tem prioridade
+  if (numberOfNights >= 30) {
+    discountPercentage = room.discount30Days || 45;
+    discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
+  } else if (numberOfNights >= 15) {
+    discountPercentage = room.discount15Days || 16;
+    discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
+  } else if (numberOfNights >= 7) {
+    discountPercentage = room.discount7Days || 8;
+    discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
+  } else if (numberOfGuests === 1) {
+    // Desconto de 11% para 1 pessoa só se não houver desconto por duração
+    discountPercentage = 11;
+    discountAmount = Math.round(baseSubtotal * 0.11);
+  }
+  
+  const subtotal = baseSubtotal - discountAmount;
+  const cleaningFee = bookingData.cleaningFee || 700;
+  const finalTotalPrice = subtotal + cleaningFee;
+  const paymentAtBooking = bookingData.paymentAtBooking || 0;
+  const paymentAtCheckIn = bookingData.paymentAtCheckIn || (finalTotalPrice - paymentAtBooking);
+  
+  const bookingToInsert = {
+    guestId,
+    roomId: bookingData.roomId,
+    checkInDate: bookingData.checkInDate,
+    checkOutDate: bookingData.checkOutDate,
+    numberOfGuests: bookingData.numberOfGuests,
+    dailyType: bookingData.dailyType,
+    discountPercentage: discountPercentage,
+    discountAmount: discountAmount,
+    cleaningFee: cleaningFee,
+    subtotal: subtotal,
+    totalPrice: finalTotalPrice,
+    specialRequests: bookingData.specialRequests,
+    checkInTime: bookingData.checkInTime,
+    checkOutTime: bookingData.checkOutTime,
+    documentType: bookingData.documentType || "rg",
+    documentNumber: bookingData.documentNumber || "",
+    paymentAtBooking: paymentAtBooking,
+    paymentAtCheckIn: paymentAtCheckIn,
+  };
+  
+  console.log("[createBooking] bookingToInsert totalPrice:", bookingToInsert.totalPrice);
+  
+  // Usar query SQL raw para ter controle total dos parâmetros
+  const { sql } = await import('drizzle-orm');
+  const result = await db.execute(sql`
+    INSERT INTO bookings (
+      guestId, roomId, checkInDate, checkOutDate, numberOfGuests, dailyType,
+      discountPercentage, discountAmount, cleaningFee, subtotal, totalPrice,
+      specialRequests, checkInTime, checkOutTime, documentType, documentNumber,
+      paymentAtBooking, paymentAtCheckIn
+    ) VALUES (
+      ${bookingToInsert.guestId},
+      ${bookingToInsert.roomId},
+      ${bookingToInsert.checkInDate},
+      ${bookingToInsert.checkOutDate},
+      ${bookingToInsert.numberOfGuests},
+      ${bookingToInsert.dailyType || 'couple'},
+      ${bookingToInsert.discountPercentage},
+      ${bookingToInsert.discountAmount},
+      ${bookingToInsert.cleaningFee},
+      ${bookingToInsert.subtotal},
+      ${bookingToInsert.totalPrice || 0},
+      ${bookingToInsert.specialRequests},
+      ${bookingToInsert.checkInTime},
+      ${bookingToInsert.checkOutTime},
+      ${bookingToInsert.documentType},
+      ${bookingToInsert.documentNumber},
+      ${bookingToInsert.paymentAtBooking},
+      ${bookingToInsert.paymentAtCheckIn}
+    )
+  `)
+  
+  // Extrair bookingId com suporte a diferentes formatos de retorno do Drizzle
+  let bookingId: number;
+  if ((result as any).insertId) {
+    bookingId = Number((result as any).insertId);
+  } else if (Array.isArray(result) && (result[0] as any)?.insertId) {
+    bookingId = Number((result[0] as any).insertId);
+  } else if ((result as any)[0]?.insertId) {
+    bookingId = Number((result as any)[0].insertId);
+  } else {
+    console.error('[createBooking] bookingResult:', result);
+    throw new Error("Failed to create booking: could not extract insertId");
+  }
+  if (!bookingId || isNaN(bookingId)) throw new Error("Failed to create booking: invalid bookingId");
+  
+  // Gerar codigo de confirmacao unico (formato: YYYYMMDD-XXXXX)
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
+  const confirmationCode = `${dateStr}-${randomStr}`;
+  
+  // Bloquear automaticamente as datas da reserva
   try {
-    const result = await db
-      .update(rooms)
-      .set(updates)
-      .where(eq(rooms.id, id));
-    return result;
+    // Usar timezone local para evitar problemas de conversão
+    const [checkInYear, checkInMonth, checkInDay] = bookingData.checkInDate.split('-').map(Number);
+    const [checkOutYear, checkOutMonth, checkOutDay] = bookingData.checkOutDate.split('-').map(Number);
+    
+    // Criar timestamps em timezone local (sem UTC)
+    const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
+    const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
+    
+    await createBlockedDate({
+      roomId: bookingData.roomId,
+      bookingId: bookingId,
+      startDate,
+      endDate,
+      reason: `Reserva automática - Código: ${confirmationCode} - Hóspede: ${bookingData.firstName} ${bookingData.lastName}`,
+    });
   } catch (error) {
-    console.error("[Database] Error updating room:", error);
-    throw error;
+    console.error("[Booking] Erro ao bloquear datas automaticamente:", error);
+    // Não falhar a reserva se o bloqueio automático falhar
   }
+  
+  // Atualizar booking com o código de confirmação
+  await db.update(bookings).set({ confirmationCode }).where(eq(bookings.id, bookingId));
+  
+  // Enviar notificação para o hóspede
+  try {
+    const { notifyGuest } = await import('./_core/guestNotification');
+    const roomResult = await db.select().from(rooms).where(eq(rooms.id, bookingData.roomId)).limit(1);
+    const room = roomResult.length > 0 ? roomResult[0] : null;
+    
+    if (room) {
+      await notifyGuest({
+        guestEmail: bookingData.email,
+        guestPhone: bookingData.phone,
+        guestName: `${bookingData.firstName} ${bookingData.lastName}`,
+        bookingCode: confirmationCode,
+        checkInDate: new Date(bookingData.checkInDate).toLocaleDateString('pt-BR'),
+        checkOutDate: new Date(bookingData.checkOutDate).toLocaleDateString('pt-BR'),
+        roomName: room.name,
+        totalPrice: bookingData.totalPrice,
+        message: 'Sua reserva foi confirmada com sucesso! Aqui estão os detalhes:',
+        cpf: bookingData.cpf,
+        documentType: bookingData.documentType,
+        documentNumber: bookingData.documentNumber,
+      });
+    }
+  } catch (error) {
+    console.error('[Booking] Erro ao enviar notificação:', error);
+  }
+  
+  // Retornar dados completos da reserva com confirmationCode
+  return {
+    id: bookingId,
+    guestId,
+    confirmationCode,
+    roomId: bookingData.roomId,
+    checkInDate: bookingData.checkInDate,
+    checkOutDate: bookingData.checkOutDate,
+    numberOfGuests: bookingData.numberOfGuests,
+    dailyType: bookingData.dailyType || 'couple',
+    subtotal: subtotal,
+    totalPrice: finalTotalPrice,
+    checkInTime: bookingData.checkInTime,
+    checkOutTime: bookingData.checkOutTime,
+    discountPercentage: discountPercentage,
+    discountAmount: discountAmount,
+    cleaningFee: cleaningFee,
+    specialRequests: bookingData.specialRequests,
+  };
 }
 
-export async function deleteRoom(id: number) {
+export async function getAllBookings() {
   const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
-  }
-
-  try {
-    const result = await db
-      .delete(rooms)
-      .where(eq(rooms.id, id));
-    return result;
-  } catch (error) {
-    console.error("[Database] Error deleting room:", error);
-    throw error;
-  }
-}
-
-export async function createBooking(booking: InsertBooking) {
-  const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
-  }
-
-  try {
-    const result = await db.insert(bookings).values(booking);
-    return result;
-  } catch (error) {
-    console.error("[Database] Error creating booking:", error);
-    throw error;
-  }
-}
-
-export async function getBookingById(id: number) {
-  const db = await getDb();
-  if (!db) return null;
-
+  if (!db) return [];
+  
   try {
     const result = await db
       .select({
@@ -221,21 +414,29 @@ export async function getBookingById(id: number) {
           id: bookings.id,
           guestId: bookings.guestId,
           roomId: bookings.roomId,
+          bedId: bookings.bedId,
           checkInDate: bookings.checkInDate,
           checkOutDate: bookings.checkOutDate,
-          checkInTime: bookings.checkInTime,
-          checkOutTime: bookings.checkOutTime,
           numberOfGuests: bookings.numberOfGuests,
-          specialRequests: bookings.specialRequests,
+          dailyType: bookings.dailyType,
+          discountPercentage: bookings.discountPercentage,
+          discountAmount: bookings.discountAmount,
+          cleaningFee: bookings.cleaningFee,
+          subtotal: bookings.subtotal,
+          totalPrice: bookings.totalPrice,
           status: bookings.status,
-          confirmationCode: bookings.confirmationCode,
-          createdAt: bookings.createdAt,
-          updatedAt: bookings.updatedAt,
+          specialRequests: bookings.specialRequests,
+          paymentMethod: bookings.paymentMethod,
+          paymentStatus: bookings.paymentStatus,
           paymentAtBooking: bookings.paymentAtBooking,
           paymentAtCheckIn: bookings.paymentAtCheckIn,
-          isExtension: bookings.isExtension,
-          parentBookingId: bookings.parentBookingId,
-          extensionCleaningFee: bookings.extensionCleaningFee,
+          confirmationCode: bookings.confirmationCode,
+          checkInTime: bookings.checkInTime,
+          checkOutTime: bookings.checkOutTime,
+          editedAt: bookings.editedAt,
+          editedBy: bookings.editedBy,
+          createdAt: bookings.createdAt,
+          updatedAt: bookings.updatedAt,
         },
         guest: {
           id: guests.id,
@@ -246,6 +447,8 @@ export async function getBookingById(id: number) {
           cpf: guests.cpf,
           nationality: guests.nationality,
           dateOfBirth: guests.dateOfBirth,
+          createdAt: guests.createdAt,
+          updatedAt: guests.updatedAt,
         },
         room: {
           id: rooms.id,
@@ -264,25 +467,26 @@ export async function getBookingById(id: number) {
           imageUrl: rooms.imageUrl,
           additionalImages: rooms.additionalImages,
           status: rooms.status,
-        },
+          createdAt: rooms.createdAt,
+          updatedAt: rooms.updatedAt,
+        }
       })
       .from(bookings)
       .innerJoin(guests, eq(bookings.guestId, guests.id))
       .innerJoin(rooms, eq(bookings.roomId, rooms.id))
-      .where(eq(bookings.id, id))
-      .limit(1);
-
-    return result[0] || null;
+      .orderBy(desc(bookings.createdAt));
+    
+    return result;
   } catch (error) {
-    console.error("[Database] Error getting booking by id:", error);
-    return null;
+    console.error('[Database] Error in getAllBookings:', error);
+    return [];
   }
 }
 
-export async function getAllBookings() {
+export async function getBookingById(bookingId: number) {
   const db = await getDb();
-  if (!db) return [];
-
+  if (!db) return undefined;
+  
   try {
     const result = await db
       .select({
@@ -290,21 +494,29 @@ export async function getAllBookings() {
           id: bookings.id,
           guestId: bookings.guestId,
           roomId: bookings.roomId,
+          bedId: bookings.bedId,
           checkInDate: bookings.checkInDate,
           checkOutDate: bookings.checkOutDate,
-          checkInTime: bookings.checkInTime,
-          checkOutTime: bookings.checkOutTime,
           numberOfGuests: bookings.numberOfGuests,
-          specialRequests: bookings.specialRequests,
+          dailyType: bookings.dailyType,
+          discountPercentage: bookings.discountPercentage,
+          discountAmount: bookings.discountAmount,
+          cleaningFee: bookings.cleaningFee,
+          subtotal: bookings.subtotal,
+          totalPrice: bookings.totalPrice,
           status: bookings.status,
-          confirmationCode: bookings.confirmationCode,
-          createdAt: bookings.createdAt,
-          updatedAt: bookings.updatedAt,
+          specialRequests: bookings.specialRequests,
+          paymentMethod: bookings.paymentMethod,
+          paymentStatus: bookings.paymentStatus,
           paymentAtBooking: bookings.paymentAtBooking,
           paymentAtCheckIn: bookings.paymentAtCheckIn,
-          isExtension: bookings.isExtension,
-          parentBookingId: bookings.parentBookingId,
-          extensionCleaningFee: bookings.extensionCleaningFee,
+          confirmationCode: bookings.confirmationCode,
+          checkInTime: bookings.checkInTime,
+          checkOutTime: bookings.checkOutTime,
+          editedAt: bookings.editedAt,
+          editedBy: bookings.editedBy,
+          createdAt: bookings.createdAt,
+          updatedAt: bookings.updatedAt,
         },
         guest: {
           id: guests.id,
@@ -314,6 +526,9 @@ export async function getAllBookings() {
           phone: guests.phone,
           cpf: guests.cpf,
           nationality: guests.nationality,
+          dateOfBirth: guests.dateOfBirth,
+          createdAt: guests.createdAt,
+          updatedAt: guests.updatedAt,
         },
         room: {
           id: rooms.id,
@@ -332,476 +547,978 @@ export async function getAllBookings() {
           imageUrl: rooms.imageUrl,
           additionalImages: rooms.additionalImages,
           status: rooms.status,
-        },
+          createdAt: rooms.createdAt,
+          updatedAt: rooms.updatedAt,
+        }
       })
       .from(bookings)
       .innerJoin(guests, eq(bookings.guestId, guests.id))
       .innerJoin(rooms, eq(bookings.roomId, rooms.id))
-      .orderBy(desc(bookings.createdAt));
-
-    return result;
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+    
+    return result.length > 0 ? result[0] : undefined;
   } catch (error) {
-    console.error("[Database] Error getting all bookings:", error);
-    return [];
+    console.error('[Database] Error in getBookingById:', error);
+    return undefined;
   }
 }
 
-export async function updateBooking(id: number, updates: any) {
+export async function updateBookingStatus(bookingId: number, status: string) {
   const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
-  }
-
+  if (!db) throw new Error("Database not available");
+  
   try {
-    const result = await db
+    await db
       .update(bookings)
-      .set(updates)
-      .where(eq(bookings.id, id));
-    return result;
+      .set({ status: status as any })
+      .where(eq(bookings.id, bookingId));
+    return getBookingById(bookingId);
   } catch (error) {
-    console.error("[Database] Error updating booking:", error);
+    console.error("[Database] Error updating booking status:", error);
     throw error;
   }
 }
 
-export async function deleteBooking(id: number) {
-  const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
-  }
-
-  try {
-    const result = await db
-      .delete(bookings)
-      .where(eq(bookings.id, id));
-    return result;
-  } catch (error) {
-    console.error("[Database] Error deleting booking:", error);
-    throw error;
-  }
-}
-
-export async function getBlockedDates(roomId: number) {
+export async function getBookingsByGuestEmail(email: string) {
   const db = await getDb();
   if (!db) return [];
-
-  try {
-    const result = await db
-      .select()
-      .from(blockedDates)
-      .where(eq(blockedDates.roomId, roomId));
-
-    return result;
-  } catch (error) {
-    console.error("[Database] Error getting blocked dates:", error);
-    return [];
-  }
+  
+  return db
+    .select({
+      booking: bookings,
+      guest: guests,
+      room: rooms
+    })
+    .from(bookings)
+    .innerJoin(guests, eq(bookings.guestId, guests.id))
+    .innerJoin(rooms, eq(bookings.roomId, rooms.id))
+    .where(eq(guests.email, email))
+    .orderBy(desc(bookings.createdAt));
 }
 
-export async function blockDate(roomId: number, date: string) {
+// Funções para gerenciar fotos dos quartos
+export async function addRoomPhoto(photo: InsertRoomPhoto) {
   const db = await getDb();
   if (!db) {
-    throw new Error("Database not available");
-  }
-
-  try {
-    const result = await db.insert(blockedDates).values({
-      roomId,
-      date,
-    });
-    return result;
-  } catch (error) {
-    console.error("[Database] Error blocking date:", error);
-    throw error;
-  }
-}
-
-export async function unblockDate(roomId: number, date: string) {
-  const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
-  }
-
-  try {
-    const result = await db
-      .delete(blockedDates)
-      .where(and(eq(blockedDates.roomId, roomId), eq(blockedDates.date, date)));
-    return result;
-  } catch (error) {
-    console.error("[Database] Error unblocking date:", error);
-    throw error;
-  }
-}
-
-export async function getAuditLogs(roomId?: number) {
-  const db = await getDb();
-  if (!db) return [];
-
-  try {
-    let query = db.select().from(auditLogs);
-    if (roomId) {
-      query = query.where(eq(auditLogs.roomId, roomId));
-    }
-    const result = await query.orderBy(desc(auditLogs.createdAt));
-    return result;
-  } catch (error) {
-    console.error("[Database] Error getting audit logs:", error);
-    return [];
-  }
-}
-
-export async function createAuditLog(log: InsertAuditLog) {
-  const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
-  }
-
-  try {
-    const result = await db.insert(auditLogs).values(log);
-    return result;
-  } catch (error) {
-    console.error("[Database] Error creating audit log:", error);
-    throw error;
-  }
-}
-
-export async function getFailedUnblockAttempts(roomId: number) {
-  const db = await getDb();
-  if (!db) return [];
-
-  try {
-    const result = await db
-      .select()
-      .from(failedUnblockAttempts)
-      .where(eq(failedUnblockAttempts.roomId, roomId))
-      .orderBy(desc(failedUnblockAttempts.createdAt));
-
-    return result;
-  } catch (error) {
-    console.error("[Database] Error getting failed unblock attempts:", error);
-    return [];
-  }
-}
-
-export async function recordFailedUnblockAttempt(attempt: InsertFailedUnblockAttempt) {
-  const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
-  }
-
-  try {
-    const result = await db.insert(failedUnblockAttempts).values(attempt);
-    return result;
-  } catch (error) {
-    console.error("[Database] Error recording failed unblock attempt:", error);
-    throw error;
-  }
-}
-
-export async function getBlockingExceptions(roomId: number) {
-  const db = await getDb();
-  if (!db) return [];
-
-  try {
-    const result = await db
-      .select()
-      .from(blockingExceptions)
-      .where(eq(blockingExceptions.roomId, roomId));
-
-    return result;
-  } catch (error) {
-    console.error("[Database] Error getting blocking exceptions:", error);
-    return [];
-  }
-}
-
-export async function createBlockingException(exception: InsertBlockingException) {
-  const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
-  }
-
-  try {
-    const result = await db.insert(blockingExceptions).values(exception);
-    return result;
-  } catch (error) {
-    console.error("[Database] Error creating blocking exception:", error);
-    throw error;
-  }
-}
-
-export async function deleteBlockingException(id: number) {
-  const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
-  }
-
-  try {
-    const result = await db
-      .delete(blockingExceptions)
-      .where(eq(blockingExceptions.id, id));
-    return result;
-  } catch (error) {
-    console.error("[Database] Error deleting blocking exception:", error);
-    throw error;
-  }
-}
-
-export async function getRoomPhotos(roomId: number) {
-  const db = await getDb();
-  if (!db) return [];
-
-  try {
-    const result = await db
-      .select()
-      .from(roomPhotos)
-      .where(eq(roomPhotos.roomId, roomId));
-
-    return result;
-  } catch (error) {
-    console.error("[Database] Error getting room photos:", error);
-    return [];
-  }
-}
-
-export async function createRoomPhoto(photo: InsertRoomPhoto) {
-  const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
+    console.warn("[Database] Cannot add room photo: database not available");
+    return null;
   }
 
   try {
     const result = await db.insert(roomPhotos).values(photo);
     return result;
   } catch (error) {
-    console.error("[Database] Error creating room photo:", error);
+    console.error("[Database] Failed to add room photo:", error);
     throw error;
   }
 }
 
-export async function deleteRoomPhoto(id: number) {
+export async function createRoomPhoto(photoData: InsertRoomPhoto) {
   const db = await getDb();
   if (!db) {
-    throw new Error("Database not available");
+    console.warn("[Database] Cannot create room photo: database not available");
+    return null;
   }
 
   try {
-    const result = await db
-      .delete(roomPhotos)
-      .where(eq(roomPhotos.id, id));
-    return result;
+    const result = await db.insert(roomPhotos).values(photoData);
+    return result[0].insertId;
   } catch (error) {
-    console.error("[Database] Error deleting room photo:", error);
+    console.error("[Database] Failed to create room photo:", error);
     throw error;
   }
 }
 
-export async function getHomeImages() {
+export async function getRoomPhotos(roomId: number): Promise<RoomPhoto[]> {
   const db = await getDb();
   if (!db) return [];
 
   try {
-    const result = await db.select().from(homeImages);
-    return result;
+    return db
+      .select()
+      .from(roomPhotos)
+      .where(eq(roomPhotos.roomId, roomId))
+      .orderBy(roomPhotos.displayOrder);
   } catch (error) {
-    console.error("[Database] Error getting home images:", error);
+    console.error("[Database] Failed to get room photos:", error);
     return [];
   }
 }
 
-export async function createHomeImage(image: InsertHomeImage) {
+export async function deleteRoomPhoto(photoId: number) {
   const db = await getDb();
   if (!db) {
-    throw new Error("Database not available");
+    console.warn("[Database] Cannot delete room photo: database not available");
+    return false;
   }
 
   try {
-    const result = await db.insert(homeImages).values(image);
+    await db.delete(roomPhotos).where(eq(roomPhotos.id, photoId));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to delete room photo:", error);
+    return false;
+  }
+}
+
+export async function updateRoomPhoto(photoId: number, updates: Partial<InsertRoomPhoto>) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update room photo: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db
+      .update(roomPhotos)
+      .set(updates)
+      .where(eq(roomPhotos.id, photoId));
     return result;
+  } catch (error) {
+    console.error("[Database] Failed to update room photo:", error);
+    throw error;
+  }
+}
+
+
+/**
+ * Query helpers para bloqueio de datas
+ */
+export async function createBlockedDate(blockedDateData: InsertBlockedDate) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(blockedDates).values(blockedDateData);
+  return result[0].insertId;
+}
+
+export async function getBlockedDateByBookingId(bookingId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db
+    .select()
+    .from(blockedDates)
+    .where(eq(blockedDates.bookingId, bookingId))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function getBlockedDates(roomId: number, startDate: Date, endDate: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db
+    .select()
+    .from(blockedDates)
+    .where(
+      and(
+        eq(blockedDates.roomId, roomId),
+        lt(blockedDates.startDate, endDate),
+        gt(blockedDates.endDate, startDate)
+      )
+    );
+}
+
+export async function deleteBlockedDate(blockedDateId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(blockedDates).where(eq(blockedDates.id, blockedDateId));
+}
+
+export async function updateBlockedDate(blockedDateId: number, data: { startDate?: Date; endDate?: Date; reason?: string; roomId?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const updates: any = { updatedAt: new Date() };
+  if (data.startDate) updates.startDate = data.startDate;
+  if (data.endDate) updates.endDate = data.endDate;
+  if (data.reason) updates.reason = data.reason;
+  if (data.roomId) updates.roomId = data.roomId;
+  
+  await db.update(blockedDates)
+    .set(updates)
+    .where(eq(blockedDates.id, blockedDateId));
+}
+
+export async function getAllBlockedDates(roomId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db
+    .select()
+    .from(blockedDates)
+    .where(eq(blockedDates.roomId, roomId))
+    .orderBy(desc(blockedDates.startDate));
+}
+
+
+// Audit Log functions
+export async function createAuditLog(data: InsertAuditLog): Promise<AuditLog | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Remover campos undefined para evitar erros de inserção
+  const cleanData = Object.fromEntries(
+    Object.entries(data).filter(([_, value]) => value !== undefined)
+  ) as InsertAuditLog;
+  
+  try {
+    const result = await db.insert(auditLogs).values(cleanData);
+    const insertId = (result as any).insertId;
+    if (!insertId) return null;
+    
+    const rows = await db.select().from(auditLogs).where(eq(auditLogs.id, Number(insertId)));
+    return rows[0] || null;
+  } catch (error) {
+    console.error("[AuditLog] Error creating audit log:", error);
+    return null;
+  }
+}
+
+export async function getAuditLogs(filters?: { userId?: number; roomId?: number; action?: 'block' | 'unblock'; limit?: number; offset?: number }): Promise<AuditLog[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const conditions: any[] = [];
+  
+  if (filters?.userId) {
+    conditions.push(eq(auditLogs.userId, filters.userId));
+  }
+  if (filters?.roomId) {
+    conditions.push(eq(auditLogs.roomId, filters.roomId));
+  }
+  if (filters?.action) {
+    conditions.push(eq(auditLogs.action, filters.action));
+  }
+  
+  let query: any = db.select().from(auditLogs);
+  
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions));
+  }
+  
+  query = query.orderBy(desc(auditLogs.createdAt));
+  
+  if (filters?.limit) {
+    query = query.limit(filters.limit);
+  }
+  if (filters?.offset) {
+    query = query.offset(filters.offset);
+  }
+  
+  return await query;
+}
+
+export async function getAuditLogsByRoom(roomId: number, limit: number = 50, offset: number = 0): Promise<AuditLog[]> {
+  return getAuditLogs({ roomId, limit, offset });
+}
+
+export async function getAuditLogsByUser(userId: number, limit: number = 50, offset: number = 0): Promise<AuditLog[]> {
+  return getAuditLogs({ userId, limit, offset });
+}
+
+
+/**
+ * Funções para gerenciar tentativas falhadas de desbloqueio
+ */
+export async function recordFailedUnblockAttempt(data: InsertFailedUnblockAttempt): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(failedUnblockAttempts).values(data);
+}
+
+export async function getRecentFailedAttempts(ipAddress: string, minutes: number = 5): Promise<FailedUnblockAttempt[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const fiveMinutesAgo = new Date(Date.now() - minutes * 60 * 1000);
+  
+  return db
+    .select()
+    .from(failedUnblockAttempts)
+    .where(
+      and(
+        eq(failedUnblockAttempts.ipAddress, ipAddress),
+        gt(failedUnblockAttempts.createdAt, fiveMinutesAgo)
+      )
+    )
+    .orderBy(desc(failedUnblockAttempts.createdAt));
+}
+
+export async function getFailedAttemptsByUser(userId: number, minutes: number = 5): Promise<FailedUnblockAttempt[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const fiveMinutesAgo = new Date(Date.now() - minutes * 60 * 1000);
+  
+  return db
+    .select()
+    .from(failedUnblockAttempts)
+    .where(
+      and(
+        eq(failedUnblockAttempts.userId, userId),
+        gt(failedUnblockAttempts.createdAt, fiveMinutesAgo)
+      )
+    )
+    .orderBy(desc(failedUnblockAttempts.createdAt));
+}
+
+export async function cleanupOldFailedAttempts(hoursOld: number = 24): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  
+  const cutoffTime = new Date(Date.now() - hoursOld * 60 * 60 * 1000);
+  
+  await db.delete(failedUnblockAttempts).where(lt(failedUnblockAttempts.createdAt, cutoffTime));
+}
+
+
+// Blocking Exceptions functions
+export async function createBlockingException(data: InsertBlockingException): Promise<BlockingException | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    const result = await db.insert(blockingExceptions).values(data);
+    const insertId = (result as any).insertId;
+    if (!insertId) return null;
+    
+    const rows = await db.select().from(blockingExceptions).where(eq(blockingExceptions.id, Number(insertId)));
+    return rows[0] || null;
+  } catch (error) {
+    console.error("[BlockingException] Error creating exception:", error);
+    return null;
+  }
+}
+
+export async function deleteBlockingException(exceptionId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    await db.delete(blockingExceptions).where(eq(blockingExceptions.id, exceptionId));
+    return true;
+  } catch (error) {
+    console.error("[BlockingException] Error deleting exception:", error);
+    return false;
+  }
+}
+
+export async function getBlockingExceptionsByBlockedDate(blockedDateId: number): Promise<BlockingException[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(blockingExceptions).where(eq(blockingExceptions.blockedDateId, blockedDateId));
+}
+
+export async function isDateExcepted(blockedDateId: number, date: Date): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  
+  // Converter Date para formato YYYY-MM-DD para comparação (usar UTC)
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const dateStr = `${year}-${month}-${day}`;
+  
+  // Criar Date UTC para comparação
+  const exceptionDate = new Date(Date.UTC(year, parseInt(month) - 1, parseInt(day), 0, 0, 0, 0));
+  
+  const exceptions = await db
+    .select()
+    .from(blockingExceptions)
+    .where(and(
+      eq(blockingExceptions.blockedDateId, blockedDateId),
+      eq(blockingExceptions.exceptionDate, exceptionDate)
+    ));
+  
+  return exceptions.length > 0;
+}
+
+
+// Missing functions for routers.ts
+export async function getBlockedDateById(blockedDateId: number): Promise<BlockedDate | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(blockedDates).where(eq(blockedDates.id, blockedDateId));
+  return result[0] || null;
+}
+
+export async function recordFailedAttempt(data: { ipAddress: string; userAgent: string; blockedDateId: number }): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  
+  try {
+    await db.insert(failedUnblockAttempts).values({
+      userId: null, // Anonymous attempt
+      ipAddress: data.ipAddress,
+      userAgent: data.userAgent,
+      blockedDateId: data.blockedDateId,
+      reason: "Senha incorreta",
+      createdAt: new Date(),
+    });
+  } catch (error) {
+    console.error("[FailedAttempt] Error recording attempt:", error);
+  }
+}
+
+export async function checkSuspiciousActivity(ipAddress: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+  
+  const attempts = await db
+    .select()
+    .from(failedUnblockAttempts)
+    .where(and(
+      eq(failedUnblockAttempts.ipAddress, ipAddress),
+      gt(failedUnblockAttempts.createdAt, fiveMinutesAgo)
+    ));
+  
+  return attempts.length >= 3;
+}
+
+
+export async function updateBooking(bookingId: number, updateData: any, editedBy: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Buscar a reserva atual para ter os dados originais
+  const currentBooking = await getBookingById(bookingId);
+  if (!currentBooking) throw new Error("Booking not found");
+  
+  // Determinar o quarto a ser usado (novo ou atual)
+  const roomId = updateData.roomId !== undefined ? updateData.roomId : currentBooking.booking.roomId;
+  const checkInDate = updateData.checkInDate !== undefined ? updateData.checkInDate : currentBooking.booking.checkInDate;
+  const checkOutDate = updateData.checkOutDate !== undefined ? updateData.checkOutDate : currentBooking.booking.checkOutDate;
+  const numberOfGuestsStr = updateData.numberOfGuests !== undefined ? String(updateData.numberOfGuests) : String(currentBooking.booking.numberOfGuests);
+  const numberOfGuests = parseInt(numberOfGuestsStr);
+  
+  // Buscar o preço vigente do quarto
+  const roomResult = await db.select().from(rooms).where(eq(rooms.id, roomId)).limit(1);
+  const room = roomResult.length > 0 ? roomResult[0] : null;
+  
+  if (!room) {
+    throw new Error(`Room with id ${roomId} not found`);
+  }
+  
+  // Recalcular preço com o preço vigente
+  const checkInDateObj = new Date(checkInDate);
+  const checkOutDateObj = new Date(checkOutDate);
+  const numberOfNights = Math.ceil((checkOutDateObj.getTime() - checkInDateObj.getTime()) / (1000 * 60 * 60 * 24));
+  
+  const currentRoomPrice = room.pricePerNight || 80;
+  const baseSubtotal = currentRoomPrice * numberOfNights;
+  
+  // Aplicar desconto por duração ou por número de hóspedes
+  let discountAmount = 0;
+  let discountPercentage = 0;
+  
+  // Desconto por duração tem prioridade
+  if (numberOfNights >= 30) {
+    discountPercentage = room.discount30Days || 45;
+    discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
+  } else if (numberOfNights >= 15) {
+    discountPercentage = room.discount15Days || 16;
+    discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
+  } else if (numberOfNights >= 7) {
+    discountPercentage = room.discount7Days || 8;
+    discountAmount = Math.round(baseSubtotal * discountPercentage / 100);
+  } else if (numberOfGuests === 1) {
+    // Desconto de 11% para 1 pessoa só se não houver desconto por duração
+    discountPercentage = 11;
+    discountAmount = Math.round(baseSubtotal * 0.11);
+  }
+  
+  const subtotal = baseSubtotal - discountAmount;
+  const cleaningFee = currentBooking.booking.cleaningFee || 700;
+  const totalPrice = subtotal + cleaningFee;
+  
+  // Atualizar dados da reserva
+  const updateSet: any = {
+    editedAt: new Date(),
+    editedBy,
+    subtotal,
+    discountPercentage,
+    discountAmount,
+    totalPrice,
+  };
+  
+  // Adicionar campos opcionais se fornecidos
+  if (updateData.checkInDate !== undefined) updateSet.checkInDate = updateData.checkInDate;
+  if (updateData.checkOutDate !== undefined) updateSet.checkOutDate = updateData.checkOutDate;
+  if (updateData.checkInTime !== undefined) updateSet.checkInTime = updateData.checkInTime;
+  if (updateData.checkOutTime !== undefined) updateSet.checkOutTime = updateData.checkOutTime;
+  if (updateData.roomId !== undefined) updateSet.roomId = updateData.roomId;
+  if (updateData.numberOfGuests !== undefined) updateSet.numberOfGuests = updateData.numberOfGuests;
+  if (updateData.dailyType !== undefined) updateSet.dailyType = updateData.dailyType;
+  if (updateData.specialRequests !== undefined) updateSet.specialRequests = updateData.specialRequests;
+  if (updateData.paymentAtBooking !== undefined) updateSet.paymentAtBooking = updateData.paymentAtBooking;
+  if (updateData.paymentAtCheckIn !== undefined) updateSet.paymentAtCheckIn = updateData.paymentAtCheckIn;
+  
+  // Atualizar dados do hóspede se fornecidos
+  if (updateData.firstName || updateData.lastName || updateData.email || updateData.phone) {
+    const booking = await getBookingById(bookingId);
+    if (booking) {
+      const guestUpdateSet: any = {};
+      if (updateData.firstName !== undefined) guestUpdateSet.firstName = updateData.firstName;
+      if (updateData.lastName !== undefined) guestUpdateSet.lastName = updateData.lastName;
+      if (updateData.email !== undefined) guestUpdateSet.email = updateData.email;
+      if (updateData.phone !== undefined) guestUpdateSet.phone = updateData.phone;
+      
+      if (Object.keys(guestUpdateSet).length > 0) {
+        await db.update(guests).set(guestUpdateSet).where(eq(guests.id, booking.booking.guestId));
+      }
+    }
+  }
+  
+  // Atualizar reserva
+  await db.update(bookings).set(updateSet).where(eq(bookings.id, bookingId));
+  
+  // Sincronizar datas bloqueadas se as datas foram alteradas
+  if (updateData.checkInDate !== undefined || updateData.checkOutDate !== undefined || updateData.roomId !== undefined) {
+    try {
+      const blockedDate = await getBlockedDateByBookingId(bookingId);
+      if (blockedDate) {
+        const newCheckInDate = updateData.checkInDate !== undefined ? updateData.checkInDate : currentBooking.booking.checkInDate;
+        const newCheckOutDate = updateData.checkOutDate !== undefined ? updateData.checkOutDate : currentBooking.booking.checkOutDate;
+        const newRoomId = updateData.roomId !== undefined ? updateData.roomId : currentBooking.booking.roomId;
+        
+        // Converter datas para timestamps
+        const [checkInYear, checkInMonth, checkInDay] = newCheckInDate.split('-').map(Number);
+        const [checkOutYear, checkOutMonth, checkOutDay] = newCheckOutDate.split('-').map(Number);
+        const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
+        const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
+        
+        // Atualizar data bloqueada
+        await updateBlockedDate(blockedDate.id, {
+          roomId: newRoomId,
+          startDate,
+          endDate,
+          reason: `Reserva automatica - Hospede: ${currentBooking.guest.firstName} ${currentBooking.guest.lastName}`,
+        });
+      }
+    } catch (error) {
+      console.error('[Booking] Erro ao sincronizar datas bloqueadas:', error);
+      // Nao falhar a atualizacao se a sincronizacao falhar
+    }
+  }
+  
+  // Retornar dados atualizados com guest e room para WhatsApp
+  const updatedBooking = await getBookingById(bookingId);
+  if (!updatedBooking) throw new Error("Booking not found after update");
+  
+  // Enviar notificação para o hóspede sobre a edição
+  try {
+    const { notifyGuest } = await import('./_core/guestNotification');
+    if (updatedBooking.guest.email && updatedBooking.booking.confirmationCode) {
+      await notifyGuest({
+        guestEmail: updatedBooking.guest.email,
+        guestPhone: updatedBooking.guest.phone || undefined,
+        guestName: `${updatedBooking.guest.firstName} ${updatedBooking.guest.lastName}`,
+        bookingCode: updatedBooking.booking.confirmationCode,
+        checkInDate: new Date(updatedBooking.booking.checkInDate).toLocaleDateString('pt-BR'),
+        checkOutDate: new Date(updatedBooking.booking.checkOutDate).toLocaleDateString('pt-BR'),
+        roomName: updatedBooking.room.name,
+        totalPrice: updatedBooking.booking.totalPrice,
+        message: 'Sua reserva foi editada! Aqui estão os detalhes atualizados:',
+      });
+    }
+  } catch (error) {
+    console.error('[Booking] Erro ao enviar notificação de edição:', error);
+  }
+  
+  return {
+    booking: updatedBooking.booking,
+    guest: updatedBooking.guest,
+    room: updatedBooking.room,
+  };
+}
+
+
+/**
+ * Atualizar informações do quarto (nome, preço, descrição, etc)
+ */
+export async function updateRoom(roomId: number, updateData: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateSet: Record<string, any> = {};
+
+  // Apenas campos permitidos
+  const allowedFields = ['name', 'description', 'pricePerNight', 'capacity', 'type', 'amenities', 'status', 'cleaningFee', 'discount7Days', 'discount15Days', 'discount30Days', 'bathroomType'];
+  
+  for (const field of allowedFields) {
+    if (updateData[field] !== undefined) {
+      updateSet[field] = updateData[field];
+    }
+  }
+
+  if (Object.keys(updateSet).length === 0) {
+    throw new Error("No valid fields to update");
+  }
+
+  await db.update(rooms).set(updateSet).where(eq(rooms.id, roomId));
+
+  return getRoomById(roomId);
+}
+
+
+/**
+ * Criar novo quarto
+ */
+export async function createRoom(roomData: {
+  name: string;
+  type: "private" | "shared" | "dorm";
+  capacity: number;
+  pricePerNight: number;
+  description?: string;
+  amenities?: string;
+  bathroomType?: "private" | "shared";
+  status?: "available" | "maintenance" | "archived";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db.insert(rooms).values({
+      name: roomData.name,
+      type: roomData.type,
+      capacity: roomData.capacity,
+      pricePerNight: roomData.pricePerNight,
+      description: roomData.description || null,
+      amenities: roomData.amenities || null,
+      bathroomType: roomData.bathroomType || "shared",
+      status: roomData.status || "available",
+    });
+
+    // Extrair o ID do novo quarto
+    let roomId: number;
+    if ((result as any).insertId) {
+      roomId = Number((result as any).insertId);
+    } else if (Array.isArray(result) && (result[0] as any)?.insertId) {
+      roomId = Number((result[0] as any).insertId);
+    } else if ((result as any)[0]?.insertId) {
+      roomId = Number((result as any)[0].insertId);
+    } else {
+      throw new Error("Failed to create room: could not extract insertId");
+    }
+
+    if (!roomId || isNaN(roomId)) throw new Error("Failed to create room: invalid roomId");
+
+    return getRoomById(roomId);
+  } catch (error) {
+    console.error("[Database] Error creating room:", error);
+    throw error;
+  }
+}
+
+
+/**
+ * Deletar uma reserva
+ */
+export async function deleteBooking(bookingId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  try {
+    const result = await db.delete(bookings).where(eq(bookings.id, bookingId));
+    return { success: true, message: "Reserva deletada com sucesso" };
+  } catch (error) {
+    console.error("[Database] Error deleting booking:", error);
+    throw error;
+  }
+}
+
+
+
+export async function getBlockingExceptionsByRoom(roomId: number): Promise<BlockingException[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Get all blocked dates for the room, then get all exceptions for those blocked dates
+  const blockedDateRecords = await db
+    .select({ id: blockedDates.id })
+    .from(blockedDates)
+    .where(eq(blockedDates.roomId, roomId));
+  
+  if (blockedDateRecords.length === 0) return [];
+  
+  const blockedDateIds = blockedDateRecords.map(bd => bd.id);
+  
+  return db
+    .select()
+    .from(blockingExceptions)
+    .where(inArray(blockingExceptions.blockedDateId, blockedDateIds));
+}
+
+
+// ============================================================================
+// Home Images Functions
+// ============================================================================
+
+export async function getHomeImages(): Promise<HomeImage[]> {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    return await db.select().from(homeImages).orderBy(homeImages.displayOrder, homeImages.position);
+  } catch (error) {
+    console.error("[Database] Error fetching home images:", error);
+    return [];
+  }
+}
+
+export async function createHomeImage(data: InsertHomeImage): Promise<HomeImage | null> {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const result = await db.insert(homeImages).values(data);
+    const insertedId = result[0].insertId;
+    return await db.select().from(homeImages).where(eq(homeImages.id, Number(insertedId))).then(rows => rows[0] || null);
   } catch (error) {
     console.error("[Database] Error creating home image:", error);
-    throw error;
+    return null;
   }
 }
 
-export async function deleteHomeImage(id: number) {
+export async function updateHomeImage(id: number, data: Partial<InsertHomeImage>): Promise<HomeImage | null> {
   const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
-  }
-
+  if (!db) return null;
   try {
-    const result = await db
-      .delete(homeImages)
-      .where(eq(homeImages.id, id));
-    return result;
+    await db.update(homeImages).set(data).where(eq(homeImages.id, id));
+    return await db.select().from(homeImages).where(eq(homeImages.id, id)).then(rows => rows[0] || null);
+  } catch (error) {
+    console.error("[Database] Error updating home image:", error);
+    return null;
+  }
+}
+
+export async function deleteHomeImage(id: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    await db.delete(homeImages).where(eq(homeImages.id, id));
+    return true;
   } catch (error) {
     console.error("[Database] Error deleting home image:", error);
-    throw error;
+    return false;
   }
 }
 
-export async function getMonthlyRevenueHistory(roomId?: number) {
+export async function getHomeImageByPosition(position: "left" | "right" | "top" | "bottom"): Promise<HomeImage | null> {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const result = await db.select().from(homeImages).where(eq(homeImages.position, position));
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Database] Error fetching home image by position:", error);
+    return null;
+  }
+}
+
+export async function reorderHomeImages(items: Array<{ id: number; displayOrder: number }>): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    for (const item of items) {
+      await db.update(homeImages).set({ displayOrder: item.displayOrder }).where(eq(homeImages.id, item.id));
+    }
+    return true;
+  } catch (error) {
+    console.error("[Database] Error reordering home images:", error);
+    return false;
+  }
+}
+
+// ============================================================================
+// Monthly Revenue History Functions
+// ============================================================================
+
+export async function getMonthlyRevenueHistory(year: number, month: number) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    const result = await db.select().from(monthlyRevenueHistory).where(
+      and(eq(monthlyRevenueHistory.year, year), eq(monthlyRevenueHistory.month, month))
+    );
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Database] Error fetching monthly revenue history:", error);
+    return null;
+  }
+}
+
+export async function getAllMonthlyRevenueHistory() {
   const db = await getDb();
   if (!db) return [];
-
   try {
-    let query = db.select().from(monthlyRevenueHistory);
-    if (roomId) {
-      query = query.where(eq(monthlyRevenueHistory.roomId, roomId));
-    }
-    const result = await query.orderBy(desc(monthlyRevenueHistory.month));
-    return result;
+    return await db.select().from(monthlyRevenueHistory).orderBy(desc(monthlyRevenueHistory.year), desc(monthlyRevenueHistory.month));
   } catch (error) {
-    console.error("[Database] Error getting monthly revenue history:", error);
+    console.error("[Database] Error fetching all monthly revenue history:", error);
     return [];
   }
 }
 
-export async function createMonthlyRevenueHistory(revenue: InsertMonthlyRevenueHistory) {
+export async function saveMonthlyRevenueHistory(data: InsertMonthlyRevenueHistory) {
   const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
-  }
-
+  if (!db) return null;
   try {
-    const result = await db.insert(monthlyRevenueHistory).values(revenue);
-    return result;
+    const existing = await getMonthlyRevenueHistory(data.year!, data.month!);
+    if (existing) {
+      await db.update(monthlyRevenueHistory)
+        .set(data)
+        .where(and(eq(monthlyRevenueHistory.year, data.year!), eq(monthlyRevenueHistory.month, data.month!)));
+      return existing;
+    } else {
+      await db.insert(monthlyRevenueHistory).values(data);
+      const saved = await getMonthlyRevenueHistory(data.year!, data.month!);
+      return saved;
+    }
   } catch (error) {
-    console.error("[Database] Error creating monthly revenue history:", error);
-    throw error;
+    console.error("[Database] Error saving monthly revenue history:", error);
+    return null;
   }
 }
 
+
+/**
+ * Estender uma reserva existente criando uma nova reserva para os dias adicionais
+ */
 export async function extendBooking(
-  originalBookingId: number,
+  parentBookingId: number,
   newCheckOutDate: string,
-  numberOfGuests: number,
-  roomId: number,
-  guestId: number,
-  checkInTime: string,
-  checkOutTime: string,
-  chargeCleaningFee: boolean,
-  pricePerNight: number,
-  cleaningFee: number,
-  singleGuestDiscountType: string,
-  singleGuestDiscountValue: number
+  extensionCleaningFee: number,
+  editedBy: string
 ) {
   const db = await getDb();
-  if (!db) {
-    throw new Error("Database not available");
-  }
+  if (!db) throw new Error("Database not available");
 
   try {
-    // Get original booking
-    const originalBooking = await getBookingById(originalBookingId);
-    if (!originalBooking) {
-      throw new Error("Original booking not found");
+    // Buscar a reserva original
+    const originalBooking = await getBookingById(parentBookingId);
+    if (!originalBooking) throw new Error("Original booking not found");
+
+    const originalCheckOutDate = new Date(originalBooking.booking.checkOutDate);
+    const newCheckOutDateObj = new Date(newCheckOutDate);
+
+    // Calcular número de dias da extensão
+    const extensionDays = Math.ceil(
+      (newCheckOutDateObj.getTime() - originalCheckOutDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (extensionDays <= 0) {
+      throw new Error("Extension date must be after the original check-out date");
     }
 
-    // Calculate days for extension
-    const checkOutDate = new Date(originalBooking.booking.checkOutDate);
-    const newCheckOut = new Date(newCheckOutDate);
-    const nights = Math.ceil((newCheckOut.getTime() - checkOutDate.getTime()) / (1000 * 60 * 60 * 24));
+    // Calcular preço da extensão
+    const pricePerNight = originalBooking.room.pricePerNight;
+    const numberOfGuests = originalBooking.booking.numberOfGuests;
+    const extensionSubtotal = extensionDays * pricePerNight;
 
-    if (nights <= 0) {
-      throw new Error("Extension must be at least 1 day");
-    }
-
-    // Calculate price for extension
-    let subtotal = nights * pricePerNight;
-
-    // Apply single guest discount if applicable
-    let discount = 0;
+    // Aplicar desconto de 1 pessoa usando o valor configurado no quarto
+    let extensionDiscountAmount = 0;
+    let extensionDiscountPercentage = 0;
     if (numberOfGuests === 1) {
-      if (singleGuestDiscountType === "percentage") {
-        discount = Math.floor(subtotal * singleGuestDiscountValue / 100);
+      // Usar o desconto configurado no quarto
+      const roomSingleGuestDiscountType = (originalBooking.room as any).singleGuestDiscountType || 'percentage';
+      const roomSingleGuestDiscountValue = (originalBooking.room as any).singleGuestDiscountValue || 11;
+      
+      if (roomSingleGuestDiscountType === 'percentage') {
+        extensionDiscountPercentage = roomSingleGuestDiscountValue;
+        extensionDiscountAmount = Math.floor(extensionSubtotal * (roomSingleGuestDiscountValue / 100));
       } else {
-        discount = singleGuestDiscountValue;
+        // Desconto em valor fixo
+        extensionDiscountAmount = roomSingleGuestDiscountValue;
+        extensionDiscountPercentage = Math.round((extensionDiscountAmount / extensionSubtotal) * 100);
       }
     }
 
-    const extensionFee = chargeCleaningFee ? cleaningFee : 0;
-    const total = subtotal - discount + extensionFee;
+    // Usar taxa de limpeza do quarto se não foi passada no parâmetro
+    const finalCleaningFee = extensionCleaningFee > 0 ? extensionCleaningFee : ((originalBooking.room as any).cleaningFee || 0);
 
-    // Create new booking for extension
-    const extensionBooking = await createBooking({
-      guestId,
-      roomId,
-      checkInDate: originalBooking.booking.checkOutDate,
+    // Calcular total da extensão
+    const extensionTotalPrice = extensionSubtotal - extensionDiscountAmount + finalCleaningFee;
+
+    // Calcular pagamentos (padrão: metade no ato, metade no check-in)
+    const extensionPaymentAtBooking = Math.floor(extensionTotalPrice / 2);
+    const extensionPaymentAtCheckIn = extensionTotalPrice - extensionPaymentAtBooking;
+
+    // Gerar novo código de confirmação para a extensão
+    const confirmationCode = `EXT-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+    // Criar nova reserva de extensão
+    const result = await db.insert(bookings).values({
+      guestId: originalBooking.booking.guestId,
+      roomId: originalBooking.booking.roomId,
+      bedId: originalBooking.booking.bedId,
+      checkInDate: originalBooking.booking.checkOutDate, // Check-in é o check-out da original
       checkOutDate: newCheckOutDate,
-      checkInTime,
-      checkOutTime,
-      numberOfGuests,
-      specialRequests: `Extensão da reserva #${originalBooking.booking.confirmationCode}`,
+      numberOfGuests: numberOfGuests,
+      dailyType: originalBooking.booking.dailyType,
+      discountPercentage: extensionDiscountPercentage,
+      discountAmount: extensionDiscountAmount,
+      cleaningFee: finalCleaningFee,
+      subtotal: extensionSubtotal,
+      totalPrice: extensionTotalPrice,
       status: "pending",
-      confirmationCode: `EXT-${Date.now()}`,
-      paymentAtBooking: 0,
-      paymentAtCheckIn: total,
-      isExtension: 1,
-      parentBookingId: originalBookingId,
-      extensionCleaningFee: extensionFee,
+      specialRequests: `Extensão da reserva #${originalBooking.booking.id}`,
+      paymentMethod: originalBooking.booking.paymentMethod,
+      paymentStatus: "pending",
+      confirmationCode: confirmationCode,
+      checkInTime: (originalBooking.booking as any).checkInTime || '14:00',
+      checkOutTime: (originalBooking.booking as any).checkOutTime || '12:00',
+      documentType: (originalBooking.booking as any).documentType || 'rg',
+      documentNumber: (originalBooking.booking as any).documentNumber || '',
+      paymentAtBooking: extensionPaymentAtBooking,
+      paymentAtCheckIn: extensionPaymentAtCheckIn,
+      isExtension: 1, // Marcar como extensão
+      parentBookingId: parentBookingId, // Referência à reserva original
+      extensionCleaningFee: finalCleaningFee,
+      editedAt: new Date(),
+      editedBy: editedBy,
     });
 
-    // Block dates for extension
-    for (let i = 0; i < nights; i++) {
-      const date = new Date(checkOutDate);
-      date.setDate(date.getDate() + i);
-      const dateStr = date.toISOString().split('T')[0];
-      await blockDate(roomId, dateStr);
+    // Extrair o ID da nova reserva
+    let extensionBookingId: number;
+    if ((result as any).insertId) {
+      extensionBookingId = Number((result as any).insertId);
+    } else if (Array.isArray(result) && (result[0] as any)?.insertId) {
+      extensionBookingId = Number((result[0] as any).insertId);
+    } else {
+      throw new Error("Failed to create extension booking: could not extract insertId");
     }
 
-    return extensionBooking;
+    // Bloquear automaticamente as datas estendidas no calendário
+    const startDate = new Date(originalBooking.booking.checkOutDate);
+    const endDate = new Date(newCheckOutDate);
+    endDate.setHours(23, 59, 59, 999);
+
+    await createBlockedDate({
+      roomId: originalBooking.booking.roomId,
+      startDate,
+      endDate,
+      reason: `Extensão automática - Hóspede: ${originalBooking.guest.firstName} ${originalBooking.guest.lastName}`,
+      bookingId: extensionBookingId,
+    });
+
+    // Retornar a nova reserva de extensão
+    const extensionBooking = await getBookingById(extensionBookingId);
+    if (!extensionBooking) throw new Error("Extension booking not found after creation");
+
+    return {
+      booking: extensionBooking.booking,
+      guest: extensionBooking.guest,
+      room: extensionBooking.room,
+    };
   } catch (error) {
     console.error("[Database] Error extending booking:", error);
     throw error;
-  }
-}
-
-/**
- * Buscar hóspedes por nome, CPF ou Passaporte (para autocomplete)
- */
-export async function searchGuestsByName(name: string) {
-  const db = await getDb();
-  if (!db) return [];
-
-  try {
-    const searchTerm = `%${name}%`;
-    const cleanedCPF = name.replace(/[^0-9]/g, '');
-    
-    // Construir array de condições de busca
-    const conditions: any[] = [
-      like(guests.firstName, searchTerm),
-      like(guests.lastName, searchTerm),
-      like(sql`CONCAT(${guests.firstName}, ' ', ${guests.lastName})`, searchTerm),
-      like(guests.documentNumberPassport, searchTerm),
-    ];
-    
-    // Adicionar busca por CPF se tiver pelo menos 3 dígitos
-    if (cleanedCPF.length >= 3) {
-      conditions.push(like(guests.cpf, `%${cleanedCPF}%`));
-    }
-    
-    const results = await db
-      .select({
-        id: guests.id,
-        firstName: guests.firstName,
-        lastName: guests.lastName,
-        email: guests.email,
-        phone: guests.phone,
-        cpf: guests.cpf,
-        nationality: guests.nationality,
-      })
-      .from(guests)
-      .where(or(...conditions))
-      .limit(10);
-
-    return results.map(guest => ({
-      ...guest,
-      fullName: `${guest.firstName} ${guest.lastName}`,
-    }));
-  } catch (error) {
-    console.error("[Database] Error searching guests by name:", error);
-    return [];
   }
 }
