@@ -331,8 +331,8 @@ export async function createBooking(bookingData: any) {
   const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
   const confirmationCode = `${dateStr}-${randomStr}`;
   
-  // Bloquear automaticamente as datas da reserva (exceto para Quarto Alcatório)
-  if (room.name !== "Quarto Alcatório") {
+  // Bloquear automaticamente as datas da reserva (exceto para Quarto Aleatório)
+  if (room.name !== "Quarto Aleatório") {
     try {
       // Usar timezone local para evitar problemas de conversão
       const [checkInYear, checkInMonth, checkInDay] = bookingData.checkInDate.split('-').map(Number);
