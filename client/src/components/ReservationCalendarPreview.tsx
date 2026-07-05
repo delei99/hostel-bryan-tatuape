@@ -59,24 +59,31 @@ export default function ReservationCalendarPreview({
   const checkIn = parseDate(checkInDate);
   const checkOut = parseDate(checkOutDate);
 
+  // Estabilizar blockedDates com chave JSON para evitar recalculos
+  const blockedDatesKey = useMemo(() => {
+    return JSON.stringify(blockedDates.map(bd => ({ id: bd.id, roomId: bd.roomId, bookingId: bd.bookingId, startDate: String(bd.startDate), endDate: String(bd.endDate) })));
+  }, [blockedDates]);
+
   // Filtrar bloqueios relevantes (mesmo quarto, excluindo bloqueio da reserva atual)
   const relevantBlockedDates = useMemo(() => {
     return blockedDates.filter(bd => {
       if (bd.roomId !== roomId) return false;
-      // Excluir bloqueio da propria reserva sendo editada
       if (currentBookingId && bd.bookingId === currentBookingId) return false;
       return true;
     });
-  }, [blockedDates, roomId, currentBookingId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blockedDatesKey, roomId, currentBookingId]);
 
   // Detectar conflitos entre datas da reserva e bloqueios existentes
   const conflicts = useMemo(() => {
-    if (!checkIn || !checkOut) return [];
+    const cIn = parseDate(checkInDate);
+    const cOut = parseDate(checkOutDate);
+    if (!cIn || !cOut) return [] as string[];
     
     const conflictDates: string[] = [];
-    const current = new Date(checkIn);
+    const current = new Date(cIn);
     
-    while (current < checkOut) {
+    while (current < cOut) {
       const normalized = new Date(current.getFullYear(), current.getMonth(), current.getDate(), 0, 0, 0, 0);
       
       const isBlocked = relevantBlockedDates.some(blocked => {
@@ -94,9 +101,10 @@ export default function ReservationCalendarPreview({
     }
     
     return conflictDates;
-  }, [checkIn, checkOut, relevantBlockedDates]);
+  }, [checkInDate, checkOutDate, relevantBlockedDates]);
 
-  // Notificar componente pai sobre conflitos
+  // Notificar componente pai sobre conflitos - usar stringify para evitar loop
+  const conflictsKey = conflicts.join(',');
   const onConflictChangeRef = React.useRef(onConflictChange);
   onConflictChangeRef.current = onConflictChange;
 
@@ -104,7 +112,8 @@ export default function ReservationCalendarPreview({
     if (onConflictChangeRef.current) {
       onConflictChangeRef.current(conflicts.length > 0, conflicts);
     }
-  }, [conflicts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conflictsKey]);
 
   // Verificar se uma data esta na reserva
   const isReservationDate = (date: Date): boolean => {
