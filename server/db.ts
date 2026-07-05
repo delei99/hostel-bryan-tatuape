@@ -1087,25 +1087,41 @@ export async function updateBooking(bookingId: number, updateData: any, editedBy
   // Sincronizar datas bloqueadas se as datas foram alteradas
   if (updateData.checkInDate !== undefined || updateData.checkOutDate !== undefined || updateData.roomId !== undefined) {
     try {
+      const newCheckInDate = updateData.checkInDate !== undefined ? updateData.checkInDate : currentBooking.booking.checkInDate;
+      const newCheckOutDate = updateData.checkOutDate !== undefined ? updateData.checkOutDate : currentBooking.booking.checkOutDate;
+      const newRoomId = updateData.roomId !== undefined ? updateData.roomId : currentBooking.booking.roomId;
+      
+      // Converter datas para timestamps
+      const [checkInYear, checkInMonth, checkInDay] = newCheckInDate.split('-').map(Number);
+      const [checkOutYear, checkOutMonth, checkOutDay] = newCheckOutDate.split('-').map(Number);
+      const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
+      const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
+      
+      // Buscar a data bloqueada existente
       const blockedDate = await getBlockedDateByBookingId(bookingId);
+      
       if (blockedDate) {
-        const newCheckInDate = updateData.checkInDate !== undefined ? updateData.checkInDate : currentBooking.booking.checkInDate;
-        const newCheckOutDate = updateData.checkOutDate !== undefined ? updateData.checkOutDate : currentBooking.booking.checkOutDate;
-        const newRoomId = updateData.roomId !== undefined ? updateData.roomId : currentBooking.booking.roomId;
-        
-        // Converter datas para timestamps
-        const [checkInYear, checkInMonth, checkInDay] = newCheckInDate.split('-').map(Number);
-        const [checkOutYear, checkOutMonth, checkOutDay] = newCheckOutDate.split('-').map(Number);
-        const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
-        const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
-        
-        // Atualizar data bloqueada
+        // Se já existe bloqueio, atualizar
         await updateBlockedDate(blockedDate.id, {
           roomId: newRoomId,
           startDate,
           endDate,
           reason: `Reserva automatica - Hospede: ${currentBooking.guest.firstName} ${currentBooking.guest.lastName}`,
         });
+      } else {
+        // Se não existe bloqueio, criar novo (exceto para Quarto Aleatório)
+        const roomResult = await db.select().from(rooms).where(eq(rooms.id, newRoomId)).limit(1);
+        const room = roomResult.length > 0 ? roomResult[0] : null;
+        
+        if (room && room.name !== "Quarto Aleatório") {
+          await createBlockedDate({
+            roomId: newRoomId,
+            bookingId: bookingId,
+            startDate,
+            endDate,
+            reason: `Reserva automática - Código: ${currentBooking.booking.confirmationCode} - Hóspede: ${currentBooking.guest.firstName} ${currentBooking.guest.lastName}`,
+          });
+        }
       }
     } catch (error) {
       console.error('[Booking] Erro ao sincronizar datas bloqueadas:', error);
