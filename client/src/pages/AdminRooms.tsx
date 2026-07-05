@@ -385,7 +385,7 @@ export default function AdminRooms() {
                       <Input
                         type="text"
                         value={editFormData?.cleaningFee || ""}
-                        onChange={(e) => handleFieldChange("cleaningFee", Math.round(parseFloat(e.target.value) * 100))}
+                        onChange={(e) => handleFieldChange("cleaningFee", e.target.value)}
                         className="mt-1 text-right"
                       />
                     </div>
@@ -546,6 +546,10 @@ export default function AdminRooms() {
                       <div>
                         <span className="text-gray-600">Preço:</span>
                         <p className="font-medium">R$ {(room.pricePerNight / 100).toFixed(2)}/noite</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Taxa de Limpeza:</span>
+                        <p className="font-medium">R$ {(room.cleaningFee / 100).toFixed(2)}</p>
                       </div>
                       <div>
                         <span className="text-gray-600">Capacidade:</span>
