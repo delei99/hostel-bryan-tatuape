@@ -146,12 +146,18 @@ export default function Booking() {
   const [reservationId, setReservationId] = useState<number | null>(null);
 
   
-  // Atualizar roomId se vier da URL
+  // Atualizar roomId se vier da URL ou quando rooms for carregado
   React.useEffect(() => {
     if (roomIdFromUrl && roomIdFromUrl !== formData.roomId) {
       setFormData(prev => ({ ...prev, roomId: roomIdFromUrl }));
+    } else if (!roomIdFromUrl && rooms.length > 0) {
+      // Se nao houver roomId na URL, usar Quarto Aleatorio como padrao
+      const randomRoom = rooms.find(r => r.name === "Quarto Aleatório");
+      if (randomRoom && formData.roomId !== randomRoom.id.toString()) {
+        setFormData(prev => ({ ...prev, roomId: randomRoom.id.toString() }));
+      }
     }
-  }, [roomIdFromUrl]);
+  }, [roomIdFromUrl, rooms]);
 
 
   
