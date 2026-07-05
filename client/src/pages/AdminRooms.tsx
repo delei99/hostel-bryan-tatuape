@@ -384,7 +384,7 @@ export default function AdminRooms() {
                       <Label className="text-sm font-medium">Taxa de Limpeza (R$)</Label>
                       <Input
                         type="text"
-                        value={editFormData?.cleaningFee ? (editFormData.cleaningFee / 100).toFixed(2) : ""}
+                        value={editFormData?.cleaningFee || ""}
                         onChange={(e) => handleFieldChange("cleaningFee", Math.round(parseFloat(e.target.value) * 100))}
                         className="mt-1 text-right"
                       />
