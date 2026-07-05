@@ -633,6 +633,12 @@ export default function Booking() {
                   ))}
                 </SelectContent>
               </Select>
+              {selectedRoom?.name === "Quarto Aleatório" && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-300 rounded-lg">
+                  <p className="text-sm text-blue-800 font-semibold">ℹ️ Quarto Aleatório</p>
+                  <p className="text-sm text-blue-700 mt-1">O quarto exato será definido no momento do check-in. Você terá acesso a todos os quartos disponíveis.</p>
+                </div>
+              )}
               {blockedDates.length > 0 && selectedRoom?.name !== "Quarto Aleatório" && (
                 <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-sm text-yellow-800 font-semibold">📅 Datas bloqueadas neste quarto:</p>
