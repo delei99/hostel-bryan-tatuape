@@ -113,6 +113,10 @@ export default function Booking() {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
+  // Buscar quartos primeiro para encontrar Quarto Aleatório
+  const { data: rooms = [] } = trpc.rooms.list.useQuery();
+  const randomRoomId = rooms.find(r => r.name === "Quarto Aleatório")?.id?.toString() || "1";
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -124,7 +128,7 @@ export default function Booking() {
     documentNumber: "",
     documentUF: "SP",
     documentNumberPassport: "",
-    roomId: roomIdFromUrl || "1",
+    roomId: roomIdFromUrl || randomRoomId,
     checkInDate: getLocalDateString(today),
     checkOutDate: getLocalDateString(tomorrow),
     checkInTime: "14:00",
@@ -148,8 +152,7 @@ export default function Booking() {
     }
   }, [roomIdFromUrl]);
 
-  // Buscar quartos
-  const { data: rooms = [] } = trpc.rooms.list.useQuery();
+
   
   // Buscar datas bloqueadas
   const { data: blockedDates = [] } = trpc.blockedDates.list.useQuery(
