@@ -47,6 +47,8 @@ export default function AdminDashboard() {
   const [extensionCheckOutDate, setExtensionCheckOutDate] = useState("");
   const [extensionCleaningFee, setExtensionCleaningFee] = useState(0);
   const [extensionChargeCleaningFee, setExtensionChargeCleaningFee] = useState(false);
+  const [hasDateConflict, setHasDateConflict] = useState(false);
+  const [conflictDates, setConflictDates] = useState<string[]>([]);
   const [newGuestData, setNewGuestData] = useState({
     firstName: "",
     lastName: "",
@@ -1407,7 +1409,12 @@ export default function AdminDashboard() {
                         checkInDate={editFormData.checkInDate}
                         checkOutDate={editFormData.checkOutDate}
                         roomId={editFormData.roomId}
+                        currentBookingId={editingBooking?.booking?.id}
                         blockedDates={allBlockedDates}
+                        onConflictChange={(hasConflict, dates) => {
+                          setHasDateConflict(hasConflict);
+                          setConflictDates(dates);
+                        }}
                       />
                     )}
                   </div>
@@ -1416,6 +1423,10 @@ export default function AdminDashboard() {
                 <div className="border-t border-border pt-6 flex gap-3">
                   <Button
                     onClick={() => {
+                      if (hasDateConflict) {
+                        toast.error(`Conflito de datas! ${conflictDates.length} dia(s) já estão bloqueados. Resolva antes de salvar.`);
+                        return;
+                      }
                       if (!editPassword) {
                         toast.error("Digite a senha para confirmar!");
                         return;
@@ -1439,8 +1450,8 @@ export default function AdminDashboard() {
                         paymentAtCheckIn: editFormData.paymentAtCheckIn || 0,
                       });
                     }}
-                    disabled={isEditingSubmitting || updateBooking.isPending}
-                    className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                    disabled={isEditingSubmitting || updateBooking.isPending || hasDateConflict}
+                    className={`${hasDateConflict ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white flex items-center gap-2`}
                   >
                     {isEditingSubmitting || updateBooking.isPending ? (
                       <>
@@ -1647,6 +1658,10 @@ export default function AdminDashboard() {
                     checkOutDate={editFormData.checkOutDate}
                     roomId={editFormData.roomId}
                     blockedDates={allBlockedDates}
+                    onConflictChange={(hasConflict, dates) => {
+                      setHasDateConflict(hasConflict);
+                      setConflictDates(dates);
+                    }}
                   />
                 </div>
               )}
@@ -1659,9 +1674,15 @@ export default function AdminDashboard() {
                   Cancelar
                 </Button>
                 <Button
-                  onClick={handleSaveAsNewBooking}
-                  disabled={isEditingSubmitting}
-                  className="flex-1"
+                  onClick={() => {
+                    if (hasDateConflict) {
+                      toast.error(`Conflito de datas! ${conflictDates.length} dia(s) já estão bloqueados. Resolva antes de criar.`);
+                      return;
+                    }
+                    handleSaveAsNewBooking();
+                  }}
+                  disabled={isEditingSubmitting || hasDateConflict}
+                  className={`flex-1 ${hasDateConflict ? 'bg-gray-400 cursor-not-allowed' : ''}`}
                 >
                   {isEditingSubmitting ? "Criando..." : "Criar Nova Reserva"}
                 </Button>

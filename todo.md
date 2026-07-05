@@ -763,3 +763,11 @@
 - [x] Bloquear automaticamente datas estendidas no calendário
 - [x] Opção de taxa de limpeza apenas na extensão
 - [x] Testar fluxo completo de extensão (10 testes adicionados)
+
+## Fase 57: Alertas de Conflito de Datas
+- [x] Adicionar detecção de conflitos no ReservationCalendarPreview
+- [x] Adicionar callback onConflictChange para notificar componente pai
+- [x] Bloquear botão de salvar quando há conflito no modal de edição
+- [x] Bloquear botão de criar quando há conflito no modal de nova reserva
+- [x] Exibir alerta visual com datas em conflito (laranja pulsante)
+- [x] Testar fluxo completo
