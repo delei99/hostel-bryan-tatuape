@@ -11,6 +11,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import jsPDF from "jspdf";
+import ReservationCalendarPreview from "@/components/ReservationCalendarPreview";
 
 /**
  * Painel administrativo para gerenciar reservas
@@ -86,6 +87,12 @@ export default function AdminDashboard() {
 
   // Buscar lista de quartos
   const { data: rooms = [] } = trpc.rooms.list.useQuery();
+
+  // Buscar bloqueios de todos os quartos para preview
+  const { data: allBlockedDates = [] } = trpc.blockedDates.list.useQuery(
+    { roomId: editFormData?.roomId || 1 },
+    { enabled: !!editFormData?.roomId }
+  );
 
   // Mutation para deletar reserva
   const deleteBookingMutation = trpc.bookings.delete.useMutation({
@@ -1393,6 +1400,17 @@ export default function AdminDashboard() {
                       onChange={(e) => setEditPassword(e.target.value)}
                     />
                   </div>
+
+                  <div className="border-t border-border pt-4">
+                    {editFormData?.checkInDate && editFormData?.checkOutDate && editFormData?.roomId && (
+                      <ReservationCalendarPreview
+                        checkInDate={editFormData.checkInDate}
+                        checkOutDate={editFormData.checkOutDate}
+                        roomId={editFormData.roomId}
+                        blockedDates={allBlockedDates}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div className="border-t border-border pt-6 flex gap-3">
@@ -1620,6 +1638,16 @@ export default function AdminDashboard() {
                       />
                     </div>
                   </div>
+                </div>
+              )}
+              {editFormData?.checkInDate && editFormData?.checkOutDate && editFormData?.roomId && (
+                <div className="border-t border-border pt-4">
+                  <ReservationCalendarPreview
+                    checkInDate={editFormData.checkInDate}
+                    checkOutDate={editFormData.checkOutDate}
+                    roomId={editFormData.roomId}
+                    blockedDates={allBlockedDates}
+                  />
                 </div>
               )}
               <div className="flex gap-4">
