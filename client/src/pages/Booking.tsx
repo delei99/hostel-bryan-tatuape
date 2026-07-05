@@ -616,7 +616,11 @@ export default function Booking() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {rooms.map(room => (
+                  {[...rooms].sort((a, b) => {
+                    if (a.name === "Quarto Alcatório") return -1;
+                    if (b.name === "Quarto Alcatório") return 1;
+                    return 0;
+                  }).map(room => (
                     <SelectItem key={room.id} value={room.id.toString()}>
                       <div className="flex flex-col">
                         <span>{room.name} - R$ {(room.pricePerNight / 100).toFixed(2)}/noite</span>
@@ -626,7 +630,7 @@ export default function Booking() {
                   ))}
                 </SelectContent>
               </Select>
-              {blockedDates.length > 0 && (
+              {blockedDates.length > 0 && selectedRoom?.name !== "Quarto Alcatório" && (
                 <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-sm text-yellow-800 font-semibold">📅 Datas bloqueadas neste quarto:</p>
                   <ul className="text-sm text-yellow-700 mt-2 space-y-1">

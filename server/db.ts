@@ -331,26 +331,28 @@ export async function createBooking(bookingData: any) {
   const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
   const confirmationCode = `${dateStr}-${randomStr}`;
   
-  // Bloquear automaticamente as datas da reserva
-  try {
-    // Usar timezone local para evitar problemas de conversão
-    const [checkInYear, checkInMonth, checkInDay] = bookingData.checkInDate.split('-').map(Number);
-    const [checkOutYear, checkOutMonth, checkOutDay] = bookingData.checkOutDate.split('-').map(Number);
-    
-    // Criar timestamps em timezone local (sem UTC)
-    const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
-    const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
-    
-    await createBlockedDate({
-      roomId: bookingData.roomId,
-      bookingId: bookingId,
-      startDate,
-      endDate,
-      reason: `Reserva automática - Código: ${confirmationCode} - Hóspede: ${bookingData.firstName} ${bookingData.lastName}`,
-    });
-  } catch (error) {
-    console.error("[Booking] Erro ao bloquear datas automaticamente:", error);
-    // Não falhar a reserva se o bloqueio automático falhar
+  // Bloquear automaticamente as datas da reserva (exceto para Quarto Alcatório)
+  if (room.name !== "Quarto Alcatório") {
+    try {
+      // Usar timezone local para evitar problemas de conversão
+      const [checkInYear, checkInMonth, checkInDay] = bookingData.checkInDate.split('-').map(Number);
+      const [checkOutYear, checkOutMonth, checkOutDay] = bookingData.checkOutDate.split('-').map(Number);
+      
+      // Criar timestamps em timezone local (sem UTC)
+      const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
+      const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
+      
+      await createBlockedDate({
+        roomId: bookingData.roomId,
+        bookingId: bookingId,
+        startDate,
+        endDate,
+        reason: `Reserva automática - Código: ${confirmationCode} - Hóspede: ${bookingData.firstName} ${bookingData.lastName}`,
+      });
+    } catch (error) {
+      console.error("[Booking] Erro ao bloquear datas automaticamente:", error);
+      // Não falhar a reserva se o bloqueio automático falhar
+    }
   }
   
   // Atualizar booking com o código de confirmação
