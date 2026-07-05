@@ -97,11 +97,14 @@ export default function ReservationCalendarPreview({
   }, [checkIn, checkOut, relevantBlockedDates]);
 
   // Notificar componente pai sobre conflitos
+  const onConflictChangeRef = React.useRef(onConflictChange);
+  onConflictChangeRef.current = onConflictChange;
+
   React.useEffect(() => {
-    if (onConflictChange) {
-      onConflictChange(conflicts.length > 0, conflicts);
+    if (onConflictChangeRef.current) {
+      onConflictChangeRef.current(conflicts.length > 0, conflicts);
     }
-  }, [conflicts, onConflictChange]);
+  }, [conflicts]);
 
   // Verificar se uma data esta na reserva
   const isReservationDate = (date: Date): boolean => {

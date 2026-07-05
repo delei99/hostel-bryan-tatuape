@@ -49,6 +49,11 @@ export default function AdminDashboard() {
   const [extensionChargeCleaningFee, setExtensionChargeCleaningFee] = useState(false);
   const [hasDateConflict, setHasDateConflict] = useState(false);
   const [conflictDates, setConflictDates] = useState<string[]>([]);
+
+  const handleConflictChange = useCallback((hasConflict: boolean, dates: string[]) => {
+    setHasDateConflict(hasConflict);
+    setConflictDates(dates);
+  }, []);
   const [newGuestData, setNewGuestData] = useState({
     firstName: "",
     lastName: "",
@@ -1411,10 +1416,7 @@ export default function AdminDashboard() {
                         roomId={editFormData.roomId}
                         currentBookingId={editingBooking?.booking?.id}
                         blockedDates={allBlockedDates}
-                        onConflictChange={(hasConflict, dates) => {
-                          setHasDateConflict(hasConflict);
-                          setConflictDates(dates);
-                        }}
+                        onConflictChange={handleConflictChange}
                       />
                     )}
                   </div>
@@ -1658,10 +1660,7 @@ export default function AdminDashboard() {
                     checkOutDate={editFormData.checkOutDate}
                     roomId={editFormData.roomId}
                     blockedDates={allBlockedDates}
-                    onConflictChange={(hasConflict, dates) => {
-                      setHasDateConflict(hasConflict);
-                      setConflictDates(dates);
-                    }}
+                    onConflictChange={handleConflictChange}
                   />
                 </div>
               )}
