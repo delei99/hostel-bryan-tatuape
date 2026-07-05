@@ -478,7 +478,8 @@ export default function Booking() {
       setBookingSuccess(null);
       
       // Invalidar cache para sincronizar automaticamente no calendário
-      await utils.blockedDates.list.invalidate();
+      const roomIdToInvalidate = parseInt(formData.roomId) || 1;
+      await utils.blockedDates.list.invalidate({ roomId: roomIdToInvalidate });
 
     } catch (error) {
       console.error("Erro ao criar reserva:", error);

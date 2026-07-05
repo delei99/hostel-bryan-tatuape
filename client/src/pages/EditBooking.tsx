@@ -133,7 +133,13 @@ export default function EditBooking() {
 
       // Invalidar cache para sincronizar automaticamente no painel administrativo
       await utils.bookings.list.invalidate();
-      await utils.blockedDates.list.invalidate();
+      // Invalidar bloqueios para o quarto original E o novo quarto (se mudou)
+      if (booking?.booking?.roomId) {
+        await utils.blockedDates.list.invalidate({ roomId: booking.booking.roomId });
+        if (formData.roomId !== booking.booking.roomId.toString()) {
+          await utils.blockedDates.list.invalidate({ roomId: parseInt(formData.roomId) });
+        }
+      }
 
       toast.success("Reserva atualizada com sucesso!");
       setUpdateSuccess(true);
