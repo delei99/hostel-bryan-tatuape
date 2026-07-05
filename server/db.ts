@@ -571,6 +571,20 @@ export async function updateBookingStatus(bookingId: number, status: string) {
   if (!db) throw new Error("Database not available");
   
   try {
+    // Se o status for "cancelled", desbloquear automaticamente as datas
+    if (status === "cancelled") {
+      try {
+        const blockedDate = await getBlockedDateByBookingId(bookingId);
+        if (blockedDate) {
+          await deleteBlockedDate(blockedDate.id);
+          console.log(`[Booking] Datas desbloqueadas automaticamente para reserva #${bookingId}`);
+        }
+      } catch (error) {
+        console.error(`[Booking] Erro ao desbloquear datas da reserva #${bookingId}:`, error);
+        // Não falhar a atualização de status se o desbloqueio falhar
+      }
+    }
+    
     await db
       .update(bookings)
       .set({ status: status as any })
