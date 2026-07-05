@@ -70,8 +70,11 @@ export default function AdminRooms() {
 
   const handleEdit = (room: any) => {
     setEditingId(room.id);
-    // Armazenar preço em centavos no estado para evitar problemas de conversão
-    setEditFormData({ ...room });
+    // Converter cleaningFee de centavos para reais para exibição correta
+    setEditFormData({
+      ...room,
+      cleaningFee: room.cleaningFee ? (room.cleaningFee / 100).toFixed(2) : "0"
+    });
   };
 
   const handleCancel = () => {
