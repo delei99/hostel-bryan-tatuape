@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ArrowLeft, MessageCircle, CheckCircle, Copy } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import React from "react";
+import { useRealtimeBlockedDates } from "@/hooks/useRealtimeBlockedDates";
 
 export default function Booking() {
   // Obter roomId da URL se fornecido
@@ -159,6 +160,9 @@ export default function Booking() {
     { roomId: parseInt(formData.roomId) },
     { enabled: !!formData.roomId }
   );
+
+  // Sincronizar bloqueios em tempo real entre abas
+  useRealtimeBlockedDates(parseInt(formData.roomId), !!formData.roomId);
 
   // Estado para armazenar exceções
   // Nota: Exceções são gerenciáveis apenas na página admin

@@ -8,6 +8,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useRealtimeBlockedDates } from "@/hooks/useRealtimeBlockedDates";
 
 export default function EditBooking() {
   const [location] = useLocation();
@@ -53,6 +54,9 @@ export default function EditBooking() {
     { roomId: parseInt(formData.roomId) },
     { enabled: !!formData.roomId }
   );
+
+  // Sincronizar bloqueios em tempo real entre abas
+  useRealtimeBlockedDates(parseInt(formData.roomId), !!formData.roomId);
 
   // Normalizar data para comparação (usar UTC para evitar shift de timezone)
   const normalizeDate = (dateStr: string | Date): Date => {

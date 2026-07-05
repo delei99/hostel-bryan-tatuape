@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Lock, Unlock, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import BlockedDatesCalendar from "@/components/BlockedDatesCalendar";
+import { useRealtimeBlockedDates } from "@/hooks/useRealtimeBlockedDates";
 
 export default function BlockedDates() {
   const utils = trpc.useUtils();
@@ -82,6 +83,10 @@ export default function BlockedDates() {
     { roomId: roomIds.length > 0 ? parseInt(roomIds[0]) : 1 },
     { enabled: roomIds.length > 0 }
   );
+
+  // Sincronizar bloqueios em tempo real entre abas
+  const currentRoomId = roomIds.length > 0 ? parseInt(roomIds[0]) : 1;
+  useRealtimeBlockedDates(currentRoomId, roomIds.length > 0);
 
   const createBlockedDate = trpc.blockedDates.create.useMutation();
   const deleteBlockedDate = trpc.blockedDates.delete.useMutation();
