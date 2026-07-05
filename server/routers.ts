@@ -278,6 +278,12 @@ export const appRouter = router({
 
         return { success: true };
       }),
+
+    syncAll: adminProcedure
+      .mutation(async () => {
+        const { syncAllBookingBlockedDates } = await import("./db");
+        return syncAllBookingBlockedDates();
+      }),
   }),
 
   blockingExceptions: router({

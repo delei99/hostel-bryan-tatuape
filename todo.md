@@ -771,3 +771,11 @@
 - [x] Bloquear botão de criar quando há conflito no modal de nova reserva
 - [x] Exibir alerta visual com datas em conflito (laranja pulsante)
 - [x] Testar fluxo completo
+
+## Fase 58: Corrigir bloqueio automático de datas no calendário
+- [x] Investigar por que reservas não estão bloqueando o calendário
+- [x] Sincronizar 25 reservas existentes sem bloqueio no banco de dados
+- [x] Adicionar logs de debug no createBooking e updateBooking
+- [x] Remover condição desnecessária (if updateData) no updateBooking - agora SEMPRE sincroniza
+- [x] Criar procedure syncAll para sincronização manual de emergência
+- [x] Criar função syncAllBookingBlockedDates no db.ts

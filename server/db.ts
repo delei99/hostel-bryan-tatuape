@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, lt, or, inArray } from "drizzle-orm";
+import { and, desc, eq, gt, lt, or, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog, failedUnblockAttempts, InsertFailedUnblockAttempt, FailedUnblockAttempt, blockingExceptions, InsertBlockingException, BlockingException, homeImages, InsertHomeImage, HomeImage, monthlyRevenueHistory, InsertMonthlyRevenueHistory, MonthlyRevenueHistory } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -332,6 +332,7 @@ export async function createBooking(bookingData: any) {
   const confirmationCode = `${dateStr}-${randomStr}`;
   
   // Bloquear automaticamente as datas da reserva (exceto para Quarto Aleatório)
+  console.log('[createBooking] Room name:', room.name, '| roomId:', bookingData.roomId, '| bookingId:', bookingId);
   if (room.name !== "Quarto Aleatório") {
     try {
       // Usar timezone local para evitar problemas de conversão
@@ -342,6 +343,7 @@ export async function createBooking(bookingData: any) {
       const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
       const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
       
+      console.log('[createBooking] Criando bloqueio - startDate:', startDate.toISOString(), 'endDate:', endDate.toISOString());
       await createBlockedDate({
         roomId: bookingData.roomId,
         bookingId: bookingId,
@@ -349,10 +351,13 @@ export async function createBooking(bookingData: any) {
         endDate,
         reason: `Reserva automática - Código: ${confirmationCode} - Hóspede: ${bookingData.firstName} ${bookingData.lastName}`,
       });
+      console.log('[createBooking] Bloqueio criado com sucesso para bookingId:', bookingId);
     } catch (error) {
-      console.error("[Booking] Erro ao bloquear datas automaticamente:", error);
+      console.error("[createBooking] ERRO ao bloquear datas automaticamente:", error);
       // Não falhar a reserva se o bloqueio automático falhar
     }
+  } else {
+    console.log('[createBooking] Quarto Aleatório - não bloquear');
   }
   
   // Atualizar booking com o código de confirmação
@@ -1098,49 +1103,57 @@ export async function updateBooking(bookingId: number, updateData: any, editedBy
   // Atualizar reserva
   await db.update(bookings).set(updateSet).where(eq(bookings.id, bookingId));
   
-  // Sincronizar datas bloqueadas se as datas foram alteradas
-  if (updateData.checkInDate !== undefined || updateData.checkOutDate !== undefined || updateData.roomId !== undefined) {
-    try {
-      const newCheckInDate = updateData.checkInDate !== undefined ? updateData.checkInDate : currentBooking.booking.checkInDate;
-      const newCheckOutDate = updateData.checkOutDate !== undefined ? updateData.checkOutDate : currentBooking.booking.checkOutDate;
-      const newRoomId = updateData.roomId !== undefined ? updateData.roomId : currentBooking.booking.roomId;
-      
-      // Converter datas para timestamps
-      const [checkInYear, checkInMonth, checkInDay] = newCheckInDate.split('-').map(Number);
-      const [checkOutYear, checkOutMonth, checkOutDay] = newCheckOutDate.split('-').map(Number);
-      const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
-      const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
-      
-      // Buscar a data bloqueada existente
-      const blockedDate = await getBlockedDateByBookingId(bookingId);
-      
-      if (blockedDate) {
-        // Se já existe bloqueio, atualizar
-        await updateBlockedDate(blockedDate.id, {
-          roomId: newRoomId,
-          startDate,
-          endDate,
-          reason: `Reserva automatica - Hospede: ${currentBooking.guest.firstName} ${currentBooking.guest.lastName}`,
-        });
-      } else {
-        // Se não existe bloqueio, criar novo (exceto para Quarto Aleatório)
-        const roomResult = await db.select().from(rooms).where(eq(rooms.id, newRoomId)).limit(1);
-        const room = roomResult.length > 0 ? roomResult[0] : null;
-        
-        if (room && room.name !== "Quarto Aleatório") {
-          await createBlockedDate({
-            roomId: newRoomId,
-            bookingId: bookingId,
-            startDate,
-            endDate,
-            reason: `Reserva automática - Código: ${currentBooking.booking.confirmationCode} - Hóspede: ${currentBooking.guest.firstName} ${currentBooking.guest.lastName}`,
-          });
-        }
-      }
-    } catch (error) {
-      console.error('[Booking] Erro ao sincronizar datas bloqueadas:', error);
-      // Nao falhar a atualizacao se a sincronizacao falhar
+  // Sincronizar datas bloqueadas SEMPRE ao editar reserva
+  try {
+    const newCheckInDate = updateData.checkInDate !== undefined ? updateData.checkInDate : currentBooking.booking.checkInDate;
+    const newCheckOutDate = updateData.checkOutDate !== undefined ? updateData.checkOutDate : currentBooking.booking.checkOutDate;
+    const newRoomId = updateData.roomId !== undefined ? updateData.roomId : currentBooking.booking.roomId;
+    
+    console.log('[updateBooking] Sincronizando bloqueios - bookingId:', bookingId, 'roomId:', newRoomId, 'checkIn:', newCheckInDate, 'checkOut:', newCheckOutDate);
+    
+    // Converter datas para timestamps
+    const [checkInYear, checkInMonth, checkInDay] = newCheckInDate.split('-').map(Number);
+    const [checkOutYear, checkOutMonth, checkOutDay] = newCheckOutDate.split('-').map(Number);
+    const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
+    const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
+    
+    console.log('[updateBooking] Datas convertidas - startDate:', startDate.toISOString(), 'endDate:', endDate.toISOString());
+    
+    // Buscar a data bloqueada existente
+    const blockedDate = await getBlockedDateByBookingId(bookingId);
+    console.log('[updateBooking] Bloqueio existente:', blockedDate ? `id=${blockedDate.id}` : 'NENHUM');
+    
+    // Verificar se é Quarto Aleatório
+    const roomResult = await db.select().from(rooms).where(eq(rooms.id, newRoomId)).limit(1);
+    const roomForBlock = roomResult.length > 0 ? roomResult[0] : null;
+    
+    if (roomForBlock && roomForBlock.name === "Quarto Aleatório") {
+      console.log('[updateBooking] Quarto Aleatório - não bloquear');
+    } else if (blockedDate) {
+      // Se já existe bloqueio, atualizar
+      console.log('[updateBooking] Atualizando bloqueio existente id:', blockedDate.id);
+      await updateBlockedDate(blockedDate.id, {
+        roomId: newRoomId,
+        startDate,
+        endDate,
+        reason: `Reserva automatica - Hospede: ${currentBooking.guest.firstName} ${currentBooking.guest.lastName}`,
+      });
+      console.log('[updateBooking] Bloqueio atualizado com sucesso');
+    } else {
+      // Se não existe bloqueio, criar novo
+      console.log('[updateBooking] Criando novo bloqueio para bookingId:', bookingId);
+      await createBlockedDate({
+        roomId: newRoomId,
+        bookingId: bookingId,
+        startDate,
+        endDate,
+        reason: `Reserva automática - Código: ${currentBooking.booking.confirmationCode} - Hóspede: ${currentBooking.guest.firstName} ${currentBooking.guest.lastName}`,
+      });
+      console.log('[updateBooking] Novo bloqueio criado com sucesso');
     }
+  } catch (error) {
+    console.error('[updateBooking] ERRO ao sincronizar datas bloqueadas:', error);
+    // Nao falhar a atualizacao se a sincronizacao falhar
   }
   
   // Retornar dados atualizados com guest e room para WhatsApp
@@ -1553,4 +1566,69 @@ export async function extendBooking(
     console.error("[Database] Error extending booking:", error);
     throw error;
   }
+}
+
+
+export async function syncAllBookingBlockedDates() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Buscar reservas ativas (não canceladas) sem bloqueio associado, exceto Quarto Aleatório
+  const allBookingsResult = await db
+    .select({
+      id: bookings.id,
+      roomId: bookings.roomId,
+      checkInDate: bookings.checkInDate,
+      checkOutDate: bookings.checkOutDate,
+      status: bookings.status,
+      confirmationCode: bookings.confirmationCode,
+      guestId: bookings.guestId,
+    })
+    .from(bookings)
+    .where(sql`${bookings.status} != 'cancelled'`);
+  
+  let created = 0;
+  let skipped = 0;
+  
+  for (const booking of allBookingsResult) {
+    // Verificar se já tem bloqueio
+    const existingBlock = await getBlockedDateByBookingId(booking.id);
+    if (existingBlock) {
+      skipped++;
+      continue;
+    }
+    
+    // Verificar se é Quarto Aleatório
+    const roomResult = await db.select().from(rooms).where(eq(rooms.id, booking.roomId)).limit(1);
+    const room = roomResult.length > 0 ? roomResult[0] : null;
+    if (!room || room.name === "Quarto Aleatório") {
+      skipped++;
+      continue;
+    }
+    
+    // Buscar guest
+    const guestResult = await db.select().from(guests).where(eq(guests.id, booking.guestId)).limit(1);
+    const guest = guestResult.length > 0 ? guestResult[0] : null;
+    
+    try {
+      const [checkInYear, checkInMonth, checkInDay] = booking.checkInDate.split('-').map(Number);
+      const [checkOutYear, checkOutMonth, checkOutDay] = booking.checkOutDate.split('-').map(Number);
+      const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
+      const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
+      
+      await createBlockedDate({
+        roomId: booking.roomId,
+        bookingId: booking.id,
+        startDate,
+        endDate,
+        reason: `Reserva automática - Código: ${booking.confirmationCode || 'N/A'} - Hóspede: ${guest ? `${guest.firstName} ${guest.lastName}` : 'Desconhecido'}`,
+      });
+      created++;
+    } catch (error) {
+      console.error(`[syncAllBookingBlockedDates] Erro ao criar bloqueio para reserva ${booking.id}:`, error);
+    }
+  }
+  
+  console.log(`[syncAllBookingBlockedDates] Resultado: ${created} criados, ${skipped} já existentes`);
+  return { created, skipped, total: allBookingsResult.length };
 }
