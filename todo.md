@@ -493,11 +493,11 @@
 - [x] Todos os 47 testes continuam passando
 
 ## Fase 56: Adicionar Upload de Imagens para Página Principal
-- [ ] Criar tabela no banco de dados para armazenar URLs de imagens da home
-- [ ] Implementar endpoint tRPC para upload de imagens
-- [ ] Adicionar interface de upload no painel administrativo
-- [ ] Exibir duas imagens lado a lado na página principal
-- [ ] Testar fluxo completo
+- [x] Criar tabela no banco de dados para armazenar URLs de imagens da home
+- [x] Implementar endpoint tRPC para upload de imagens
+- [x] Adicionar interface de upload no painel administrativo
+- [x] Exibir duas imagens lado a lado na página principal
+- [x] Testar fluxo completo
 
 ## Fase 56: Adicionar Upload de Imagens para Página Principal
 - [x] Criar tabela homeImages no banco de dados
