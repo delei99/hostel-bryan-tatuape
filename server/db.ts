@@ -223,8 +223,11 @@ export async function createBooking(bookingData: any) {
   }
   
   // Calcular preço usando o preço vigente do quarto
-  const checkInDate = new Date(bookingData.checkInDate);
-  const checkOutDate = new Date(bookingData.checkOutDate);
+  // Parse datas corretamente sem timezone shift
+  const [checkInYear, checkInMonth, checkInDay] = bookingData.checkInDate.split('-').map(Number);
+  const [checkOutYear, checkOutMonth, checkOutDay] = bookingData.checkOutDate.split('-').map(Number);
+  const checkInDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
+  const checkOutDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 0, 0, 0, 0);
   const numberOfNights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
   
   // Calcular subtotal com o preço atual do quarto

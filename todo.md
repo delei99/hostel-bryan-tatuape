@@ -779,3 +779,9 @@
 - [x] Remover condição desnecessária (if updateData) no updateBooking - agora SEMPRE sincroniza
 - [x] Criar procedure syncAll para sincronização manual de emergência
 - [x] Criar função syncAllBookingBlockedDates no db.ts
+
+## Fase 59: Corrigir data adicionando +1 dia ao criar reserva
+- [x] Investigar por que data está sendo salva com +1 dia
+- [x] Corrigir parse de datas em createBooking para não usar new Date() com string (evita timezone shift)
+- [x] Usar parse manual com split('-') para manter data local
+- [x] Validar com testes
