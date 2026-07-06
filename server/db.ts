@@ -338,13 +338,11 @@ export async function createBooking(bookingData: any) {
   console.log('[createBooking] Room name:', room.name, '| roomId:', bookingData.roomId, '| bookingId:', bookingId);
   if (room.name !== "Quarto Aleatório") {
     try {
-      // Usar timezone local para evitar problemas de conversão
-      const [checkInYear, checkInMonth, checkInDay] = bookingData.checkInDate.split('-').map(Number);
-      const [checkOutYear, checkOutMonth, checkOutDay] = bookingData.checkOutDate.split('-').map(Number);
-      
-      // Criar timestamps em timezone local (sem UTC)
-      const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
-      const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
+      // Usar strings de data para evitar problemas de conversão de timezone
+      // startDate é o primeiro dia da reserva (check-in)
+      // endDate é o último dia da reserva (check-out - 1 dia, pois checkout é exclusivo)
+      const startDate = new Date(`${bookingData.checkInDate}T00:00:00Z`);
+      const endDate = new Date(`${bookingData.checkOutDate}T23:59:59Z`);
       
       console.log('[createBooking] Criando bloqueio - startDate:', startDate.toISOString(), 'endDate:', endDate.toISOString());
       await createBlockedDate({
@@ -1114,11 +1112,9 @@ export async function updateBooking(bookingId: number, updateData: any, editedBy
     
     console.log('[updateBooking] Sincronizando bloqueios - bookingId:', bookingId, 'roomId:', newRoomId, 'checkIn:', newCheckInDate, 'checkOut:', newCheckOutDate);
     
-    // Converter datas para timestamps
-    const [checkInYear, checkInMonth, checkInDay] = newCheckInDate.split('-').map(Number);
-    const [checkOutYear, checkOutMonth, checkOutDay] = newCheckOutDate.split('-').map(Number);
-    const startDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
-    const endDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 23, 59, 59, 999);
+    // Converter datas para timestamps usando strings ISO para evitar shift de timezone
+    const startDate = new Date(`${newCheckInDate}T00:00:00Z`);
+    const endDate = new Date(`${newCheckOutDate}T23:59:59Z`);
     
     console.log('[updateBooking] Datas convertidas - startDate:', startDate.toISOString(), 'endDate:', endDate.toISOString());
     
@@ -1544,9 +1540,8 @@ export async function extendBooking(
     }
 
     // Bloquear automaticamente as datas estendidas no calendário
-    const startDate = new Date(originalBooking.booking.checkOutDate);
-    const endDate = new Date(newCheckOutDate);
-    endDate.setHours(23, 59, 59, 999);
+    const startDate = new Date(`${originalBooking.booking.checkOutDate}T00:00:00Z`);
+    const endDate = new Date(`${newCheckOutDate}T23:59:59Z`);
 
     await createBlockedDate({
       roomId: originalBooking.booking.roomId,

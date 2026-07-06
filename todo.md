@@ -791,3 +791,10 @@
 - [x] Encontrar o problema: checkInDay + 1 e checkOutDay + 1 na mensagem WhatsApp
 - [x] Remover +1 dia da exibição, mantendo apenas para cálculo de noites
 - [x] Validar com testes
+
+## Fase 61: Corrigir data com -1 dia no bloqueio de datas
+- [x] Investigar problema de shift de timezone no bloqueio
+- [x] Corrigir createBooking para usar strings ISO
+- [x] Corrigir updateBooking para usar strings ISO
+- [x] Corrigir extendBooking para usar strings ISO
+- [x] Validar com testes
