@@ -190,6 +190,8 @@ export async function createBooking(bookingData: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
+  console.log('[createBooking] Recebido - checkInDate:', bookingData.checkInDate, 'checkOutDate:', bookingData.checkOutDate);
+  
   const { guests } = await import("../drizzle/schema");
   const guestResult = await db.insert(guests).values({
     firstName: bookingData.firstName,

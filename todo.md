@@ -798,3 +798,8 @@
 - [x] Corrigir updateBooking para usar strings ISO
 - [x] Corrigir extendBooking para usar strings ISO
 - [x] Validar com testes
+
+## Fase 62: Corrigir data com -1 dia na função normalizeDate
+- [x] Identificar problema em Date.UTC() na normalizeDate
+- [x] Corrigir para usar timezone local
+- [x] Validar com testes

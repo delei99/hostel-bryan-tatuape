@@ -274,11 +274,12 @@ export default function Booking() {
         console.error('[Booking] Invalid date format:', dateStr);
         return new Date();
       }
-      return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+      // Usar timezone local, nao UTC
+      return new Date(year, month - 1, day, 0, 0, 0, 0);
     }
-    // Se for Date object (vindo do backend como ISO string), usar UTC getters
+    // Se for Date object, extrair apenas a parte da data em timezone local
     const d = new Date(dateStr);
-    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
   };
 
   const isDateBlocked = (checkInStr: string, checkOutStr: string) => {
@@ -359,6 +360,12 @@ export default function Booking() {
       
       console.log('DEBUG: formData.checkInDate =', formData.checkInDate);
       console.log('DEBUG: formData.checkOutDate =', formData.checkOutDate);
+      console.log('DEBUG: Enviando para backend - checkInDate:', checkInDate, 'checkOutDate:', checkOutDate);
+      
+      // Verificar se as datas estão corretas
+      if (!checkInDate || !checkOutDate) {
+        throw new Error('Datas de check-in e check-out são obrigatórias');
+      }
       console.log('Price Calculation:', priceCalculation);
       console.log('Total Price:', priceCalculation.total);
       
