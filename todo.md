@@ -803,3 +803,9 @@
 - [x] Identificar problema em Date.UTC() na normalizeDate
 - [x] Corrigir para usar timezone local
 - [x] Validar com testes
+
+## Fase 63: Corrigir definitivamente data com -1 dia - remover todos new Date(string)
+- [x] Criar helper dateUtils.ts com formatYmdToPtBr e parseYmdToLocalDate
+- [x] Corrigir AdminDashboard.tsx para usar helpers
+- [x] Corrigir server/db.ts notifyGuest para usar split/reverse
+- [x] Validar com testes

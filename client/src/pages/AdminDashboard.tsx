@@ -12,6 +12,7 @@ import { Link } from "wouter";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import jsPDF from "jspdf";
 import ReservationCalendarPreview from "@/components/ReservationCalendarPreview";
+import { formatYmdToPtBr, parseYmdToLocalDate } from "../../../shared/dateUtils";
 
 /**
  * Painel administrativo para gerenciar reservas
@@ -147,8 +148,8 @@ export default function AdminDashboard() {
       `*Email:* ${guest.email}\n` +
       `*Telefone:* ${guest.phone}\n\n` +
       `*Quarto:* ${room.name}\n` +
-      `*Check-in:* ${new Date(booking.checkInDate).toLocaleDateString('pt-BR')} as ${booking.checkInTime}\n` +
-      `*Check-out:* ${new Date(booking.checkOutDate).toLocaleDateString('pt-BR')} as ${booking.checkOutTime}\n` +
+      `*Check-in:* ${formatYmdToPtBr(booking.checkInDate)} as ${booking.checkInTime}\n` +
+      `*Check-out:* ${formatYmdToPtBr(booking.checkOutDate)} as ${booking.checkOutTime}\n` +
       `*Hospedes:* ${booking.numberOfGuests} pessoa${booking.numberOfGuests > 1 ? 's' : ''}\n\n` +
       `*Valores:*\n` +
       `Subtotal: R$ ${(booking.subtotal / 100).toFixed(2)}\n` +
@@ -499,8 +500,8 @@ export default function AdminDashboard() {
       yPosition += 10;
 
       // Quarto e Período
-      const checkInDate = new Date(booking.booking.checkInDate);
-      const checkOutDate = new Date(booking.booking.checkOutDate);
+      const checkInDate = parseYmdToLocalDate(booking.booking.checkInDate);
+      const checkOutDate = parseYmdToLocalDate(booking.booking.checkOutDate);
       const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
       
       doc.text(`Quarto: ${booking.booking.room?.number || "N/A"}`, 15, yPosition);
@@ -591,8 +592,8 @@ export default function AdminDashboard() {
 
   const handleSendWhatsApp = (booking: any) => {
     try {
-      const checkInDate = new Date(booking.booking.checkInDate);
-      const checkOutDate = new Date(booking.booking.checkOutDate);
+      const checkInDate = parseYmdToLocalDate(booking.booking.checkInDate);
+      const checkOutDate = parseYmdToLocalDate(booking.booking.checkOutDate);
       const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
       const subtotal = booking.booking.subtotal / 100;
       const discount = booking.booking.discountAmount / 100;
