@@ -785,3 +785,9 @@
 - [x] Corrigir parse de datas em createBooking para não usar new Date() com string (evita timezone shift)
 - [x] Usar parse manual com split('-') para manter data local
 - [x] Validar com testes
+
+## Fase 60: Corrigir data com +1 dia na mensagem WhatsApp
+- [x] Investigar onde o +1 dia estava sendo adicionado
+- [x] Encontrar o problema: checkInDay + 1 e checkOutDay + 1 na mensagem WhatsApp
+- [x] Remover +1 dia da exibição, mantendo apenas para cálculo de noites
+- [x] Validar com testes

@@ -357,6 +357,8 @@ export default function Booking() {
       const checkInDate = formData.checkInDate;
       const checkOutDate = formData.checkOutDate;
       
+      console.log('DEBUG: formData.checkInDate =', formData.checkInDate);
+      console.log('DEBUG: formData.checkOutDate =', formData.checkOutDate);
       console.log('Price Calculation:', priceCalculation);
       console.log('Total Price:', priceCalculation.total);
       
@@ -409,8 +411,10 @@ export default function Booking() {
       const room = rooms.find(r => r.id === roomId);
       const [checkInYear, checkInMonth, checkInDay] = formData.checkInDate.split('-').map(Number);
       const [checkOutYear, checkOutMonth, checkOutDay] = formData.checkOutDate.split('-').map(Number);
-      const checkInDateObj = new Date(checkInYear, checkInMonth - 1, checkInDay + 1);
-      const checkOutDateObj = new Date(checkOutYear, checkOutMonth - 1, checkOutDay + 1);
+      // Para exibição: usar datas corretas sem +1
+      const checkInDateObj = new Date(checkInYear, checkInMonth - 1, checkInDay, 0, 0, 0, 0);
+      const checkOutDateObj = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 0, 0, 0, 0);
+      // Para cálculo de noites: checkout é exclusivo, então precisa +1 dia
       const nights = Math.ceil((checkOutDateObj.getTime() - checkInDateObj.getTime()) / (1000 * 60 * 60 * 24));
       
       // Calcular o desconto que foi aplicado
