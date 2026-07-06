@@ -4,6 +4,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
+import { parseYmdToLocalDate } from "../shared/dateUtils";
 
 export const appRouter = router({
   system: systemRouter,
@@ -40,7 +41,7 @@ export const appRouter = router({
       }))
       .query(async ({ input }) => {
         const { getRoomAvailability } = await import("./db");
-        return getRoomAvailability(input.roomId, new Date(input.checkInDate), new Date(input.checkOutDate));
+        return getRoomAvailability(input.roomId, parseYmdToLocalDate(input.checkInDate), parseYmdToLocalDate(input.checkOutDate));
       }),
 
     create: adminProcedure
@@ -215,7 +216,7 @@ export const appRouter = router({
       .input(z.object({ roomId: z.number() }))
       .query(async ({ input }) => {
         const { getBlockedDates } = await import("./db");
-        return getBlockedDates(input.roomId, new Date("1970-01-01"), new Date("2099-12-31"));
+        return getBlockedDates(input.roomId, parseYmdToLocalDate("1970-01-01"), parseYmdToLocalDate("2099-12-31"));
       }),
 
     create: publicProcedure

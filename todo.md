@@ -809,3 +809,14 @@
 - [x] Corrigir AdminDashboard.tsx para usar helpers
 - [x] Corrigir server/db.ts notifyGuest para usar split/reverse
 - [x] Validar com testes
+
+## Bug: Datas com -1 dia no Admin Dashboard (CORRIGIDO)
+- [x] Identificar todas as instâncias de `new Date('YYYY-MM-DD')` que causam timezone shift
+- [x] Corrigir `server/routers.ts` - checkAvailability e blockedDates.list
+- [x] Corrigir `server/db.ts` - createBooking, updateBooking, extendBooking, notificações
+- [x] Corrigir `client/src/pages/AdminDashboard.tsx` - tabela e modal de detalhes
+- [x] Corrigir `client/src/pages/Booking.tsx` - mensagem WhatsApp e success card
+- [x] Usar `parseYmdToLocalDate` para converter strings sem timezone shift
+- [x] Usar `formatYmdToPtBr` para exibir datas sem timezone shift
+- [x] Todos os 85 testes vitest passando
+- [x] Testar fluxo completo de reserva

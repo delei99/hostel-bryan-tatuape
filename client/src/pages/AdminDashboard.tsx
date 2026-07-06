@@ -1040,7 +1040,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="py-3 px-4 font-mono text-sm text-foreground">{item.booking.confirmationCode}</td>
                       <td className="py-3 px-4 text-sm text-foreground">
-                        {new Date(item.booking.checkInDate).toLocaleDateString('pt-BR')} - {new Date(item.booking.checkOutDate).toLocaleDateString('pt-BR')}
+                        {formatYmdToPtBr(item.booking.checkInDate)} - {formatYmdToPtBr(item.booking.checkOutDate)}
                       </td>
                       <td className="py-3 px-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(item.booking.status)}`}>
@@ -1157,11 +1157,11 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <Label>Check-in</Label>
-                        <p className="text-foreground">{new Date(selectedBooking.booking.checkInDate).toLocaleDateString('pt-BR')} às {selectedBooking.booking.checkInTime}</p>
+                        <p className="text-foreground">{formatYmdToPtBr(selectedBooking.booking.checkInDate)} às {selectedBooking.booking.checkInTime}</p>
                       </div>
                       <div>
                         <Label>Check-out</Label>
-                        <p className="text-foreground">{new Date(selectedBooking.booking.checkOutDate).toLocaleDateString('pt-BR')} às {selectedBooking.booking.checkOutTime}</p>
+                        <p className="text-foreground">{formatYmdToPtBr(selectedBooking.booking.checkOutDate)} às {selectedBooking.booking.checkOutTime}</p>
                       </div>
                     </div>
                   </div>
@@ -1862,7 +1862,8 @@ export default function AdminDashboard() {
                     {extensionCheckOutDate && (
                       <>
                         {(() => {
-                          const days = Math.ceil((new Date(extensionCheckOutDate).getTime() - new Date(editingBooking.booking.checkOutDate).getTime()) / (1000 * 60 * 60 * 24));
+                          const { parseYmdToLocalDate } = require('../../../shared/dateUtils');
+                          const days = Math.ceil((parseYmdToLocalDate(extensionCheckOutDate).getTime() - parseYmdToLocalDate(editingBooking.booking.checkOutDate).getTime()) / (1000 * 60 * 60 * 24));
                           const subtotal = days * editingBooking.room.pricePerNight;
                           const numberOfGuests = editingBooking.booking.numberOfGuests;
                           const roomDiscountType = (editingBooking.room as any).singleGuestDiscountType || 'percentage';

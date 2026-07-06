@@ -2,6 +2,7 @@ import { and, desc, eq, gt, lt, or, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, InsertGuest, guests, rooms, bookings, InsertBooking, roomPhotos, InsertRoomPhoto, RoomPhoto, blockedDates, InsertBlockedDate, BlockedDate, auditLogs, InsertAuditLog, AuditLog, failedUnblockAttempts, InsertFailedUnblockAttempt, FailedUnblockAttempt, blockingExceptions, InsertBlockingException, BlockingException, homeImages, InsertHomeImage, HomeImage, monthlyRevenueHistory, InsertMonthlyRevenueHistory, MonthlyRevenueHistory } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { formatYmdToPtBr } from "../shared/dateUtils";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -340,11 +341,12 @@ export async function createBooking(bookingData: any) {
   console.log('[createBooking] Room name:', room.name, '| roomId:', bookingData.roomId, '| bookingId:', bookingId);
   if (room.name !== "Quarto Aleatório") {
     try {
-      // Usar strings de data para evitar problemas de conversão de timezone
+      // Usar parseYmdToLocalDate para evitar problemas de conversão de timezone
       // startDate é o primeiro dia da reserva (check-in)
       // endDate é o último dia da reserva (check-out - 1 dia, pois checkout é exclusivo)
-      const startDate = new Date(`${bookingData.checkInDate}T00:00:00Z`);
-      const endDate = new Date(`${bookingData.checkOutDate}T23:59:59Z`);
+      const { parseYmdToLocalDate } = await import("../shared/dateUtils");
+      const startDate = parseYmdToLocalDate(bookingData.checkInDate);
+      const endDate = parseYmdToLocalDate(bookingData.checkOutDate);
       
       console.log('[createBooking] Criando bloqueio - startDate:', startDate.toISOString(), 'endDate:', endDate.toISOString());
       await createBlockedDate({
@@ -1114,9 +1116,10 @@ export async function updateBooking(bookingId: number, updateData: any, editedBy
     
     console.log('[updateBooking] Sincronizando bloqueios - bookingId:', bookingId, 'roomId:', newRoomId, 'checkIn:', newCheckInDate, 'checkOut:', newCheckOutDate);
     
-    // Converter datas para timestamps usando strings ISO para evitar shift de timezone
-    const startDate = new Date(`${newCheckInDate}T00:00:00Z`);
-    const endDate = new Date(`${newCheckOutDate}T23:59:59Z`);
+    // Converter datas para timestamps usando parseYmdToLocalDate para evitar shift de timezone
+    const { parseYmdToLocalDate } = await import("../shared/dateUtils");
+    const startDate = parseYmdToLocalDate(newCheckInDate);
+    const endDate = parseYmdToLocalDate(newCheckOutDate);
     
     console.log('[updateBooking] Datas convertidas - startDate:', startDate.toISOString(), 'endDate:', endDate.toISOString());
     
@@ -1170,8 +1173,8 @@ export async function updateBooking(bookingId: number, updateData: any, editedBy
         guestPhone: updatedBooking.guest.phone || undefined,
         guestName: `${updatedBooking.guest.firstName} ${updatedBooking.guest.lastName}`,
         bookingCode: updatedBooking.booking.confirmationCode,
-        checkInDate: new Date(updatedBooking.booking.checkInDate).toLocaleDateString('pt-BR'),
-        checkOutDate: new Date(updatedBooking.booking.checkOutDate).toLocaleDateString('pt-BR'),
+        checkInDate: formatYmdToPtBr(updatedBooking.booking.checkInDate),
+        checkOutDate: formatYmdToPtBr(updatedBooking.booking.checkOutDate),
         roomName: updatedBooking.room.name,
         totalPrice: updatedBooking.booking.totalPrice,
         message: 'Sua reserva foi editada! Aqui estão os detalhes atualizados:',
@@ -1451,8 +1454,9 @@ export async function extendBooking(
     const originalBooking = await getBookingById(parentBookingId);
     if (!originalBooking) throw new Error("Original booking not found");
 
-    const originalCheckOutDate = new Date(originalBooking.booking.checkOutDate);
-    const newCheckOutDateObj = new Date(newCheckOutDate);
+    const { parseYmdToLocalDate } = await import("../shared/dateUtils");
+    const originalCheckOutDate = parseYmdToLocalDate(originalBooking.booking.checkOutDate);
+    const newCheckOutDateObj = parseYmdToLocalDate(newCheckOutDate);
 
     // Calcular número de dias da extensão
     const extensionDays = Math.ceil(
@@ -1542,8 +1546,8 @@ export async function extendBooking(
     }
 
     // Bloquear automaticamente as datas estendidas no calendário
-    const startDate = new Date(`${originalBooking.booking.checkOutDate}T00:00:00Z`);
-    const endDate = new Date(`${newCheckOutDate}T23:59:59Z`);
+    const startDate = parseYmdToLocalDate(originalBooking.booking.checkOutDate);
+    const endDate = parseYmdToLocalDate(newCheckOutDate);
 
     await createBlockedDate({
       roomId: originalBooking.booking.roomId,

@@ -10,6 +10,7 @@ import { ArrowLeft, MessageCircle, CheckCircle, Copy } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import React from "react";
 import { useRealtimeBlockedDates } from "@/hooks/useRealtimeBlockedDates";
+import { formatYmdToPtBr } from "../../../shared/dateUtils";
 
 export default function Booking() {
   // Obter roomId da URL se fornecido
@@ -540,8 +541,8 @@ export default function Booking() {
       `*Nacionalidade:* ${formData.nationality}\n\n` +
       `*Quarto:* ${room?.name}\n` +
       `*Período:* ${checkInDate.toLocaleDateString('pt-BR')} a ${checkOutDate.toLocaleDateString('pt-BR')} (${nights} dias)\n` +
-      `*Check-in:* ${new Date(new Date(formData.checkInDate).getTime() + 86400000).toLocaleDateString('pt-BR')} às ${formData.checkInTime}\n` +
-      `*Check-out:* ${new Date(new Date(formData.checkOutDate).getTime() + 86400000).toLocaleDateString('pt-BR')} às ${formData.checkOutTime}\n` +
+      `*Check-in:* ${formatYmdToPtBr(formData.checkInDate)} às ${formData.checkInTime}\n` +
+      `*Check-out:* ${formatYmdToPtBr(formData.checkOutDate)} às ${formData.checkOutTime}\n` +
       `*Hóspedes:* ${numberOfGuests} pessoa${numberOfGuests > 1 ? 's' : ''}\n\n` +
       `*Valores:*\n` +
       `Subtotal: R$ ${(priceCalculation.subtotal / 100).toFixed(2)}\n` +
@@ -593,7 +594,7 @@ export default function Booking() {
             <div className="bg-accent/5 p-4 rounded-lg mb-6">
               <div className="mb-4 space-y-2">
                 <p className="text-foreground font-semibold">Detalhes da Reserva:</p>
-                <p className="text-sm text-muted-foreground">Período: {new Date(bookingSuccess.checkInDate).toLocaleDateString('pt-BR')} a {new Date(bookingSuccess.checkOutDate).toLocaleDateString('pt-BR')}</p>
+                <p className="text-sm text-muted-foreground">Período: {formatYmdToPtBr(bookingSuccess.checkInDate)} a {formatYmdToPtBr(bookingSuccess.checkOutDate)}</p>
                 <p className="text-sm text-muted-foreground">Dias: <span className="font-bold text-accent">{bookingSuccess.numberOfGuests === 1 ? Math.ceil((new Date(bookingSuccess.checkOutDate).getTime() - new Date(bookingSuccess.checkInDate).getTime()) / (1000 * 60 * 60 * 24)) : 'N/A'}</span></p>
               </div>
               <p className="text-foreground mb-4">
