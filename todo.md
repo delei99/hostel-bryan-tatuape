@@ -820,3 +820,5 @@
 - [x] Usar `formatYmdToPtBr` para exibir datas sem timezone shift
 - [x] Todos os 85 testes vitest passando
 - [x] Testar fluxo completo de reserva
+- [x] Validar criação de reserva com datas corretas no admin dashboard
+- [x] BUG RESOLVIDO: Datas agora são salvas corretamente sem -1 dia
