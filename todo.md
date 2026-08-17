@@ -822,3 +822,11 @@
 - [x] Testar fluxo completo de reserva
 - [x] Validar criação de reserva com datas corretas no admin dashboard
 - [x] BUG RESOLVIDO: Datas agora são salvas corretamente sem -1 dia
+
+## Bug: Erro NaN ao salvar descontos dos quartos
+- [ ] Identificar a conversão que transforma campos vazios de desconto em NaN
+- [ ] Corrigir discount7Days, discount15Days e discount30Days para aceitarem campos vazios como 0
+- [ ] Garantir que preço, taxa de limpeza, capacidade, status e demais dados não sejam alterados
+- [ ] Criar ou atualizar teste Vitest para a conversão dos descontos
+- [ ] Validar o salvamento de quarto após a correção
+- [ ] Atualizar este item como concluído após a validação

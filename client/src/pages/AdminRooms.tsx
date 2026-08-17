@@ -9,6 +9,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Edit2, Save, X, Plus } from "lucide-react";
 import { useState } from "react";
+import { parseIntegerOrFallback, parseOptionalDiscount } from "../../../shared/numberUtils";
 
 export default function AdminRooms() {
   const { data: rooms = [], isLoading, refetch } = trpc.rooms.list.useQuery();
@@ -91,10 +92,10 @@ export default function AdminRooms() {
       description: editFormData.description,
       pricePerNight: Math.round(editFormData.pricePerNight),
       cleaningFee: Math.round(parseFloat(editFormData.cleaningFee) * 100),
-      discount7Days: parseInt(editFormData.discount7Days),
-      discount15Days: parseInt(editFormData.discount15Days),
-      discount30Days: parseInt(editFormData.discount30Days),
-      capacity: parseInt(editFormData.capacity),
+      discount7Days: parseOptionalDiscount(editFormData.discount7Days),
+      discount15Days: parseOptionalDiscount(editFormData.discount15Days),
+      discount30Days: parseOptionalDiscount(editFormData.discount30Days),
+      capacity: parseIntegerOrFallback(editFormData.capacity, 1),
       type: editFormData.type,
       amenities: editFormData.amenities,
       bathroomType: editFormData.bathroomType,
@@ -129,9 +130,9 @@ export default function AdminRooms() {
       capacity: parseInt(createFormData.capacity),
       pricePerNight: Math.round(parseFloat(createFormData.pricePerNight) * 100),
       cleaningFee: Math.round(parseFloat(createFormData.cleaningFee) * 100),
-      discount7Days: parseInt(createFormData.discount7Days),
-      discount15Days: parseInt(createFormData.discount15Days),
-      discount30Days: parseInt(createFormData.discount30Days),
+      discount7Days: parseOptionalDiscount(createFormData.discount7Days),
+      discount15Days: parseOptionalDiscount(createFormData.discount15Days),
+      discount30Days: parseOptionalDiscount(createFormData.discount30Days),
       description: createFormData.description || undefined,
       amenities: createFormData.amenities || undefined,
       bathroomType: createFormData.bathroomType,
@@ -397,7 +398,7 @@ export default function AdminRooms() {
                       <Input
                         type="text"
                         value={editFormData?.discount7Days || ""}
-                        onChange={(e) => handleFieldChange("discount7Days", parseInt(e.target.value))}
+                        onChange={(e) => handleFieldChange("discount7Days", e.target.value === "" ? "" : parseIntegerOrFallback(e.target.value, 0))}
                         className="mt-1 text-right"
                       />
                     </div>
@@ -406,7 +407,7 @@ export default function AdminRooms() {
                       <Input
                         type="text"
                         value={editFormData?.discount15Days || ""}
-                        onChange={(e) => handleFieldChange("discount15Days", parseInt(e.target.value))}
+                        onChange={(e) => handleFieldChange("discount15Days", e.target.value === "" ? "" : parseIntegerOrFallback(e.target.value, 0))}
                         className="mt-1 text-right"
                       />
                     </div>
@@ -415,7 +416,7 @@ export default function AdminRooms() {
                       <Input
                         type="text"
                         value={editFormData?.discount30Days || ""}
-                        onChange={(e) => handleFieldChange("discount30Days", parseInt(e.target.value))}
+                        onChange={(e) => handleFieldChange("discount30Days", e.target.value === "" ? "" : parseIntegerOrFallback(e.target.value, 0))}
                         className="mt-1 text-right"
                       />
                     </div>
